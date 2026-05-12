@@ -1,0 +1,216 @@
+<!DOCTYPE html><html lang="zh-Hant"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Ch 15: 空間轉錄組 — Python BioInfo Tutorial</title>
+<link rel="stylesheet" href="styles.css">
+</head><body>
+<nav class="top-nav"><div class="top-nav-inner">
+  <a href="index.html" class="top-nav-brand"><span>🐍</span> <span data-zh="Python 生資教學" data-en="Python BioInfo Tutorial">Python 生資教學</span></a>
+  <ul class="top-nav-links">
+    <li><a href="setup.html">Setup</a></li><li><a href="syntax.html">Syntax</a></li><li><a href="paths.html">Paths</a></li><li><a href="functions.html">Func</a></li><li><a href="numpy.html">NumPy</a></li><li><a href="pandas.html">Pandas</a></li><li><a href="visualization.html">Viz</a></li><li><a href="biopython.html">Biopy</a></li><li><a href="fasta-fastq.html">FASTQ</a></li><li><a href="blast.html">BLAST</a></li><li><a href="pysam.html">pysam</a></li><li><a href="variant-calling.html">Variant</a></li><li><a href="scanpy-anndata.html">scanpy</a></li><li><a href="scrna-workflow.html">scRNA</a></li><li><a href="spatial.html" class="active">Spatial</a></li><li><a href="multi-omics.html">Multi</a></li><li><a href="scllms.html">scLLMs</a></li><li><a href="ai-bioinformatics.html">AI</a></li>
+  </ul>
+</div></nav>
+<div class="progress-bar-container"><div class="progress-bar" id="progressBar"></div></div>
+<header class="page-hero"><div class="step-badge">CHAPTER 15 / 18</div>
+<h1 data-zh="空間轉錄組 (Squidpy)" data-en="Spatial Transcriptomics (Squidpy)">空間轉錄組</h1>
+<p class="subtitle" data-lang="zh">把基因表達放回組織切片上 — Visium / Xenium / MERFISH 的 Python 分析。</p>
+<p class="subtitle" data-lang="en">Map gene expression back onto tissue sections — Python analysis for Visium / Xenium / MERFISH.</p>
+</header>
+<main class="content-wrap">
+
+<section class="section">
+<div class="section-label" data-zh="平台" data-en="PLATFORMS">平台</div>
+<h2 data-zh="一、空間轉錄組三大技術路線" data-en="I. Three flavors of spatial transcriptomics">一、三大技術路線</h2>
+<table class="comp-table">
+<thead><tr><th data-zh="平台" data-en="Platform">平台</th><th data-zh="解析度" data-en="Resolution">解析度</th><th data-zh="基因數" data-en="Gene panel">基因數</th><th data-zh="特性" data-en="Feature">特性</th></tr></thead>
+<tbody>
+<tr><td><strong>Visium</strong></td><td data-lang="zh">spot (~55 μm，含多個細胞)</td><td data-lang="zh">全轉錄組 (~17k)</td><td data-lang="zh">最普及、最便宜，但非單細胞</td>
+<td data-lang="en">Spot (~55 μm, multiple cells)</td><td data-lang="en">Whole transcriptome (~17k)</td><td data-lang="en">Most popular, cheap, but not single-cell</td></tr>
+<tr><td><strong>Visium HD</strong></td><td data-lang="zh">2 μm bin (近單細胞)</td><td data-lang="zh">全轉錄組</td><td data-lang="zh">2024 新一代、解析度大幅提升</td>
+<td data-lang="en">2 μm bin (near single-cell)</td><td data-lang="en">Whole transcriptome</td><td data-lang="en">Next-gen (2024+), much higher resolution</td></tr>
+<tr><td><strong>Xenium / MERFISH / CosMx</strong></td><td data-lang="zh">真正單細胞 / 亞細胞</td><td data-lang="zh">~300–1000 個 panel 基因</td><td data-lang="zh">影像式 (FISH)，需事前選擇基因</td>
+<td data-lang="en">True single-cell / subcellular</td><td data-lang="en">~300-1000 panel genes</td><td data-lang="en">Imaging-based (FISH), pre-selected gene panel</td></tr>
+<tr><td><strong>Slide-seq / DBiT-seq</strong></td><td data-lang="zh">~10 μm bead</td><td data-lang="zh">全轉錄組</td><td data-lang="zh">學術界較常用</td>
+<td data-lang="en">~10 μm bead</td><td data-lang="en">Whole transcriptome</td><td data-lang="en">Common in academic labs</td></tr>
+</tbody></table>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="工具" data-en="TOOLS">工具</div>
+<h2 data-zh="二、Squidpy & SpatialData：scverse 的空間方案" data-en="II. Squidpy & SpatialData: the scverse spatial stack">二、Squidpy & SpatialData</h2>
+<div data-lang="zh">
+<p><strong>Squidpy</strong> = 在 AnnData 上加空間分析 (鄰居圖、Moran's I、空間共表現)。</p>
+<p><strong>SpatialData</strong> = 新一代資料模型，整合表達矩陣 + 影像 + 形狀 (cell segmentation polygons)。</p>
+<p>2025 年的趨勢：scanpy 的舊空間 tutorial 被 deprecated，新分析統一用 squidpy + spatialdata。</p>
+</div>
+<div data-lang="en">
+<p><strong>Squidpy</strong> = AnnData-aware spatial analysis (neighbor graphs, Moran's I, spatial co-expression).</p>
+<p><strong>SpatialData</strong> = next-gen data model unifying expression + images + shapes (cell segmentation polygons).</p>
+<p>2025 trend: scanpy's old spatial tutorial is deprecated; new analysis uses squidpy + spatialdata.</p>
+</div>
+<div class="path-box">
+<span class="label">$</span> pip install squidpy spatialdata-io
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="完整流程" data-en="WORKFLOW">完整流程</div>
+<h2 data-zh="三、Visium 完整分析範例" data-en="III. End-to-end Visium analysis">三、Visium 完整範例</h2>
+<div class="code-tabs"><div class="code-tab-btns">
+<button class="code-tab-btn active" onclick="switchTab(this,'sp1')">讀檔 + QC</button>
+<button class="code-tab-btn" onclick="switchTab(this,'sp2')">標準 scanpy 流程</button>
+<button class="code-tab-btn" onclick="switchTab(this,'sp3')">空間特定分析</button>
+<button class="code-tab-btn" onclick="switchTab(this,'sp4')">Xenium 子細胞</button>
+</div>
+<div class="code-tab-content active" id="sp1"><pre><span class="kw">import</span> scanpy <span class="kw">as</span> sc, squidpy <span class="kw">as</span> sq
+
+<span class="comment"># 從 SpaceRanger 輸出讀入 / Read from SpaceRanger output</span>
+adata = sc.read_visium(<span class="str">"data/raw/visium_brain/"</span>)
+adata.var_names_make_unique()
+<span class="comment"># adata.obsm["spatial"] = (n_spots, 2) 像素座標</span>
+<span class="comment"># adata.uns["spatial"][library]["images"] = HE 影像</span>
+<span class="builtin">print</span>(adata)
+
+<span class="comment"># 在組織切片上看 QC</span>
+adata.var[<span class="str">"mt"</span>] = adata.var_names.str.startswith(<span class="str">"MT-"</span>)
+sc.pp.calculate_qc_metrics(adata, qc_vars=[<span class="str">"mt"</span>], inplace=<span class="kw">True</span>)
+
+sc.pl.spatial(adata, color=[<span class="str">"total_counts"</span>,<span class="str">"n_genes_by_counts"</span>,<span class="str">"pct_counts_mt"</span>],
+              cmap=<span class="str">"viridis"</span>)
+
+<span class="comment"># 過濾：spot 太空、太多 mt</span>
+sc.pp.filter_cells(adata, min_counts=<span class="num">500</span>)
+adata = adata[adata.obs.pct_counts_mt &lt; <span class="num">20</span>].copy()</pre></div>
+<div class="code-tab-content" id="sp2"><pre><span class="comment"># 跟 scRNA 一樣跑 normalize → HVG → PCA → UMAP → Leiden</span>
+adata.layers[<span class="str">"counts"</span>] = adata.X.copy()
+sc.pp.normalize_total(adata)
+sc.pp.log1p(adata)
+sc.pp.highly_variable_genes(adata, n_top_genes=<span class="num">2000</span>, flavor=<span class="str">"seurat_v3"</span>,
+                            layer=<span class="str">"counts"</span>)
+sc.pp.scale(adata, max_value=<span class="num">10</span>)
+sc.tl.pca(adata)
+sc.pp.neighbors(adata)
+sc.tl.umap(adata)
+sc.tl.leiden(adata, resolution=<span class="num">1.0</span>, key_added=<span class="str">"clusters"</span>)
+
+<span class="comment"># 把 cluster 投回組織切片！ / Project clusters back onto the tissue</span>
+sc.pl.spatial(adata, color=<span class="str">"clusters"</span>)
+
+<span class="comment"># 看特定基因的空間分佈</span>
+sc.pl.spatial(adata, color=[<span class="str">"HPCA"</span>,<span class="str">"TTR"</span>], cmap=<span class="str">"magma"</span>)</pre></div>
+<div class="code-tab-content" id="sp3"><pre><span class="comment"># 1. 建空間鄰居圖 / Build spatial neighbor graph</span>
+sq.gr.spatial_neighbors(adata, coord_type=<span class="str">"generic"</span>, n_neighs=<span class="num">6</span>)
+
+<span class="comment"># 2. Moran's I — 找空間自相關 (spatially variable) 基因</span>
+sq.gr.spatial_autocorr(adata, mode=<span class="str">"moran"</span>, genes=adata.var_names[:<span class="num">3000</span>])
+top_svg = adata.uns[<span class="str">"moranI"</span>].head(<span class="num">10</span>)
+<span class="builtin">print</span>(top_svg)
+
+<span class="comment"># 視覺化 top SVG</span>
+sc.pl.spatial(adata, color=top_svg.index[:<span class="num">6</span>], ncols=<span class="num">3</span>)
+
+<span class="comment"># 3. 鄰里富集分析 / Neighborhood enrichment</span>
+<span class="comment"># 哪些 cluster 在空間上「常常相鄰」？</span>
+sq.gr.nhood_enrichment(adata, cluster_key=<span class="str">"clusters"</span>)
+sq.pl.nhood_enrichment(adata, cluster_key=<span class="str">"clusters"</span>)
+
+<span class="comment"># 4. 共出現分析 / Co-occurrence</span>
+sq.gr.co_occurrence(adata, cluster_key=<span class="str">"clusters"</span>)
+sq.pl.co_occurrence(adata, cluster_key=<span class="str">"clusters"</span>, clusters=<span class="str">"3"</span>)
+
+<span class="comment"># 5. Ligand-receptor 分析 (LIANA)</span>
+<span class="comment"># pip install liana</span>
+<span class="kw">import</span> liana <span class="kw">as</span> li
+li.method.cellphonedb(adata, groupby=<span class="str">"clusters"</span>, resource_name=<span class="str">"consensus"</span>,
+                      use_raw=<span class="kw">False</span>)
+li.pl.dotplot(adata, colour=<span class="str">"lr_means"</span>, size=<span class="str">"specificity_rank"</span>)</pre></div>
+<div class="code-tab-content" id="sp4"><pre><span class="comment"># Xenium / MERFISH 是真正單細胞解析度</span>
+<span class="comment"># Xenium / MERFISH are true single-cell resolution</span>
+<span class="kw">import</span> spatialdata <span class="kw">as</span> sd
+<span class="kw">import</span> spatialdata_io <span class="kw">as</span> sd_io
+
+<span class="comment"># 讀入 Xenium 完整資料 (含 cell segmentation, 多解析度影像)</span>
+sdata = sd_io.xenium(<span class="str">"data/raw/xenium_breast/"</span>)
+<span class="builtin">print</span>(sdata)
+<span class="comment"># SpatialData object: tables (cell × gene), shapes (polygons),
+<span class="comment">#                    images (DAPI, IF), points (transcripts)</span>
+
+<span class="comment"># 取出 AnnData 給 scanpy 用</span>
+adata = sdata.tables[<span class="str">"table"</span>]
+
+<span class="comment"># 同樣的 scanpy + squidpy 流程，但解析度是真正單細胞</span>
+sq.gr.spatial_neighbors(adata, coord_type=<span class="str">"generic"</span>,
+                        delaunay=<span class="kw">True</span>)              <span class="comment"># Delaunay 三角法</span>
+sq.gr.spatial_autocorr(adata, mode=<span class="str">"moran"</span>)
+
+<span class="comment"># Cell type deconvolution — Visium spot 含多細胞時用</span>
+<span class="comment"># 工具：cell2location, RCTD, Tangram, stereoscope</span></pre></div>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="關鍵分析" data-en="KEY ANALYSES">關鍵分析</div>
+<h2 data-zh="四、空間獨特的分析方法" data-en="IV. Spatial-only analyses">四、空間獨特分析</h2>
+<div class="card-grid cols-2">
+<div class="card"><h4>📍 <span data-zh="Spatially Variable Genes (SVG)" data-en="Spatially Variable Genes">空間變異基因 (SVG)</span></h4>
+<div data-lang="zh"><p>不只是「在 cluster 間有差」，而是「在<strong>空間上有結構</strong>」的基因。<br>方法：<strong>Moran's I</strong> (squidpy 內建)、<strong>SpatialDE</strong>、<strong>SPARK-X</strong>。</p></div>
+<div data-lang="en"><p>Genes whose expression varies <strong>structurally over space</strong>, not just between clusters.<br>Methods: <strong>Moran's I</strong> (squidpy built-in), <strong>SpatialDE</strong>, <strong>SPARK-X</strong>.</p></div>
+</div>
+<div class="card"><h4>🧫 <span data-zh="Cell Type Deconvolution" data-en="Cell Type Deconvolution">細胞類型解構</span></h4>
+<div data-lang="zh"><p>Visium 一個 spot 是混合細胞，需用 scRNA 參考圖譜分解出每 spot 的細胞組成。<br>工具：<strong>cell2location</strong>、<strong>RCTD</strong>、<strong>Tangram</strong>、<strong>Stereoscope</strong>。</p></div>
+<div data-lang="en"><p>Each Visium spot is a cell mixture; deconvolve into cell-type composition using a scRNA reference.<br>Tools: <strong>cell2location</strong>, <strong>RCTD</strong>, <strong>Tangram</strong>, <strong>Stereoscope</strong>.</p></div>
+</div>
+<div class="card"><h4>🔁 <span data-zh="Niche / Neighborhood" data-en="Niche / Neighborhood">微環境分析</span></h4>
+<div data-lang="zh"><p>哪些細胞類型常常出現在彼此附近？<br>squidpy <code>nhood_enrichment</code> + <code>co_occurrence</code>。</p></div>
+<div data-lang="en"><p>Which cell types appear near each other in space?<br>squidpy <code>nhood_enrichment</code> + <code>co_occurrence</code>.</p></div>
+</div>
+<div class="card"><h4>📐 <span data-zh="影像對齊" data-en="Image Registration">影像對齊</span></h4>
+<div data-lang="zh"><p>把連續切片或多染色 IHC 的影像對齊到同一座標系。<br>工具：<strong>SpatialData</strong> + <strong>STalign</strong> / <strong>PASTE</strong>。</p></div>
+<div data-lang="en"><p>Align serial sections or multi-stain IHC into the same coordinate system.<br>Tools: <strong>SpatialData</strong> + <strong>STalign</strong> / <strong>PASTE</strong>.</p></div>
+</div>
+</div>
+</section>
+
+<!-- Quiz -->
+<section class="quiz-section">
+<h3>📝 <span data-zh="自我檢測" data-en="Self-Check">自我檢測</span></h3>
+<div class="quiz-q" data-answer="1">
+<p data-lang="zh">1. Visium spot (~55 μm) 跟單細胞最大的差別是？</p>
+<p data-lang="en">1. Biggest difference between a Visium spot (~55 μm) and a single cell?</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. 沒差</span><span data-lang="en">A. No difference</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. 一個 spot 含多個細胞，需 deconvolution 才能拿到細胞組成</span><span data-lang="en">B. A spot contains multiple cells; deconvolution is needed for cell-type composition</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. spot 比較貴</span><span data-lang="en">C. Spots are more expensive</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. spot 不能跑 UMAP</span><span data-lang="en">D. Spots can't run UMAP</span></div>
+</div></div>
+<div class="quiz-q" data-answer="2">
+<p data-lang="zh">2. 找在空間上有結構（不只是 cluster 間差）的基因，最該用？</p>
+<p data-lang="en">2. To find genes that vary <strong>structurally over space</strong>, you should use:</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span><code>sc.tl.rank_genes_groups</code></span></div>
+<div class="quiz-opt" data-idx="1"><span><code>sc.tl.umap</code></span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. <code>sq.gr.spatial_autocorr</code> (Moran's I) 或 SpatialDE</span><span data-lang="en">C. <code>sq.gr.spatial_autocorr</code> (Moran's I) or SpatialDE</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. 標準 PCA</span><span data-lang="en">D. Standard PCA</span></div>
+</div></div>
+<div class="quiz-q" data-answer="0">
+<p data-lang="zh">3. 想處理 Xenium 含影像 + cell polygon 的資料，最佳容器？</p>
+<p data-lang="en">3. For Xenium data with images + cell polygons, the best container is:</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span><strong>SpatialData</strong> (整合 table + image + shape)</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. 純 AnnData</span><span data-lang="en">B. Plain AnnData</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. pandas DataFrame</span><span data-lang="en">C. pandas DataFrame</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. CSV 檔</span><span data-lang="en">D. CSV file</span></div>
+</div></div>
+</section>
+
+<nav class="page-nav">
+<a href="scrna-workflow.html"><span class="nav-dir" data-zh="← 上一章" data-en="← Prev">← 上一章</span><span class="nav-title">Ch 14: scRNA Workflow</span></a>
+<a href="multi-omics.html"><span class="nav-dir" data-zh="下一章 →" data-en="Next →">下一章 →</span><span class="nav-title">Ch 16: Multi-omics</span></a>
+</nav>
+</main>
+<footer class="site-footer">© Charlene — Python for Bioinformatics Interactive Tutorial</footer>
+<script src="i18n.js"></script>
+<script>
+window.addEventListener('scroll',()=>{const h=document.documentElement;document.getElementById('progressBar').style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight))*100+'%';});
+function switchTab(b,id){const p=b.closest('.code-tabs');p.querySelectorAll('.code-tab-btn').forEach(x=>x.classList.remove('active'));p.querySelectorAll('.code-tab-content').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById(id).classList.add('active');}
+document.querySelectorAll('.quiz-q').forEach(q=>{const ans=+q.dataset.answer;q.querySelectorAll('.quiz-opt').forEach(opt=>{opt.addEventListener('click',()=>{const idx=+opt.dataset.idx;q.querySelectorAll('.quiz-opt').forEach(o=>o.classList.remove('correct','wrong'));if(idx===ans)opt.classList.add('correct');else{opt.classList.add('wrong');q.querySelectorAll('.quiz-opt')[ans].classList.add('correct');}});});});
+</script>
+</body></html>

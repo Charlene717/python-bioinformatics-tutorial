@@ -1,0 +1,437 @@
+<!DOCTYPE html><html lang="zh-Hant"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Ch 2: Python 語法基礎 — Python BioInfo Tutorial</title>
+<link rel="stylesheet" href="styles.css">
+</head><body>
+<nav class="top-nav"><div class="top-nav-inner">
+  <a href="index.html" class="top-nav-brand"><span>🐍</span> <span data-zh="Python 生資教學" data-en="Python BioInfo Tutorial">Python 生資教學</span></a>
+  <ul class="top-nav-links">
+    <li><a href="setup.html">Setup</a></li><li><a href="syntax.html" class="active">Syntax</a></li><li><a href="paths.html">Paths</a></li><li><a href="functions.html">Func</a></li><li><a href="numpy.html">NumPy</a></li><li><a href="pandas.html">Pandas</a></li><li><a href="visualization.html">Viz</a></li><li><a href="biopython.html">Biopy</a></li><li><a href="fasta-fastq.html">FASTQ</a></li><li><a href="blast.html">BLAST</a></li><li><a href="pysam.html">pysam</a></li><li><a href="variant-calling.html">Variant</a></li><li><a href="scanpy-anndata.html">scanpy</a></li><li><a href="scrna-workflow.html">scRNA</a></li><li><a href="spatial.html">Spatial</a></li><li><a href="multi-omics.html">Multi</a></li><li><a href="scllms.html">scLLMs</a></li><li><a href="ai-bioinformatics.html">AI</a></li>
+  </ul>
+</div></nav>
+<div class="progress-bar-container"><div class="progress-bar" id="progressBar"></div></div>
+<header class="page-hero"><div class="step-badge">CHAPTER 2 / 18</div>
+<h1 data-zh="Python 語法基礎" data-en="Python Syntax Basics">Python 語法基礎</h1>
+<p class="subtitle" data-lang="zh">變數、型別、控制流、容器 — 用生資範例學會 Python 的核心語法。</p>
+<p class="subtitle" data-lang="en">Variables, types, control flow, containers — learn Python's core syntax through bioinformatics examples.</p>
+</header>
+<main class="content-wrap">
+
+<!-- Section 1: First Run -->
+<section class="section">
+<div class="section-label" data-zh="開始" data-en="START">開始</div>
+<h2 data-zh="一、第一次執行 Python" data-en="I. Running Python for the first time">一、第一次執行 Python</h2>
+<div data-lang="zh">
+<p>Python 有三種執行方式，先弄懂差別：</p>
+<ol>
+<li><strong>互動式 (REPL)：</strong>終端機輸入 <code>python</code> 直接打程式碼，按 Enter 立刻看到結果。適合測試小片段。離開：<code>exit()</code> 或 <span class="kbd">Ctrl</span>+<span class="kbd">D</span>。</li>
+<li><strong>腳本 (.py 檔)：</strong>把程式存成 <code>hello.py</code>，終端機執行 <code>python hello.py</code>。適合正式分析、重複執行。</li>
+<li><strong>Jupyter Notebook (.ipynb)：</strong>把程式分成 cell，可以邊寫邊看結果、夾雜文字說明。適合探索、論文圖。</li>
+</ol>
+</div>
+<div data-lang="en">
+<p>Python runs in three different ways — get the differences straight:</p>
+<ol>
+<li><strong>Interactive (REPL):</strong> type <code>python</code> in your terminal and enter code line by line; results appear instantly. Great for testing snippets. Exit with <code>exit()</code> or <span class="kbd">Ctrl</span>+<span class="kbd">D</span>.</li>
+<li><strong>Scripts (.py file):</strong> save code as <code>hello.py</code> and run <code>python hello.py</code>. For formal, repeatable analyses.</li>
+<li><strong>Jupyter Notebook (.ipynb):</strong> code split into cells, write-and-see-as-you-go with markdown notes. Great for exploration and paper figures.</li>
+</ol>
+</div>
+
+<div class="code-tabs"><div class="code-tab-btns">
+<button class="code-tab-btn active" onclick="switchTab(this,'repl')">REPL</button>
+<button class="code-tab-btn" onclick="switchTab(this,'script')">Script</button>
+<button class="code-tab-btn" onclick="switchTab(this,'jup')">Jupyter</button>
+</div>
+<div class="code-tab-content active" id="repl"><pre><span class="comment"># 終端機 / Terminal</span>
+(pybio) $ python
+Python 3.11.5 (main, ...) on win32
+&gt;&gt;&gt; <span class="num">1</span> + <span class="num">1</span>
+<span class="num">2</span>
+&gt;&gt;&gt; dna = <span class="str">"ATGCGT"</span>
+&gt;&gt;&gt; <span class="builtin">len</span>(dna)
+<span class="num">6</span>
+&gt;&gt;&gt; exit()</pre></div>
+<div class="code-tab-content" id="script"><pre><span class="comment"># hello.py</span>
+dna = <span class="str">"ATGCGT"</span>
+<span class="builtin">print</span>(<span class="str">f"Length of DNA: {len(dna)}"</span>)
+
+<span class="comment"># 終端機執行 / Terminal</span>
+(pybio) $ python hello.py
+Length of DNA: <span class="num">6</span></pre></div>
+<div class="code-tab-content" id="jup"><pre><span class="comment"># 啟動 / Launch</span>
+(pybio) $ jupyter lab
+<span class="comment"># 瀏覽器自動開啟 / browser opens automatically</span>
+
+<span class="comment"># Cell 1 (按 Shift+Enter 執行)</span>
+dna = <span class="str">"ATGCGT"</span>
+<span class="builtin">print</span>(<span class="builtin">len</span>(dna))   <span class="comment"># 輸出顯示在 cell 下方 / output below the cell</span></pre></div>
+</div>
+</section>
+
+<!-- Section 2: Variables and Types -->
+<section class="section">
+<div class="section-label" data-zh="變數與型別" data-en="VARIABLES & TYPES">變數與型別</div>
+<h2 data-zh="二、變數、型別與基本運算" data-en="II. Variables, types, and basic ops">二、變數、型別與基本運算</h2>
+<div data-lang="zh">
+<p>Python 不需要宣告型別 — 用 <code>=</code> 賦值即可。型別是<strong>動態</strong>的（同一個變數名可以再被指向不同型別）。</p>
+</div>
+<div data-lang="en">
+<p>Python doesn't require type declarations — assign with <code>=</code> and you're done. Types are <strong>dynamic</strong>: the same name can later refer to a value of any type.</p>
+</div>
+<table class="comp-table">
+<thead><tr><th data-zh="型別" data-en="Type">型別</th><th data-zh="範例" data-en="Example">範例</th><th data-zh="生資用途" data-en="Bioinformatics use">用途</th></tr></thead>
+<tbody>
+<tr><td><code>int</code></td><td><code>n_reads = 1500000</code></td><td data-lang="zh">read 數、座標、基因數</td><td data-lang="en">Read counts, coordinates, gene counts</td></tr>
+<tr><td><code>float</code></td><td><code>pval = 0.001</code></td><td data-lang="zh">p-value、log2FC、表達量</td><td data-lang="en">p-values, log2FC, expression levels</td></tr>
+<tr><td><code>str</code></td><td><code>seq = "ATGCGT"</code></td><td data-lang="zh">DNA/蛋白質序列、染色體名、基因符號</td><td data-lang="en">DNA/protein sequences, chromosome names, gene symbols</td></tr>
+<tr><td><code>bool</code></td><td><code>is_passed = True</code></td><td data-lang="zh">QC 是否通過、布林過濾遮罩</td><td data-lang="en">QC pass/fail, boolean filter masks</td></tr>
+<tr><td><code>list</code></td><td><code>genes = ["TP53", "BRCA1"]</code></td><td data-lang="zh">基因清單、樣本 ID 清單</td><td data-lang="en">Gene lists, sample IDs</td></tr>
+<tr><td><code>dict</code></td><td><code>codon = {"ATG": "M", "TAA": "*"}</code></td><td data-lang="zh">密碼子表、Sample → metadata 對應</td><td data-lang="en">Codon tables, sample → metadata mappings</td></tr>
+<tr><td><code>tuple</code></td><td><code>region = ("chr1", 1000, 2000)</code></td><td data-lang="zh">不可變座標、回傳多個值</td><td data-lang="en">Immutable coordinates, multi-value returns</td></tr>
+<tr><td><code>set</code></td><td><code>de_genes = {"MYC", "EGFR"}</code></td><td data-lang="zh">去除重複的基因集合、交集/聯集</td><td data-lang="en">Deduplicated gene sets, intersections/unions</td></tr>
+</tbody></table>
+
+<div class="code-tabs"><div class="code-tab-btns">
+<button class="code-tab-btn active" onclick="switchTab(this,'v1')">基本運算 / Basic ops</button>
+<button class="code-tab-btn" onclick="switchTab(this,'v2')">字串 / Strings</button>
+<button class="code-tab-btn" onclick="switchTab(this,'v3')">f-string</button>
+</div>
+<div class="code-tab-content active" id="v1"><pre><span class="comment"># 算術 / Arithmetic</span>
+total = <span class="num">100</span> + <span class="num">50</span>      <span class="comment"># 150</span>
+gc = (<span class="num">3</span> + <span class="num">5</span>) / <span class="num">10</span>      <span class="comment"># 0.8 (true division → float)</span>
+half = <span class="num">7</span> // <span class="num">2</span>           <span class="comment"># 3 (整數除法 / floor division)</span>
+remainder = <span class="num">7</span> % <span class="num">2</span>     <span class="comment"># 1 (餘數 / modulo)</span>
+power = <span class="num">2</span> ** <span class="num">10</span>         <span class="comment"># 1024 (次方 / exponent)</span>
+
+<span class="comment"># 比較 / Comparison</span>
+pval &lt; <span class="num">0.05</span>             <span class="comment"># True / False</span>
+gene_a == gene_b         <span class="comment"># 等於 / equals</span>
+gene_a != gene_b         <span class="comment"># 不等於 / not equals</span>
+
+<span class="comment"># 型別檢查 / Type check</span>
+<span class="builtin">type</span>(pval)              <span class="comment"># &lt;class 'float'&gt;</span>
+<span class="builtin">isinstance</span>(pval, <span class="builtin">float</span>)   <span class="comment"># True</span></pre></div>
+<div class="code-tab-content" id="v2"><pre><span class="comment"># DNA 序列當字串用 / Treat DNA as a string</span>
+dna = <span class="str">"ATGCGTAATCG"</span>
+<span class="builtin">len</span>(dna)                 <span class="comment"># 11</span>
+dna[<span class="num">0</span>]                    <span class="comment"># 'A'  (索引從 0 開始 / 0-indexed)</span>
+dna[-<span class="num">1</span>]                   <span class="comment"># 'G'  (倒數第一)</span>
+dna[<span class="num">0</span>:<span class="num">3</span>]                  <span class="comment"># 'ATG' (切片，不含右端)</span>
+dna.count(<span class="str">"A"</span>)            <span class="comment"># 3 (A 出現次數)</span>
+dna.replace(<span class="str">"T"</span>, <span class="str">"U"</span>)      <span class="comment"># 'AUGCGUAAUCG' → 轉成 RNA</span>
+dna.lower()              <span class="comment"># 'atgcgtaatcg'</span>
+<span class="str">"ATG"</span> <span class="kw">in</span> dna             <span class="comment"># True (子序列檢查)</span>
+
+<span class="comment"># 串接 / Concatenate</span>
+adapter = <span class="str">"AGATCGGAAG"</span>
+read = adapter + dna
+<span class="comment"># 重複 / Repeat</span>
+poly_a = <span class="str">"A"</span> * <span class="num">20</span>         <span class="comment"># 'AAAAAAAAAAAAAAAAAAAA'</span></pre></div>
+<div class="code-tab-content" id="v3"><pre><span class="comment"># f-string (格式化字串，最常用！) / Recommended way to format strings</span>
+gene = <span class="str">"TP53"</span>
+fc = <span class="num">2.345678</span>
+pval = <span class="num">0.0001234</span>
+
+<span class="builtin">print</span>(<span class="str">f"{gene}: log2FC={fc:.2f}, pval={pval:.2e}"</span>)
+<span class="comment"># TP53: log2FC=2.35, pval=1.23e-04</span>
+
+<span class="comment"># :.2f → 浮點數保留 2 位小數</span>
+<span class="comment"># :.2e → 科學記號保留 2 位</span>
+<span class="comment"># :,   → 千分位逗號</span>
+<span class="builtin">print</span>(<span class="str">f"Total reads: {1500000:,}"</span>)   <span class="comment"># Total reads: 1,500,000</span></pre></div>
+</div>
+</section>
+
+<!-- Section 3: Containers -->
+<section class="section">
+<div class="section-label" data-zh="容器" data-en="CONTAINERS">容器</div>
+<h2 data-zh="三、容器：list / dict / tuple / set" data-en="III. Containers: list / dict / tuple / set">三、容器：list / dict / tuple / set</h2>
+<div class="card-grid cols-2">
+<div class="card"><h4>📋 list — <span data-zh="有序、可變" data-en="ordered, mutable">有序、可變</span></h4>
+<div data-lang="zh"><p>用方括號 <code>[ ]</code>，最常用的容器。可以新增、修改、排序。</p></div>
+<div data-lang="en"><p>Created with square brackets <code>[ ]</code> — the workhorse container. You can append, modify, sort.</p></div>
+</div>
+<div class="card"><h4>🗂️ dict — <span data-zh="鍵值對" data-en="key-value pairs">鍵值對</span></h4>
+<div data-lang="zh"><p>用大括號 <code>{ }</code> 加 <code>:</code>。透過鍵 (key) 取值 (value)，O(1) 超快查找。生資最常用！</p></div>
+<div data-lang="en"><p>Curly braces <code>{ }</code> with <code>:</code>. Look up values by key in O(1). The most-used container in bioinformatics!</p></div>
+</div>
+<div class="card"><h4>🔒 tuple — <span data-zh="不可變" data-en="immutable">不可變</span></h4>
+<div data-lang="zh"><p>用圓括號 <code>( )</code>。無法修改，但可當 dict 的 key（list 不行）。常用於座標或回傳多值。</p></div>
+<div data-lang="en"><p>Round brackets <code>( )</code>. Cannot be modified but can serve as a dict key (lists cannot). Often for coordinates or multi-value returns.</p></div>
+</div>
+<div class="card"><h4>🎯 set — <span data-zh="無序、唯一" data-en="unordered, unique">無序、唯一</span></h4>
+<div data-lang="zh"><p>用大括號 <code>{ }</code>（無 key）。自動去重，超快做交集/聯集 — 比較兩組基因清單必備。</p></div>
+<div data-lang="en"><p>Curly braces <code>{ }</code> (no key). Auto-deduplicates, fast set ops — essential for comparing two gene lists.</p></div>
+</div>
+</div>
+
+<div class="code-tabs"><div class="code-tab-btns">
+<button class="code-tab-btn active" onclick="switchTab(this,'c1')">list</button>
+<button class="code-tab-btn" onclick="switchTab(this,'c2')">dict</button>
+<button class="code-tab-btn" onclick="switchTab(this,'c3')">set</button>
+</div>
+<div class="code-tab-content active" id="c1"><pre>genes = [<span class="str">"TP53"</span>, <span class="str">"BRCA1"</span>, <span class="str">"EGFR"</span>, <span class="str">"MYC"</span>]
+
+<span class="comment"># 取值 / Access</span>
+genes[<span class="num">0</span>]              <span class="comment"># 'TP53'</span>
+genes[-<span class="num">1</span>]             <span class="comment"># 'MYC'</span>
+genes[<span class="num">1</span>:<span class="num">3</span>]            <span class="comment"># ['BRCA1', 'EGFR']  ← 切片回傳新 list</span>
+
+<span class="comment"># 修改 / Modify</span>
+genes.append(<span class="str">"KRAS"</span>)         <span class="comment"># 加到尾端 / append to end</span>
+genes.extend([<span class="str">"AKT1"</span>, <span class="str">"PTEN"</span>])  <span class="comment"># 加多個</span>
+genes.insert(<span class="num">0</span>, <span class="str">"MTOR"</span>)      <span class="comment"># 插入到開頭</span>
+genes.remove(<span class="str">"MYC"</span>)          <span class="comment"># 移除第一個 'MYC'</span>
+gene = genes.pop()           <span class="comment"># 取出並移除最後一個</span>
+
+<span class="comment"># 排序 / Sort</span>
+genes.sort()                 <span class="comment"># 原地排序 / in-place</span>
+sorted_genes = <span class="builtin">sorted</span>(genes)  <span class="comment"># 回傳新 list</span>
+
+<span class="comment"># 列表推導式 / List comprehension (神器！)</span>
+upper = [g.upper() <span class="kw">for</span> g <span class="kw">in</span> genes]
+filtered = [g <span class="kw">for</span> g <span class="kw">in</span> genes <span class="kw">if</span> g.startswith(<span class="str">"B"</span>)]
+<span class="comment"># 上面兩行各一行就能做完，比 for 迴圈快、更 Pythonic</span></pre></div>
+<div class="code-tab-content" id="c2"><pre><span class="comment"># 密碼子表 / Codon table</span>
+codon = {
+  <span class="str">"ATG"</span>: <span class="str">"M"</span>,    <span class="comment"># Methionine (start)</span>
+  <span class="str">"TAA"</span>: <span class="str">"*"</span>,    <span class="comment"># stop</span>
+  <span class="str">"TGA"</span>: <span class="str">"*"</span>,
+  <span class="str">"GCT"</span>: <span class="str">"A"</span>,    <span class="comment"># Alanine</span>
+}
+
+<span class="comment"># 取值 / Look up</span>
+codon[<span class="str">"ATG"</span>]                  <span class="comment"># 'M'</span>
+codon.get(<span class="str">"GGG"</span>, <span class="str">"X"</span>)         <span class="comment"># 'X' — 找不到時的預設值，不會報錯</span>
+
+<span class="comment"># 新增/修改 / Add or update</span>
+codon[<span class="str">"GCC"</span>] = <span class="str">"A"</span>             <span class="comment"># 直接賦值</span>
+
+<span class="comment"># 檢查 key 是否存在 / Check key</span>
+<span class="str">"ATG"</span> <span class="kw">in</span> codon              <span class="comment"># True</span>
+
+<span class="comment"># 走訪 / Iterate</span>
+<span class="kw">for</span> triplet, aa <span class="kw">in</span> codon.items():
+    <span class="builtin">print</span>(<span class="str">f"{triplet} → {aa}"</span>)
+
+<span class="comment"># 字典推導式 / Dict comprehension</span>
+<span class="comment"># 反查表：胺基酸 → [所有對應密碼子]</span>
+aa_to_codons = {}
+<span class="kw">for</span> tri, aa <span class="kw">in</span> codon.items():
+    aa_to_codons.setdefault(aa, []).append(tri)</pre></div>
+<div class="code-tab-content" id="c3"><pre><span class="comment"># 兩組差異基因清單比較 / Compare two DE gene lists</span>
+treated = {<span class="str">"MYC"</span>, <span class="str">"EGFR"</span>, <span class="str">"TP53"</span>, <span class="str">"BRCA1"</span>}
+control = {<span class="str">"TP53"</span>, <span class="str">"BRCA1"</span>, <span class="str">"PTEN"</span>}
+
+treated &amp; control          <span class="comment"># 交集 / intersection: {'TP53', 'BRCA1'}</span>
+treated | control          <span class="comment"># 聯集 / union</span>
+treated - control          <span class="comment"># 差集 / difference: {'MYC', 'EGFR'}</span>
+treated ^ control          <span class="comment"># 對稱差 / symmetric diff</span>
+
+<span class="comment"># 去重 / Deduplicate a list</span>
+genes = [<span class="str">"A"</span>,<span class="str">"B"</span>,<span class="str">"A"</span>,<span class="str">"C"</span>,<span class="str">"B"</span>]
+unique = <span class="builtin">list</span>(<span class="builtin">set</span>(genes))   <span class="comment"># ['A','B','C'] (順序可能改變)</span></pre></div>
+</div>
+</section>
+
+<!-- Section 4: Control flow -->
+<section class="section">
+<div class="section-label" data-zh="控制流" data-en="CONTROL FLOW">控制流</div>
+<h2 data-zh="四、if / for / while" data-en="IV. if / for / while">四、if / for / while</h2>
+<div class="callout info"><span class="callout-icon">📌</span><div>
+<span data-lang="zh"><strong>Python 用「縮排」分區塊</strong>，沒有大括號 <code>{}</code>。<strong>4 個空格</strong>是公認標準（VSCode/Jupyter 預設都是 4 格）。混用 tab 跟空格會出現 <code>IndentationError</code>。</span>
+<span data-lang="en"><strong>Python uses indentation to define blocks</strong> — no curly braces. <strong>4 spaces</strong> is the universal standard (VSCode/Jupyter defaults to 4). Mixing tabs and spaces yields <code>IndentationError</code>.</span>
+</div></div>
+
+<div class="code-tabs"><div class="code-tab-btns">
+<button class="code-tab-btn active" onclick="switchTab(this,'fl1')">if/elif/else</button>
+<button class="code-tab-btn" onclick="switchTab(this,'fl2')">for</button>
+<button class="code-tab-btn" onclick="switchTab(this,'fl3')">while</button>
+<button class="code-tab-btn" onclick="switchTab(this,'fl4')">try/except</button>
+</div>
+<div class="code-tab-content active" id="fl1"><pre><span class="comment"># 根據 p-value 決定顯著性 / Significance label by p-value</span>
+pval = <span class="num">0.003</span>
+
+<span class="kw">if</span> pval &lt; <span class="num">0.001</span>:
+    label = <span class="str">"***"</span>
+<span class="kw">elif</span> pval &lt; <span class="num">0.01</span>:
+    label = <span class="str">"**"</span>
+<span class="kw">elif</span> pval &lt; <span class="num">0.05</span>:
+    label = <span class="str">"*"</span>
+<span class="kw">else</span>:
+    label = <span class="str">"ns"</span>      <span class="comment"># not significant</span>
+
+<span class="comment"># 三元運算子 / Ternary expression</span>
+status = <span class="str">"PASS"</span> <span class="kw">if</span> pval &lt; <span class="num">0.05</span> <span class="kw">else</span> <span class="str">"FAIL"</span></pre></div>
+<div class="code-tab-content" id="fl2"><pre><span class="comment"># 計算 GC content / Compute GC content</span>
+dna = <span class="str">"ATGCGTAATCGGCT"</span>
+gc_count = <span class="num">0</span>
+<span class="kw">for</span> base <span class="kw">in</span> dna:           <span class="comment"># 走訪每個字元</span>
+    <span class="kw">if</span> base <span class="kw">in</span> <span class="str">"GC"</span>:
+        gc_count += <span class="num">1</span>
+gc_pct = gc_count / <span class="builtin">len</span>(dna) * <span class="num">100</span>
+
+<span class="comment"># 同時拿到 index 與值 / Get index AND value</span>
+<span class="kw">for</span> i, base <span class="kw">in</span> <span class="builtin">enumerate</span>(dna):
+    <span class="builtin">print</span>(i, base)
+
+<span class="comment"># 走訪 dict / Iterate dict</span>
+exp = {<span class="str">"TP53"</span>: <span class="num">5.2</span>, <span class="str">"MYC"</span>: <span class="num">3.1</span>, <span class="str">"BRCA1"</span>: <span class="num">7.8</span>}
+<span class="kw">for</span> gene, val <span class="kw">in</span> exp.items():
+    <span class="builtin">print</span>(<span class="str">f"{gene}: {val}"</span>)
+
+<span class="comment"># range — 用 index 走訪 / Loop by index</span>
+<span class="kw">for</span> i <span class="kw">in</span> <span class="builtin">range</span>(<span class="num">10</span>):       <span class="comment"># 0..9</span>
+    <span class="builtin">print</span>(i)
+<span class="kw">for</span> i <span class="kw">in</span> <span class="builtin">range</span>(<span class="num">2</span>, <span class="num">10</span>, <span class="num">2</span>): <span class="comment"># 2,4,6,8</span>
+    <span class="builtin">print</span>(i)</pre></div>
+<div class="code-tab-content" id="fl3"><pre><span class="comment"># while: 條件為真就一直執行 / Run while condition is true</span>
+<span class="comment"># 範例：模擬序列突變直到 GC 達標</span>
+<span class="kw">import</span> random
+seq = <span class="builtin">list</span>(<span class="str">"AAAAAAAAAA"</span>)
+<span class="kw">while</span> seq.count(<span class="str">"G"</span>) + seq.count(<span class="str">"C"</span>) &lt; <span class="num">5</span>:
+    i = random.randint(<span class="num">0</span>, <span class="num">9</span>)
+    seq[i] = random.choice(<span class="str">"GC"</span>)
+<span class="builtin">print</span>(<span class="str">""</span>.join(seq))
+
+<span class="comment"># break: 提前跳出 / Exit early</span>
+<span class="kw">for</span> i <span class="kw">in</span> <span class="builtin">range</span>(<span class="num">100</span>):
+    <span class="kw">if</span> i ** <span class="num">2</span> &gt; <span class="num">200</span>:
+        <span class="kw">break</span>
+<span class="comment"># continue: 跳過此次 / Skip this iteration</span>
+<span class="kw">for</span> g <span class="kw">in</span> genes:
+    <span class="kw">if</span> g.startswith(<span class="str">"MT-"</span>):
+        <span class="kw">continue</span>      <span class="comment"># 跳過粒線體基因</span>
+    process(g)</pre></div>
+<div class="code-tab-content" id="fl4"><pre><span class="comment"># 例外處理：讀檔失敗時優雅處理 / Graceful failure on file errors</span>
+<span class="kw">try</span>:
+    <span class="kw">with</span> <span class="builtin">open</span>(<span class="str">"data/raw/sample.fasta"</span>) <span class="kw">as</span> f:
+        seqs = f.read()
+<span class="kw">except</span> FileNotFoundError:
+    <span class="builtin">print</span>(<span class="str">"檔案不存在，請檢查路徑！"</span>)
+    seqs = <span class="kw">None</span>
+<span class="kw">except</span> PermissionError:
+    <span class="builtin">print</span>(<span class="str">"沒有讀取權限"</span>)
+<span class="kw">except</span> Exception <span class="kw">as</span> e:
+    <span class="builtin">print</span>(<span class="str">f"未知錯誤: {e}"</span>)
+<span class="kw">else</span>:
+    <span class="builtin">print</span>(<span class="str">"讀檔成功"</span>)
+<span class="kw">finally</span>:
+    <span class="builtin">print</span>(<span class="str">"無論成功失敗都會執行"</span>)</pre></div>
+</div>
+</section>
+
+<!-- Section 5: Bioinformatics worked example -->
+<section class="section">
+<div class="section-label" data-zh="生資範例" data-en="BIO EXAMPLE">生資範例</div>
+<h2 data-zh="五、整合範例：手寫 GC content + 反向互補" data-en="V. Worked example: GC content + reverse complement">五、整合範例：手寫 GC content + 反向互補</h2>
+<div data-lang="zh"><p>把上面學到的東西組合起來 — 不依賴 Biopython，純 Python 完成兩個經典操作。</p></div>
+<div data-lang="en"><p>Combine everything above — no Biopython, pure Python doing two classic operations.</p></div>
+<div class="code-tabs"><div class="code-tab-btns"><button class="code-tab-btn active" onclick="switchTab(this,'ex1')">完整範例 / Full example</button></div>
+<div class="code-tab-content active" id="ex1"><pre><span class="kw">def</span> gc_content(seq):
+    <span class="str">"""回傳 GC% (0–100) / Return GC% (0–100)"""</span>
+    seq = seq.upper()
+    gc = seq.count(<span class="str">"G"</span>) + seq.count(<span class="str">"C"</span>)
+    <span class="kw">return</span> gc / <span class="builtin">len</span>(seq) * <span class="num">100</span>
+
+<span class="kw">def</span> reverse_complement(seq):
+    <span class="str">"""DNA 反向互補 / Reverse complement of DNA"""</span>
+    pairs = {<span class="str">"A"</span>: <span class="str">"T"</span>, <span class="str">"T"</span>: <span class="str">"A"</span>, <span class="str">"G"</span>: <span class="str">"C"</span>, <span class="str">"C"</span>: <span class="str">"G"</span>, <span class="str">"N"</span>: <span class="str">"N"</span>}
+    <span class="comment"># 用 list comprehension + reverse + join，一行搞定</span>
+    <span class="kw">return</span> <span class="str">""</span>.join(pairs[b] <span class="kw">for</span> b <span class="kw">in</span> seq.upper()[::-<span class="num">1</span>])
+
+<span class="comment"># 測試 / Test</span>
+seq = <span class="str">"ATGCGTAATCG"</span>
+<span class="builtin">print</span>(<span class="str">f"GC: {gc_content(seq):.1f}%"</span>)        <span class="comment"># GC: 54.5%</span>
+<span class="builtin">print</span>(<span class="str">f"RevComp: {reverse_complement(seq)}"</span>)  <span class="comment"># CGATTACGCAT</span>
+
+<span class="comment"># [::-1] 是 Python 慣用語：把字串/list 反轉</span>
+<span class="comment"># [::-1] is the Pythonic idiom for reversing a sequence</span></pre></div>
+</div>
+</section>
+
+<!-- Interactive: codon translator -->
+<section class="section">
+<div class="section-label" data-zh="互動模擬" data-en="INTERACTIVE">互動模擬</div>
+<h2 data-zh="DNA → 蛋白質 即時翻譯器" data-en="DNA → Protein Live Translator">DNA → 蛋白質 即時翻譯器</h2>
+<div data-lang="zh"><p>輸入 DNA 序列，立即看到 GC%、反向互補、三框翻譯結果。</p></div>
+<div data-lang="en"><p>Type a DNA sequence and instantly see GC%, reverse complement, and 3-frame translation.</p></div>
+<div class="interactive-panel">
+<label data-zh="DNA 序列 (僅 ATGCN)" data-en="DNA sequence (ATGCN only)" style="font-size:.88rem;font-weight:600;display:block;margin-bottom:6px;">DNA 序列</label>
+<input type="text" id="dnaIn" value="ATGGCCATTGTAATGGGCCGCTGAAAGGGTGCCCGATAG" style="width:100%;padding:10px 14px;border:1px solid var(--c-border);border-radius:6px;font-family:var(--font-mono);font-size:.9rem;letter-spacing:1px;text-transform:uppercase;">
+<div class="sim-stats" style="margin-top:14px;">
+  <span class="sim-stat pass" id="lenStat">Length: —</span>
+  <span class="sim-stat pass" id="gcStat">GC: —</span>
+</div>
+<div style="font-size:.8rem;color:var(--c-ink-muted);margin-top:14px;font-weight:600;" data-zh="反向互補：" data-en="Reverse complement:">反向互補：</div>
+<div class="console-out" id="rcOut" style="min-height:auto;"></div>
+<div style="font-size:.8rem;color:var(--c-ink-muted);margin-top:14px;font-weight:600;" data-zh="蛋白質翻譯 (Frame 1)：" data-en="Protein translation (Frame 1):">蛋白質翻譯：</div>
+<div class="console-out" id="protOut" style="min-height:auto;"></div>
+</div>
+</section>
+
+<!-- Quiz -->
+<section class="quiz-section">
+<h3>📝 <span data-zh="自我檢測" data-en="Self-Check">自我檢測</span></h3>
+<div class="quiz-q" data-answer="2">
+<p data-lang="zh">1. <code>dna = "ATGCGT"; dna[1:4]</code> 的結果是？</p>
+<p data-lang="en">1. What is <code>dna = "ATGCGT"; dna[1:4]</code>?</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span>A. "ATGC"</span></div>
+<div class="quiz-opt" data-idx="1"><span>B. "TGCG"</span></div>
+<div class="quiz-opt" data-idx="2"><span>C. "TGC"</span></div>
+<div class="quiz-opt" data-idx="3"><span>D. "ATG"</span></div>
+</div></div>
+
+<div class="quiz-q" data-answer="1">
+<p data-lang="zh">2. 想快速比較兩組基因清單的「共同基因」，最適合用？</p>
+<p data-lang="en">2. To quickly find genes shared between two lists, use:</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. 兩個 list + 雙層 for 迴圈</span><span data-lang="en">A. Two lists + nested for loops</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. 兩個 set 用 <code>&amp;</code> 運算子</span><span data-lang="en">B. Two sets with the <code>&amp;</code> operator</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. 兩個 dict 比 keys</span><span data-lang="en">C. Two dicts comparing keys</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. 寫一個遞迴函式</span><span data-lang="en">D. Write a recursive function</span></div>
+</div></div>
+
+<div class="quiz-q" data-answer="0">
+<p data-lang="zh">3. 為什麼要用 f-string？</p>
+<p data-lang="en">3. Why use an f-string?</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. 能直接在 <code>{}</code> 裡放變數和格式碼，比 <code>%</code> 或 <code>.format()</code> 簡潔</span><span data-lang="en">A. Variables and format specs go directly in <code>{}</code> — cleaner than <code>%</code> or <code>.format()</code></span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. f-string 比較快但語法較難</span><span data-lang="en">B. Faster but harder syntax</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. 只有 f-string 能輸出中文</span><span data-lang="en">C. Only f-string can print non-ASCII</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. f-string 不需要 print()</span><span data-lang="en">D. f-string doesn't need print()</span></div>
+</div></div>
+</section>
+
+<nav class="page-nav">
+<a href="setup.html"><span class="nav-dir" data-zh="← 上一章" data-en="← Prev">← 上一章</span><span class="nav-title">Ch 1: Setup</span></a>
+<a href="paths.html"><span class="nav-dir" data-zh="下一章 →" data-en="Next →">下一章 →</span><span class="nav-title">Ch 3: File Paths & I/O</span></a>
+</nav>
+</main>
+<footer class="site-footer">© Charlene — Python for Bioinformatics Interactive Tutorial</footer>
+<script src="i18n.js"></script>
+<script>
+window.addEventListener('scroll',()=>{const h=document.documentElement;document.getElementById('progressBar').style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight))*100+'%';});
+function switchTab(b,id){const p=b.closest('.code-tabs');p.querySelectorAll('.code-tab-btn').forEach(x=>x.classList.remove('active'));p.querySelectorAll('.code-tab-content').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById(id).classList.add('active');}
+document.querySelectorAll('.quiz-q').forEach(q=>{const ans=+q.dataset.answer;q.querySelectorAll('.quiz-opt').forEach(opt=>{opt.addEventListener('click',()=>{const idx=+opt.dataset.idx;q.querySelectorAll('.quiz-opt').forEach(o=>o.classList.remove('correct','wrong'));if(idx===ans)opt.classList.add('correct');else{opt.classList.add('wrong');q.querySelectorAll('.quiz-opt')[ans].classList.add('correct');}});});});
+
+// DNA translator
+const CODON={'TTT':'F','TTC':'F','TTA':'L','TTG':'L','CTT':'L','CTC':'L','CTA':'L','CTG':'L','ATT':'I','ATC':'I','ATA':'I','ATG':'M','GTT':'V','GTC':'V','GTA':'V','GTG':'V','TCT':'S','TCC':'S','TCA':'S','TCG':'S','CCT':'P','CCC':'P','CCA':'P','CCG':'P','ACT':'T','ACC':'T','ACA':'T','ACG':'T','GCT':'A','GCC':'A','GCA':'A','GCG':'A','TAT':'Y','TAC':'Y','TAA':'*','TAG':'*','CAT':'H','CAC':'H','CAA':'Q','CAG':'Q','AAT':'N','AAC':'N','AAA':'K','AAG':'K','GAT':'D','GAC':'D','GAA':'E','GAG':'E','TGT':'C','TGC':'C','TGA':'*','TGG':'W','CGT':'R','CGC':'R','CGA':'R','CGG':'R','AGT':'S','AGC':'S','AGA':'R','AGG':'R','GGT':'G','GGC':'G','GGA':'G','GGG':'G'};
+const COMP={A:'T',T:'A',G:'C',C:'G',N:'N'};
+function update(){
+  let s=document.getElementById('dnaIn').value.toUpperCase().replace(/[^ATGCN]/g,'');
+  document.getElementById('lenStat').textContent='Length: '+s.length;
+  if(!s.length){document.getElementById('gcStat').textContent='GC: —';document.getElementById('rcOut').textContent='';document.getElementById('protOut').textContent='';return;}
+  const gc=(s.match(/[GC]/g)||[]).length/s.length*100;
+  document.getElementById('gcStat').textContent='GC: '+gc.toFixed(1)+'%';
+  const rc=s.split('').reverse().map(b=>COMP[b]||'N').join('');
+  document.getElementById('rcOut').textContent=rc;
+  let prot='';
+  for(let i=0;i+3<=s.length;i+=3){prot+=CODON[s.slice(i,i+3)]||'X';}
+  document.getElementById('protOut').textContent=prot;
+}
+document.getElementById('dnaIn').addEventListener('input',update);
+update();
+</script>
+</body></html>

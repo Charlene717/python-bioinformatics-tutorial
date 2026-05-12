@@ -1,0 +1,254 @@
+<!DOCTYPE html><html lang="zh-Hant"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Ch 8: Biopython 基礎 — Python BioInfo Tutorial</title>
+<link rel="stylesheet" href="styles.css">
+</head><body>
+<nav class="top-nav"><div class="top-nav-inner">
+  <a href="index.html" class="top-nav-brand"><span>🐍</span> <span data-zh="Python 生資教學" data-en="Python BioInfo Tutorial">Python 生資教學</span></a>
+  <ul class="top-nav-links">
+    <li><a href="setup.html">Setup</a></li><li><a href="syntax.html">Syntax</a></li><li><a href="paths.html">Paths</a></li><li><a href="functions.html">Func</a></li><li><a href="numpy.html">NumPy</a></li><li><a href="pandas.html">Pandas</a></li><li><a href="visualization.html">Viz</a></li><li><a href="biopython.html" class="active">Biopy</a></li><li><a href="fasta-fastq.html">FASTQ</a></li><li><a href="blast.html">BLAST</a></li><li><a href="pysam.html">pysam</a></li><li><a href="variant-calling.html">Variant</a></li><li><a href="scanpy-anndata.html">scanpy</a></li><li><a href="scrna-workflow.html">scRNA</a></li><li><a href="spatial.html">Spatial</a></li><li><a href="multi-omics.html">Multi</a></li><li><a href="scllms.html">scLLMs</a></li><li><a href="ai-bioinformatics.html">AI</a></li>
+  </ul>
+</div></nav>
+<div class="progress-bar-container"><div class="progress-bar" id="progressBar"></div></div>
+<header class="page-hero"><div class="step-badge">CHAPTER 8 / 18</div>
+<h1 data-zh="Biopython 基礎" data-en="Biopython Basics">Biopython 基礎</h1>
+<p class="subtitle" data-lang="zh">Seq、SeqRecord、Entrez、密碼子表 — 生資 Python 工具箱的瑞士刀。</p>
+<p class="subtitle" data-lang="en">Seq, SeqRecord, Entrez, codon tables — the Swiss Army knife of bioinformatics Python.</p>
+</header>
+<main class="content-wrap">
+
+<section class="section">
+<div class="section-label" data-zh="安裝" data-en="INSTALL">安裝</div>
+<h2 data-zh="一、安裝與基本概念" data-en="I. Installation and core concepts">一、安裝與概念</h2>
+<div class="path-box">
+<span class="label">$</span> conda install -c bioconda biopython -y
+<span class="comment"># 或 / or</span>
+<span class="label">$</span> pip install biopython
+</div>
+<div data-lang="zh">
+<p>Biopython 提供：序列物件 (Seq, SeqRecord)、檔案 I/O (FASTA/FASTQ/GenBank)、線上資料庫存取 (NCBI Entrez)、序列比對 (pairwise2)、結構解析 (PDB)。本章先把核心打通，下一章專攻 FASTA/FASTQ。</p>
+</div>
+<div data-lang="en">
+<p>Biopython provides: sequence objects (Seq, SeqRecord), file I/O (FASTA/FASTQ/GenBank), online database access (NCBI Entrez), pairwise alignment, PDB parsing. This chapter covers the core; the next focuses on FASTA/FASTQ.</p>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="Seq 物件" data-en="THE Seq OBJECT">Seq 物件</div>
+<h2 data-zh="二、Seq — 比 str 多了生物學語意" data-en="II. Seq — biological semantics on top of str">二、Seq 物件</h2>
+<div class="code-tabs"><div class="code-tab-btns">
+<button class="code-tab-btn active" onclick="switchTab(this,'s1')">基本操作</button>
+<button class="code-tab-btn" onclick="switchTab(this,'s2')">轉錄/翻譯</button>
+<button class="code-tab-btn" onclick="switchTab(this,'s3')">SeqRecord</button>
+</div>
+<div class="code-tab-content active" id="s1"><pre><span class="kw">from</span> Bio.Seq <span class="kw">import</span> Seq
+
+<span class="comment"># 建立 Seq / Create</span>
+dna = Seq(<span class="str">"ATGGCCATTGTAATGGGCCGCTGAAAGGGTGCCCGATAG"</span>)
+
+<span class="builtin">len</span>(dna)                <span class="comment"># 39</span>
+dna[<span class="num">0</span>:<span class="num">3</span>]                <span class="comment"># Seq('ATG')</span>
+dna.count(<span class="str">"A"</span>)            <span class="comment"># 12</span>
+dna.upper(); dna.lower()
+
+<span class="comment"># 反向 / 互補 / 反向互補 / Reverse / complement / reverse complement</span>
+dna.reverse_complement()        <span class="comment"># Seq('CTATCGGGCACCCTTTCAGCGGCCCATTACAATGGCCAT')</span>
+dna.complement()
+dna[::-<span class="num">1</span>]                  <span class="comment"># 反轉但不互補</span>
+
+<span class="comment"># 串接 / Concatenate</span>
+adapter = Seq(<span class="str">"AGATCGGAAG"</span>)
+read = adapter + dna
+
+<span class="comment"># Seq 物件可當 dict key、可比較等於</span>
+<span class="comment"># Seq objects are hashable; equal Seqs compare equal</span></pre></div>
+<div class="code-tab-content" id="s2"><pre><span class="kw">from</span> Bio.Seq <span class="kw">import</span> Seq
+
+dna = Seq(<span class="str">"ATGGCCATTGTAATGGGCCGCTGAAAGGGTGCCCGATAG"</span>)
+
+<span class="comment"># DNA → mRNA / Transcribe</span>
+mrna = dna.transcribe()
+<span class="comment"># Seq('AUGGCCAUUGUAAUGGGCCGCUGAAAGGGUGCCCGAUAG')</span>
+
+<span class="comment"># mRNA → 蛋白質 / Translate</span>
+protein = mrna.translate()
+<span class="comment"># Seq('MAIVMGR*KGAR*')   ← * 是 stop codon</span>
+
+<span class="comment"># 直接 DNA → 蛋白 / Direct DNA → protein</span>
+protein = dna.translate()
+
+<span class="comment"># 翻譯到第一個 stop 就停 / Stop at first stop codon</span>
+dna.translate(to_stop=<span class="kw">True</span>)        <span class="comment"># MAIVMGR</span>
+
+<span class="comment"># 用不同密碼子表 (粒線體有自己的) / Different codon tables</span>
+dna.translate(table=<span class="str">"Vertebrate Mitochondrial"</span>)
+
+<span class="comment"># 三個讀框 / Three reading frames</span>
+<span class="kw">for</span> frame <span class="kw">in</span> <span class="builtin">range</span>(<span class="num">3</span>):
+    <span class="builtin">print</span>(<span class="str">f"Frame {frame+1}:"</span>, dna[frame:].translate(to_stop=<span class="kw">True</span>))
+
+<span class="comment"># 6 個讀框 (含 reverse complement)</span>
+<span class="kw">for</span> strand, s <span class="kw">in</span> [(<span class="str">"+"</span>, dna), (<span class="str">"-"</span>, dna.reverse_complement())]:
+    <span class="kw">for</span> frame <span class="kw">in</span> <span class="builtin">range</span>(<span class="num">3</span>):
+        <span class="builtin">print</span>(strand, frame, s[frame:].translate(to_stop=<span class="kw">True</span>))</pre></div>
+<div class="code-tab-content" id="s3"><pre><span class="kw">from</span> Bio.SeqRecord <span class="kw">import</span> SeqRecord
+<span class="kw">from</span> Bio.Seq <span class="kw">import</span> Seq
+
+<span class="comment"># SeqRecord = Seq + ID + description + features (annotations)</span>
+<span class="comment"># SeqRecord = Seq + metadata (more useful for real workflows)</span>
+record = SeqRecord(
+    Seq(<span class="str">"ATGGCCATTGTA"</span>),
+    id=<span class="str">"NM_001"</span>,
+    name=<span class="str">"TP53"</span>,
+    description=<span class="str">"Tumor protein p53"</span>,
+)
+
+record.id          <span class="comment"># 'NM_001'</span>
+record.seq         <span class="comment"># Seq('ATGGCCATTGTA')</span>
+<span class="builtin">len</span>(record)        <span class="comment"># 12</span>
+<span class="builtin">str</span>(record.seq)    <span class="comment"># 'ATGGCCATTGTA' — 轉純字串</span>
+
+<span class="comment"># 從 FASTA 讀進來會自動是 SeqRecord (見 Ch 9)</span>
+<span class="comment"># Records loaded from FASTA are automatically SeqRecord (see Ch 9)</span></pre></div>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="Entrez 線上下載" data-en="ENTREZ ONLINE">Entrez 線上下載</div>
+<h2 data-zh="三、從 NCBI 下載序列 (Entrez)" data-en="III. Download sequences from NCBI (Entrez)">三、Entrez 下載</h2>
+<div class="callout warn"><span class="callout-icon">📧</span><div>
+<span data-lang="zh"><strong>NCBI 規定：</strong>使用 Entrez 必須提供你的 email — 用量過大時 NCBI 會聯絡你而不是直接封鎖。每秒最多 3 個請求 (申請 API key 後可到 10)。</span>
+<span data-lang="en"><strong>NCBI rules:</strong> You MUST provide an email when using Entrez — NCBI contacts you instead of blocking. Max 3 req/sec (10 with API key).</span>
+</div></div>
+<div class="code-tabs"><div class="code-tab-btns">
+<button class="code-tab-btn active" onclick="switchTab(this,'e1')">下載序列</button>
+<button class="code-tab-btn" onclick="switchTab(this,'e2')">搜尋</button>
+</div>
+<div class="code-tab-content active" id="e1"><pre><span class="kw">from</span> Bio <span class="kw">import</span> Entrez, SeqIO
+
+Entrez.email = <span class="str">"jung.charlix@gmail.com"</span>     <span class="comment"># 必填！</span>
+<span class="comment"># Entrez.api_key = "your_key"           # 申請後填，配額提升</span>
+
+<span class="comment"># 用 accession number 抓一條序列 / Fetch one record by accession</span>
+handle = Entrez.efetch(db=<span class="str">"nucleotide"</span>, id=<span class="str">"NM_001126112"</span>,
+                       rettype=<span class="str">"fasta"</span>, retmode=<span class="str">"text"</span>)
+record = SeqIO.read(handle, <span class="str">"fasta"</span>)
+handle.close()
+
+<span class="builtin">print</span>(record.id)
+<span class="builtin">print</span>(record.description)
+<span class="builtin">print</span>(record.seq[:<span class="num">100</span>])
+
+<span class="comment"># 抓多條 / Fetch multiple</span>
+ids = [<span class="str">"NM_001126112"</span>, <span class="str">"NM_001126113"</span>, <span class="str">"NM_001126114"</span>]
+handle = Entrez.efetch(db=<span class="str">"nucleotide"</span>, id=<span class="str">","</span>.join(ids),
+                       rettype=<span class="str">"fasta"</span>, retmode=<span class="str">"text"</span>)
+records = <span class="builtin">list</span>(SeqIO.parse(handle, <span class="str">"fasta"</span>))
+
+<span class="comment"># 抓 GenBank 格式 (含 features 註解)</span>
+handle = Entrez.efetch(db=<span class="str">"nucleotide"</span>, id=<span class="str">"NC_005816"</span>,
+                       rettype=<span class="str">"gb"</span>, retmode=<span class="str">"text"</span>)
+record = SeqIO.read(handle, <span class="str">"genbank"</span>)
+<span class="kw">for</span> feat <span class="kw">in</span> record.features:
+    <span class="kw">if</span> feat.type == <span class="str">"CDS"</span>:
+        <span class="builtin">print</span>(feat.location, feat.qualifiers.get(<span class="str">"gene"</span>))</pre></div>
+<div class="code-tab-content" id="e2"><pre><span class="kw">from</span> Bio <span class="kw">import</span> Entrez
+Entrez.email = <span class="str">"jung.charlix@gmail.com"</span>
+
+<span class="comment"># 搜尋 PubMed / Search PubMed</span>
+handle = Entrez.esearch(db=<span class="str">"pubmed"</span>,
+                        term=<span class="str">"scRNA-seq AND COVID-19"</span>,
+                        retmax=<span class="num">10</span>)
+result = Entrez.read(handle)
+<span class="builtin">print</span>(result[<span class="str">"Count"</span>])         <span class="comment"># 總筆數</span>
+<span class="builtin">print</span>(result[<span class="str">"IdList"</span>])        <span class="comment"># PMID list</span>
+
+<span class="comment"># 抓論文摘要</span>
+handle = Entrez.efetch(db=<span class="str">"pubmed"</span>, id=result[<span class="str">"IdList"</span>],
+                       rettype=<span class="str">"abstract"</span>, retmode=<span class="str">"text"</span>)
+<span class="builtin">print</span>(handle.read())
+
+<span class="comment"># 搜尋蛋白資料庫 / Search protein DB</span>
+Entrez.esearch(db=<span class="str">"protein"</span>, term=<span class="str">"TP53[Gene] AND human[Organism]"</span>)</pre></div>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="生資範例" data-en="BIO EXAMPLE">生資範例</div>
+<h2 data-zh="四、整合範例：找開放讀框 (ORF Finder)" data-en="IV. Worked example: ORF finder">四、ORF Finder</h2>
+<div class="code-tabs"><div class="code-tab-btns"><button class="code-tab-btn active" onclick="switchTab(this,'orf1')">完整實作</button></div>
+<div class="code-tab-content active" id="orf1"><pre><span class="kw">from</span> Bio.Seq <span class="kw">import</span> Seq
+
+<span class="kw">def</span> find_orfs(seq: Seq, min_aa: <span class="builtin">int</span> = <span class="num">100</span>):
+    <span class="str">"""找出所有大於 min_aa 個 amino acid 的 ORF（六個讀框）。"""</span>
+    orfs = []
+    <span class="kw">for</span> strand, s <span class="kw">in</span> [(<span class="str">"+"</span>, seq), (<span class="str">"-"</span>, seq.reverse_complement())]:
+        <span class="kw">for</span> frame <span class="kw">in</span> <span class="builtin">range</span>(<span class="num">3</span>):
+            sub = s[frame:]
+            <span class="comment"># 翻譯整段，再用 * 切割</span>
+            prot = <span class="builtin">str</span>(sub[: <span class="builtin">len</span>(sub) - <span class="builtin">len</span>(sub) % <span class="num">3</span>].translate())
+            <span class="comment"># 對每段 (用 stop 分隔)，再以 M 為起點</span>
+            <span class="kw">for</span> piece <span class="kw">in</span> prot.split(<span class="str">"*"</span>):
+                <span class="kw">if</span> <span class="str">"M"</span> <span class="kw">in</span> piece:
+                    orf = piece[piece.index(<span class="str">"M"</span>):]
+                    <span class="kw">if</span> <span class="builtin">len</span>(orf) &gt;= min_aa:
+                        orfs.append((strand, frame, <span class="builtin">len</span>(orf), orf))
+    <span class="kw">return</span> orfs
+
+<span class="comment"># 測試 / Test</span>
+<span class="kw">from</span> Bio <span class="kw">import</span> Entrez, SeqIO
+Entrez.email = <span class="str">"jung.charlix@gmail.com"</span>
+record = SeqIO.read(Entrez.efetch(db=<span class="str">"nucleotide"</span>, id=<span class="str">"NM_001126112"</span>,
+                                  rettype=<span class="str">"fasta"</span>, retmode=<span class="str">"text"</span>), <span class="str">"fasta"</span>)
+orfs = find_orfs(record.seq, min_aa=<span class="num">50</span>)
+<span class="builtin">print</span>(<span class="str">f"Found {len(orfs)} ORFs"</span>)
+<span class="kw">for</span> strand, frame, length, prot <span class="kw">in</span> orfs[:<span class="num">3</span>]:
+    <span class="builtin">print</span>(<span class="str">f"  {strand} frame {frame}: {length} aa"</span>)
+    <span class="builtin">print</span>(<span class="str">f"    {prot[:60]}..."</span>)</pre></div>
+</div>
+</section>
+
+<!-- Quiz -->
+<section class="quiz-section">
+<h3>📝 <span data-zh="自我檢測" data-en="Self-Check">自我檢測</span></h3>
+<div class="quiz-q" data-answer="1">
+<p data-lang="zh">1. <code>Seq("ATGTAA").translate()</code> 的結果是？</p>
+<p data-lang="en">1. <code>Seq("ATGTAA").translate()</code> returns?</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span><code>Seq('M')</code></span></div>
+<div class="quiz-opt" data-idx="1"><span><code>Seq('M*')</code></span></div>
+<div class="quiz-opt" data-idx="2"><span><code>Seq('ATGTAA')</code></span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. 報錯</span><span data-lang="en">D. Error</span></div>
+</div></div>
+<div class="quiz-q" data-answer="2">
+<p data-lang="zh">2. 用 Entrez 抓資料前，<strong>必須</strong>做的一件事？</p>
+<p data-lang="en">2. Before using Entrez, you <strong>must</strong>:</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. 註冊 NCBI 帳號</span><span data-lang="en">A. Register an NCBI account</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. 申請 API key</span><span data-lang="en">B. Apply for API key</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. 設定 <code>Entrez.email = "..."</code></span><span data-lang="en">C. Set <code>Entrez.email = "..."</code></span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. 安裝 R</span><span data-lang="en">D. Install R</span></div>
+</div></div>
+<div class="quiz-q" data-answer="0">
+<p data-lang="zh">3. 為什麼 SeqRecord 比純 Seq 更實用？</p>
+<p data-lang="en">3. Why is SeqRecord more useful than a bare Seq?</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. SeqRecord 帶 id/description/features 等 metadata</span><span data-lang="en">A. SeqRecord carries id/description/features metadata</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. SeqRecord 比較快</span><span data-lang="en">B. SeqRecord is faster</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. SeqRecord 可以儲存圖片</span><span data-lang="en">C. SeqRecord can store images</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. Seq 已停止維護</span><span data-lang="en">D. Seq is deprecated</span></div>
+</div></div>
+</section>
+
+<nav class="page-nav">
+<a href="visualization.html"><span class="nav-dir" data-zh="← 上一章" data-en="← Prev">← 上一章</span><span class="nav-title">Ch 7: Visualization</span></a>
+<a href="fasta-fastq.html"><span class="nav-dir" data-zh="下一章 →" data-en="Next →">下一章 →</span><span class="nav-title">Ch 9: FASTA / FASTQ</span></a>
+</nav>
+</main>
+<footer class="site-footer">© Charlene — Python for Bioinformatics Interactive Tutorial</footer>
+<script src="i18n.js"></script>
+<script>
+window.addEventListener('scroll',()=>{const h=document.documentElement;document.getElementById('progressBar').style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight))*100+'%';});
+function switchTab(b,id){const p=b.closest('.code-tabs');p.querySelectorAll('.code-tab-btn').forEach(x=>x.classList.remove('active'));p.querySelectorAll('.code-tab-content').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById(id).classList.add('active');}
+document.querySelectorAll('.quiz-q').forEach(q=>{const ans=+q.dataset.answer;q.querySelectorAll('.quiz-opt').forEach(opt=>{opt.addEventListener('click',()=>{const idx=+opt.dataset.idx;q.querySelectorAll('.quiz-opt').forEach(o=>o.classList.remove('correct','wrong'));if(idx===ans)opt.classList.add('correct');else{opt.classList.add('wrong');q.querySelectorAll('.quiz-opt')[ans].classList.add('correct');}});});});
+</script>
+</body></html>

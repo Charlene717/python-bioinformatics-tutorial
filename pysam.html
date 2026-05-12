@@ -1,0 +1,236 @@
+<!DOCTYPE html><html lang="zh-Hant"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Ch 11: pysam 與 SAM/BAM — Python BioInfo Tutorial</title>
+<link rel="stylesheet" href="styles.css">
+</head><body>
+<nav class="top-nav"><div class="top-nav-inner">
+  <a href="index.html" class="top-nav-brand"><span>🐍</span> <span data-zh="Python 生資教學" data-en="Python BioInfo Tutorial">Python 生資教學</span></a>
+  <ul class="top-nav-links">
+    <li><a href="setup.html">Setup</a></li><li><a href="syntax.html">Syntax</a></li><li><a href="paths.html">Paths</a></li><li><a href="functions.html">Func</a></li><li><a href="numpy.html">NumPy</a></li><li><a href="pandas.html">Pandas</a></li><li><a href="visualization.html">Viz</a></li><li><a href="biopython.html">Biopy</a></li><li><a href="fasta-fastq.html">FASTQ</a></li><li><a href="blast.html">BLAST</a></li><li><a href="pysam.html" class="active">pysam</a></li><li><a href="variant-calling.html">Variant</a></li><li><a href="scanpy-anndata.html">scanpy</a></li><li><a href="scrna-workflow.html">scRNA</a></li><li><a href="spatial.html">Spatial</a></li><li><a href="multi-omics.html">Multi</a></li><li><a href="scllms.html">scLLMs</a></li><li><a href="ai-bioinformatics.html">AI</a></li>
+  </ul>
+</div></nav>
+<div class="progress-bar-container"><div class="progress-bar" id="progressBar"></div></div>
+<header class="page-hero"><div class="step-badge">CHAPTER 11 / 18</div>
+<h1 data-zh="pysam 與 SAM / BAM" data-en="pysam & SAM / BAM">pysam 與 SAM / BAM</h1>
+<p class="subtitle" data-lang="zh">用 Python 拆解定序對位結果 — SAM 欄位、CIGAR 字串、coverage 計算一次到位。</p>
+<p class="subtitle" data-lang="en">Decode aligned sequencing data with Python — SAM fields, CIGAR strings, coverage in one place.</p>
+</header>
+<main class="content-wrap">
+
+<section class="section">
+<div class="section-label" data-zh="SAM/BAM 是什麼" data-en="WHAT IS SAM/BAM">概念</div>
+<h2 data-zh="一、SAM / BAM / CRAM 三兄弟" data-en="I. SAM / BAM / CRAM family">一、SAM / BAM / CRAM</h2>
+<table class="comp-table">
+<thead><tr><th>&nbsp;</th><th>SAM</th><th>BAM</th><th>CRAM</th></tr></thead>
+<tbody>
+<tr><td data-lang="zh"><strong>格式</strong></td><td data-lang="zh">純文字（人讀得懂）</td><td data-lang="zh">SAM 的二進位、壓縮版</td><td data-lang="zh">下一代壓縮，比 BAM 再小 30–50%</td>
+<td data-lang="en"><strong>Format</strong></td><td data-lang="en">Plain text (human-readable)</td><td data-lang="en">Binary, compressed SAM</td><td data-lang="en">Next-gen, 30-50% smaller than BAM</td></tr>
+<tr><td data-lang="zh"><strong>檔案大小</strong></td><td data-lang="zh">大（GB-TB）</td><td data-lang="zh">小（GB）</td><td data-lang="zh">最小</td>
+<td data-lang="en"><strong>Size</strong></td><td data-lang="en">Large (GB-TB)</td><td data-lang="en">Small (GB)</td><td data-lang="en">Smallest</td></tr>
+<tr><td data-lang="zh"><strong>實作建議</strong></td><td data-lang="zh">不要直接存 SAM (浪費)</td><td data-lang="zh"><strong>標準格式</strong>，所有工具都吃</td><td data-lang="zh">大規模存檔（需 reference）</td>
+<td data-lang="en"><strong>Recommendation</strong></td><td data-lang="en">Don't store as SAM (wasteful)</td><td data-lang="en"><strong>Standard format</strong>, universally supported</td><td data-lang="en">Large-scale archival (needs reference)</td></tr>
+</tbody></table>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="SAM 欄位" data-en="SAM FIELDS">SAM 欄位</div>
+<h2 data-zh="二、SAM 一行 11 欄都是什麼？" data-en="II. The 11 mandatory SAM fields">二、SAM 11 個必要欄位</h2>
+<div class="path-box">
+<span class="comment"># SAM 範例（每行一條 read 的對位結果）</span>
+read1   99   chr1   1000   60   76M   =   1200   276   ATGCGT...   IIIIII...
+<span class="comment"># 1     2    3      4      5    6     7   8      9     10           11</span>
+</div>
+<table class="comp-table" style="font-size:.82rem;">
+<thead><tr><th>#</th><th data-zh="欄位" data-en="Field">欄位</th><th data-zh="意義" data-en="Meaning">意義</th></tr></thead>
+<tbody>
+<tr><td>1</td><td><code>QNAME</code></td><td data-lang="zh">read 名字</td><td data-lang="en">read name</td></tr>
+<tr><td>2</td><td><code>FLAG</code></td><td data-lang="zh">位元旗標：是否成對、第幾股、是否反向、duplicate 等</td><td data-lang="en">bitwise flag: paired, strand, reverse, duplicate, etc.</td></tr>
+<tr><td>3</td><td><code>RNAME</code></td><td data-lang="zh">參考序列名（chr1, chr2 …）</td><td data-lang="en">reference name (chr1, chr2 …)</td></tr>
+<tr><td>4</td><td><code>POS</code></td><td data-lang="zh">對位起點 (1-based)</td><td data-lang="en">alignment start (1-based)</td></tr>
+<tr><td>5</td><td><code>MAPQ</code></td><td data-lang="zh">對位品質 (0-60)，越高越唯一</td><td data-lang="en">mapping quality (0-60), higher = more unique</td></tr>
+<tr><td>6</td><td><code>CIGAR</code></td><td data-lang="zh">怎麼對的（M=match, I=insertion, D=deletion, S=soft-clip）</td><td data-lang="en">how it's aligned (M/I/D/S)</td></tr>
+<tr><td>7</td><td><code>RNEXT</code></td><td data-lang="zh">配對 read 的 chr (= 表同條)</td><td data-lang="en">mate's chromosome (= same)</td></tr>
+<tr><td>8</td><td><code>PNEXT</code></td><td data-lang="zh">配對 read 的 POS</td><td data-lang="en">mate's POS</td></tr>
+<tr><td>9</td><td><code>TLEN</code></td><td data-lang="zh">insert size</td><td data-lang="en">template length</td></tr>
+<tr><td>10</td><td><code>SEQ</code></td><td data-lang="zh">read 序列</td><td data-lang="en">read sequence</td></tr>
+<tr><td>11</td><td><code>QUAL</code></td><td data-lang="zh">read 品質字串 (Phred + 33)</td><td data-lang="en">quality string (Phred + 33)</td></tr>
+</tbody></table>
+
+<div class="callout info"><span class="callout-icon">📌</span><div>
+<span data-lang="zh"><strong>FLAG 是位元欄位：</strong>常見 99 = 1+2+32+64 = 配對 + 正常配對 + mate 反向 + read1。<a href="https://broadinstitute.github.io/picard/explain-flags.html" target="_blank" rel="noopener" style="color:var(--c-accent);">decode flag 的線上工具</a>。</span>
+<span data-lang="en"><strong>FLAG is a bitfield:</strong> 99 = 1+2+32+64 = paired + properly paired + mate reverse + first in pair. <a href="https://broadinstitute.github.io/picard/explain-flags.html" target="_blank" rel="noopener" style="color:var(--c-accent);">Online flag decoder</a>.</span>
+</div></div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="CIGAR" data-en="CIGAR">CIGAR</div>
+<h2 data-zh="三、CIGAR 字串：對位細節的速記" data-en="III. CIGAR strings: shorthand for alignment detail">三、CIGAR 字串</h2>
+<div data-lang="zh">
+<p><code>76M</code> = 連續 76 個 base 都是 match/mismatch；<code>50M2I20M</code> = 50 match + 2 insertion + 20 match。常見符號：</p>
+<ul>
+<li><strong>M</strong> = alignment match (可能有 mismatch！)</li>
+<li><strong>I</strong> = insertion 在 read 上（read 有但 ref 沒有）</li>
+<li><strong>D</strong> = deletion 從 read 上（ref 有但 read 沒有）</li>
+<li><strong>S</strong> = soft-clipped（read 兩端沒對到，但 SEQ 還在）</li>
+<li><strong>H</strong> = hard-clipped（被剪掉、SEQ 也沒了）</li>
+<li><strong>N</strong> = skipped region（RNA-seq 跨 intron 必有）</li>
+</ul>
+</div>
+<div data-lang="en">
+<p><code>76M</code> = 76 contiguous matches/mismatches; <code>50M2I20M</code> = 50M + 2-base insertion + 20M. Common symbols:</p>
+<ul>
+<li><strong>M</strong> = alignment match (could include mismatches!)</li>
+<li><strong>I</strong> = insertion in the read (read has it, ref doesn't)</li>
+<li><strong>D</strong> = deletion from the read (ref has it, read doesn't)</li>
+<li><strong>S</strong> = soft-clipped (read end didn't align, SEQ kept)</li>
+<li><strong>H</strong> = hard-clipped (cut off, SEQ removed)</li>
+<li><strong>N</strong> = skipped region (always present in RNA-seq across introns)</li>
+</ul>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="pysam 操作" data-en="PYSAM USAGE">pysam 操作</div>
+<h2 data-zh="四、pysam：Python 讀寫 BAM 的標準" data-en="IV. pysam: the Python standard for BAM I/O">四、pysam 標準操作</h2>
+<div class="path-box">
+<span class="label">$</span> conda install -c bioconda pysam samtools -y
+</div>
+<div class="code-tabs"><div class="code-tab-btns">
+<button class="code-tab-btn active" onclick="switchTab(this,'p1')">讀 BAM</button>
+<button class="code-tab-btn" onclick="switchTab(this,'p2')">區段查詢 (索引)</button>
+<button class="code-tab-btn" onclick="switchTab(this,'p3')">過濾與寫出</button>
+<button class="code-tab-btn" onclick="switchTab(this,'p4')">coverage 統計</button>
+<button class="code-tab-btn" onclick="switchTab(this,'p5')">FASTA 索引</button>
+</div>
+<div class="code-tab-content active" id="p1"><pre><span class="kw">import</span> pysam
+
+bam = pysam.AlignmentFile(<span class="str">"data/raw/sample.bam"</span>, <span class="str">"rb"</span>)
+
+<span class="comment"># 顯示 header (含參考染色體名)</span>
+<span class="builtin">print</span>(bam.references[:<span class="num">5</span>])     <span class="comment"># ('chr1', 'chr2', 'chr3', ...)</span>
+<span class="builtin">print</span>(bam.lengths[:<span class="num">5</span>])
+
+<span class="comment"># 走訪每一條對位 read</span>
+<span class="kw">for</span> read <span class="kw">in</span> bam.fetch(until_eof=<span class="kw">True</span>):
+    <span class="builtin">print</span>(read.query_name,
+          read.reference_name,
+          read.reference_start,    <span class="comment"># 0-based!</span>
+          read.mapping_quality,
+          read.cigarstring,
+          read.is_reverse,
+          read.is_unmapped,
+          read.is_duplicate)
+    <span class="kw">break</span>
+
+bam.close()</pre></div>
+<div class="code-tab-content" id="p2"><pre><span class="comment"># 想抓特定區段 (chr1:1000-2000) 必須要有 .bai index！</span>
+<span class="comment"># Region queries (chr1:1000-2000) require a .bai index</span>
+<span class="comment"># 沒 index 時建一個：</span>
+pysam.index(<span class="str">"data/raw/sample.bam"</span>)
+<span class="comment"># 或在 shell：samtools index sample.bam</span>
+
+bam = pysam.AlignmentFile(<span class="str">"sample.bam"</span>, <span class="str">"rb"</span>)
+<span class="kw">for</span> read <span class="kw">in</span> bam.fetch(<span class="str">"chr1"</span>, <span class="num">1000</span>, <span class="num">2000</span>):
+    <span class="builtin">print</span>(read.query_name, read.reference_start)
+
+<span class="comment"># 計算這段區的 read 數</span>
+n = bam.count(<span class="str">"chr1"</span>, <span class="num">1000</span>, <span class="num">2000</span>)
+
+<span class="comment"># 計算 coverage（每個 base 多少 reads 覆蓋）</span>
+counts = bam.count_coverage(<span class="str">"chr1"</span>, <span class="num">1000</span>, <span class="num">2000</span>)
+<span class="comment"># 回傳 4 個 array (A, C, G, T)</span></pre></div>
+<div class="code-tab-content" id="p3"><pre><span class="kw">import</span> pysam
+
+inbam = pysam.AlignmentFile(<span class="str">"in.bam"</span>, <span class="str">"rb"</span>)
+<span class="comment"># 把 header 帶到輸出檔 / Inherit header for output</span>
+out  = pysam.AlignmentFile(<span class="str">"clean.bam"</span>, <span class="str">"wb"</span>, template=inbam)
+
+<span class="kw">for</span> r <span class="kw">in</span> inbam.fetch(until_eof=<span class="kw">True</span>):
+    <span class="comment"># 過濾條件：唯一對位、非 duplicate、MAPQ &gt;= 30</span>
+    <span class="kw">if</span> r.is_unmapped <span class="kw">or</span> r.is_duplicate <span class="kw">or</span> r.is_secondary <span class="kw">or</span> r.is_supplementary:
+        <span class="kw">continue</span>
+    <span class="kw">if</span> r.mapping_quality &lt; <span class="num">30</span>:
+        <span class="kw">continue</span>
+    out.write(r)
+
+inbam.close(); out.close()
+pysam.sort(<span class="str">"-o"</span>, <span class="str">"clean.sorted.bam"</span>, <span class="str">"clean.bam"</span>)
+pysam.index(<span class="str">"clean.sorted.bam"</span>)</pre></div>
+<div class="code-tab-content" id="p4"><pre><span class="kw">import</span> pysam, numpy <span class="kw">as</span> np
+<span class="kw">import</span> matplotlib.pyplot <span class="kw">as</span> plt
+
+bam = pysam.AlignmentFile(<span class="str">"sample.bam"</span>, <span class="str">"rb"</span>)
+
+<span class="comment"># 一個基因 region 的 coverage profile</span>
+<span class="comment"># Coverage profile across a region of interest</span>
+chrom, start, end = <span class="str">"chr17"</span>, <span class="num">7670000</span>, <span class="num">7690000</span>     <span class="comment"># TP53 大概位置</span>
+length = end - start
+counts = np.zeros(length, dtype=<span class="builtin">int</span>)
+
+<span class="comment"># 用 pileup() 一個 base 一個 base 統計</span>
+<span class="kw">for</span> col <span class="kw">in</span> bam.pileup(chrom, start, end, truncate=<span class="kw">True</span>):
+    counts[col.reference_pos - start] = col.nsegments
+
+<span class="comment"># 畫圖</span>
+fig, ax = plt.subplots(figsize=(<span class="num">12</span>,<span class="num">3</span>))
+ax.fill_between(np.arange(length) + start, counts, color=<span class="str">"#2563a6"</span>, alpha=<span class="num">.7</span>)
+ax.set_xlabel(<span class="str">"Position (chr17)"</span>); ax.set_ylabel(<span class="str">"Coverage"</span>)
+fig.savefig(<span class="str">"results/figures/coverage.pdf"</span>)</pre></div>
+<div class="code-tab-content" id="p5"><pre><span class="kw">import</span> pysam
+
+<span class="comment"># 從基因組擷取一段序列 (給 variant 顯示、引子設計、primer3 等)</span>
+<span class="comment"># Extract a slice of the genome (for variant inspection, primer design)</span>
+
+<span class="comment"># 先建 .fai 索引 / Build .fai index first</span>
+pysam.faidx(<span class="str">"data/ref/hg38.fa"</span>)
+
+fasta = pysam.FastaFile(<span class="str">"data/ref/hg38.fa"</span>)
+seq = fasta.fetch(<span class="str">"chr17"</span>, <span class="num">7676000</span>, <span class="num">7676100</span>)   <span class="comment"># 0-based half-open</span>
+<span class="builtin">print</span>(seq.upper())</pre></div>
+</div>
+</section>
+
+<!-- Quiz -->
+<section class="quiz-section">
+<h3>📝 <span data-zh="自我檢測" data-en="Self-Check">自我檢測</span></h3>
+<div class="quiz-q" data-answer="2">
+<p data-lang="zh">1. 想用 pysam 抓 chr1:1000-2000 區段的 reads，BAM 檔需要有？</p>
+<p data-lang="en">1. To <code>fetch()</code> reads from chr1:1000-2000 with pysam, the BAM needs:</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. 沒有特殊需求</span><span data-lang="en">A. Nothing special</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. 必須先轉成 SAM</span><span data-lang="en">B. Must be converted to SAM first</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. 必須是 sorted BAM 並有 .bai 索引</span><span data-lang="en">C. Must be sorted BAM with .bai index</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. 必須是 CRAM</span><span data-lang="en">D. Must be CRAM</span></div>
+</div></div>
+<div class="quiz-q" data-answer="1">
+<p data-lang="zh">2. CIGAR 字串 <code>30M2I50M</code> 代表什麼？</p>
+<p data-lang="en">2. CIGAR <code>30M2I50M</code> means:</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. 30 match + 2 deletion + 50 match</span><span data-lang="en">A. 30 match + 2 deletion + 50 match</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. 30 match + 2-base insertion (read 多出來) + 50 match</span><span data-lang="en">B. 30 match + 2-base insertion (read has extra) + 50 match</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. 32 mismatch + 50 match</span><span data-lang="en">C. 32 mismatch + 50 match</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. read 長度 = 80 bp（30+50）</span><span data-lang="en">D. read length = 80 bp (30+50)</span></div>
+</div></div>
+<div class="quiz-q" data-answer="0">
+<p data-lang="zh">3. <code>read.reference_start</code> 在 pysam 是 0-based。SAM 檔上的 POS 卻是 1-based。如果你直接拿來貼到 IGV，會：</p>
+<p data-lang="en">3. <code>read.reference_start</code> in pysam is 0-based, but SAM POS is 1-based. If you paste pysam's value into IGV, you'll:</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. 看到的位置會差 1 個 base — 須先 <code>+1</code></span><span data-lang="en">A. Be off by one base — add <code>+1</code> first</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. 完全沒事</span><span data-lang="en">B. No issue</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. IGV 會自動修正</span><span data-lang="en">C. IGV auto-corrects</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. 整個位置會錯一條染色體</span><span data-lang="en">D. The whole chromosome shifts</span></div>
+</div></div>
+</section>
+
+<nav class="page-nav">
+<a href="blast.html"><span class="nav-dir" data-zh="← 上一章" data-en="← Prev">← 上一章</span><span class="nav-title">Ch 10: BLAST</span></a>
+<a href="variant-calling.html"><span class="nav-dir" data-zh="下一章 →" data-en="Next →">下一章 →</span><span class="nav-title">Ch 12: Variant Calling & VCF</span></a>
+</nav>
+</main>
+<footer class="site-footer">© Charlene — Python for Bioinformatics Interactive Tutorial</footer>
+<script src="i18n.js"></script>
+<script>
+window.addEventListener('scroll',()=>{const h=document.documentElement;document.getElementById('progressBar').style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight))*100+'%';});
+function switchTab(b,id){const p=b.closest('.code-tabs');p.querySelectorAll('.code-tab-btn').forEach(x=>x.classList.remove('active'));p.querySelectorAll('.code-tab-content').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById(id).classList.add('active');}
+document.querySelectorAll('.quiz-q').forEach(q=>{const ans=+q.dataset.answer;q.querySelectorAll('.quiz-opt').forEach(opt=>{opt.addEventListener('click',()=>{const idx=+opt.dataset.idx;q.querySelectorAll('.quiz-opt').forEach(o=>o.classList.remove('correct','wrong'));if(idx===ans)opt.classList.add('correct');else{opt.classList.add('wrong');q.querySelectorAll('.quiz-opt')[ans].classList.add('correct');}});});});
+</script>
+</body></html>

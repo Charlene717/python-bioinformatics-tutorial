@@ -1,0 +1,85 @@
+<!DOCTYPE html><html lang="zh-Hant"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Python for Bioinformatics — Interactive Tutorial</title>
+<meta name="description" content="從零開始的 Python 生物資訊互動式教程：環境設定、語法、NumPy/Pandas、Biopython、scanpy、空間轉錄組、scLLMs。">
+<link rel="stylesheet" href="styles.css"></head><body>
+<nav class="top-nav"><div class="top-nav-inner">
+  <a href="index.html" class="top-nav-brand"><span>🐍</span> <span data-zh="Python 生資教學" data-en="Python BioInfo Tutorial">Python 生資教學</span></a>
+  <ul class="top-nav-links">
+    <li><a href="setup.html">Setup</a></li>
+    <li><a href="syntax.html">Syntax</a></li>
+    <li><a href="paths.html">Paths</a></li>
+    <li><a href="functions.html">Func</a></li>
+    <li><a href="numpy.html">NumPy</a></li>
+    <li><a href="pandas.html">Pandas</a></li>
+    <li><a href="visualization.html">Viz</a></li>
+    <li><a href="biopython.html">Biopy</a></li>
+    <li><a href="fasta-fastq.html">FASTQ</a></li>
+    <li><a href="blast.html">BLAST</a></li>
+    <li><a href="pysam.html">pysam</a></li>
+    <li><a href="variant-calling.html">Variant</a></li>
+    <li><a href="scanpy-anndata.html">scanpy</a></li>
+    <li><a href="scrna-workflow.html">scRNA</a></li>
+    <li><a href="spatial.html">Spatial</a></li>
+    <li><a href="multi-omics.html">Multi</a></li>
+    <li><a href="scllms.html">scLLMs</a></li>
+    <li><a href="ai-bioinformatics.html">AI</a></li>
+  </ul>
+</div></nav>
+<header class="hub-hero"><div style="position:relative;z-index:1;">
+<h1 data-zh="Python 生物資訊互動式教學" data-en="Python for Bioinformatics — Interactive Tutorial">Python 生物資訊互動式教學</h1>
+<p data-lang="zh">從變數與資料夾路徑，到 scanpy、空間轉錄組、單細胞大型語言模型 (scLLMs) — 18 章從零起步、循序漸進的生資 Python 之旅，搭配互動模擬與雙語切換。</p>
+<p data-lang="en">From variables and folder paths to scanpy, spatial transcriptomics, and single-cell LLMs — 18 progressive chapters with interactive simulations and bilingual switching.</p>
+</div></header>
+
+<h2 class="hub-section-title"><span>01</span> <span data-zh="基礎篇：環境與語法" data-en="Foundations: Environment & Syntax">基礎篇：環境與語法</span></h2>
+<div class="hub-steps-grid">
+  <a href="setup.html" class="hub-card"><div class="hub-emoji">🛠️</div><span class="step-num">Ch 1</span><h3 data-zh="環境設定與安裝" data-en="Setup & Installation">環境設定與安裝</h3><p data-lang="zh">Anaconda / Miniconda、IDE 選擇 (VSCode, PyCharm, Jupyter)、虛擬環境、套件管理 (pip / conda)。</p><p data-lang="en">Anaconda / Miniconda, IDE choice (VSCode, PyCharm, Jupyter), virtual envs, package managers (pip / conda).</p></a>
+  <a href="syntax.html" class="hub-card"><div class="hub-emoji">📝</div><span class="step-num">Ch 2</span><h3 data-zh="Python 語法基礎" data-en="Python Syntax Basics">Python 語法基礎</h3><p data-lang="zh">變數與型別、字串/列表/字典、控制流 (if/for/while)、推導式、例外處理。</p><p data-lang="en">Variables and types, strings/lists/dicts, control flow (if/for/while), comprehensions, exceptions.</p></a>
+  <a href="paths.html" class="hub-card"><div class="hub-emoji">📁</div><span class="step-num">Ch 3</span><h3 data-zh="檔案路徑與 I/O" data-en="File Paths & I/O">檔案路徑與 I/O</h3><p data-lang="zh">絕對 vs 相對路徑、跨平台 (Windows/Mac/Linux) 差異、pathlib、CWD、open()、CSV/JSON 讀寫。</p><p data-lang="en">Absolute vs relative paths, cross-platform (Win/Mac/Linux) issues, pathlib, CWD, open(), CSV/JSON I/O.</p></a>
+  <a href="functions.html" class="hub-card"><div class="hub-emoji">🧱</div><span class="step-num">Ch 4</span><h3 data-zh="函式、類別、模組" data-en="Functions, Classes, Modules">函式、類別、模組</h3><p data-lang="zh">函式參數、預設值、*args/**kwargs、lambda、class 與物件、import 與專案結構。</p><p data-lang="en">Function parameters, defaults, *args/**kwargs, lambdas, classes & objects, imports & project layout.</p></a>
+</div>
+
+<h2 class="hub-section-title"><span>02</span> <span data-zh="資料科學三大套件" data-en="Data Science Stack">資料科學三大套件</span></h2>
+<div class="hub-steps-grid">
+  <a href="numpy.html" class="hub-card"><div class="hub-emoji">🔢</div><span class="step-num">Ch 5</span><h3 data-zh="NumPy 數值運算" data-en="NumPy">NumPy 數值運算</h3><p data-lang="zh">ndarray、shape/dtype、向量化運算、broadcasting、索引切片、隨機數與線性代數。</p><p data-lang="en">ndarray, shape/dtype, vectorized ops, broadcasting, indexing, random & linear algebra.</p></a>
+  <a href="pandas.html" class="hub-card"><div class="hub-emoji">🐼</div><span class="step-num">Ch 6</span><h3 data-zh="Pandas 資料框" data-en="Pandas DataFrames">Pandas 資料框</h3><p data-lang="zh">Series/DataFrame、讀寫 CSV/Excel、篩選、merge/join、groupby、缺失值處理。</p><p data-lang="en">Series/DataFrame, CSV/Excel I/O, filtering, merge/join, groupby, missing data.</p></a>
+  <a href="visualization.html" class="hub-card"><div class="hub-emoji">📊</div><span class="step-num">Ch 7</span><h3 data-zh="視覺化 (Matplotlib/Seaborn)" data-en="Visualization">視覺化 (Matplotlib/Seaborn)</h3><p data-lang="zh">Figure/Axes、線圖/散佈圖/熱圖、Seaborn 統計圖、儲存高解析論文圖。</p><p data-lang="en">Figure/Axes, line/scatter/heatmap, Seaborn stats plots, saving publication-quality figures.</p></a>
+</div>
+
+<h2 class="hub-section-title"><span>03</span> <span data-zh="序列分析" data-en="Sequence Analysis">序列分析</span></h2>
+<div class="hub-steps-grid">
+  <a href="biopython.html" class="hub-card"><div class="hub-emoji">🧬</div><span class="step-num">Ch 8</span><h3 data-zh="Biopython 基礎" data-en="Biopython">Biopython 基礎</h3><p data-lang="zh">Seq/SeqRecord 物件、轉錄/轉譯、反向互補、密碼子表、Entrez API 下載序列。</p><p data-lang="en">Seq/SeqRecord, transcription/translation, reverse complement, codon tables, Entrez downloads.</p></a>
+  <a href="fasta-fastq.html" class="hub-card"><div class="hub-emoji">📄</div><span class="step-num">Ch 9</span><h3 data-zh="FASTA / FASTQ 處理" data-en="FASTA / FASTQ">FASTA / FASTQ 處理</h3><p data-lang="zh">SeqIO 讀寫多序列檔案、批次解析、品質分數 (Phred)、定序資料 QC 與 trimming。</p><p data-lang="en">SeqIO multi-record I/O, batch parsing, quality scores (Phred), read QC & trimming.</p></a>
+  <a href="blast.html" class="hub-card"><div class="hub-emoji">🔍</div><span class="step-num">Ch 10</span><h3 data-zh="BLAST 與序列比對" data-en="BLAST & Alignment">BLAST 與序列比對</h3><p data-lang="zh">本機 vs 線上 BLAST、E-value / bitscore 解讀、pairwise2、多序列比對 (MUSCLE/MAFFT)。</p><p data-lang="en">Local vs online BLAST, E-value / bitscore, pairwise2, MSA (MUSCLE/MAFFT).</p></a>
+</div>
+
+<h2 class="hub-section-title"><span>04</span> <span data-zh="高通量定序 (NGS)" data-en="Next-Gen Sequencing">高通量定序 (NGS)</span></h2>
+<div class="hub-steps-grid">
+  <a href="pysam.html" class="hub-card"><div class="hub-emoji">📦</div><span class="step-num">Ch 11</span><h3 data-zh="pysam 與 SAM/BAM" data-en="pysam & SAM/BAM">pysam 與 SAM/BAM</h3><p data-lang="zh">SAM 格式欄位、CIGAR 字串、AlignmentFile 操作、Index、區段擷取、coverage 計算。</p><p data-lang="en">SAM fields, CIGAR strings, AlignmentFile, indexing, region extraction, coverage.</p></a>
+  <a href="variant-calling.html" class="hub-card"><div class="hub-emoji">🧪</div><span class="step-num">Ch 12</span><h3 data-zh="變異呼叫 & VCF" data-en="Variant Calling & VCF">變異呼叫 & VCF</h3><p data-lang="zh">SNP/Indel 概念、bcftools/GATK 工作流、用 pysam/cyvcf2 解析 VCF、過濾與註解。</p><p data-lang="en">SNP/Indel concepts, bcftools/GATK workflows, parsing VCF with pysam/cyvcf2, filtering & annotation.</p></a>
+</div>
+
+<h2 class="hub-section-title"><span>05</span> <span data-zh="單細胞與空間轉錄組" data-en="Single-Cell & Spatial">單細胞與空間轉錄組</span></h2>
+<div class="hub-steps-grid">
+  <a href="scanpy-anndata.html" class="hub-card"><div class="hub-emoji">🔬</div><span class="step-num">Ch 13</span><h3 data-zh="AnnData 與 scanpy 入門" data-en="AnnData & scanpy">AnnData 與 scanpy 入門</h3><p data-lang="zh">AnnData 結構 (X / obs / var / obsm)、scanpy API 慣例、讀入 10X、儲存 h5ad。</p><p data-lang="en">AnnData structure (X / obs / var / obsm), scanpy conventions, reading 10X, saving h5ad.</p></a>
+  <a href="scrna-workflow.html" class="hub-card"><div class="hub-emoji">🧫</div><span class="step-num">Ch 14</span><h3 data-zh="scRNA-seq 完整流程" data-en="scRNA-seq Workflow">scRNA-seq 完整流程</h3><p data-lang="zh">QC → Normalize → HVG → PCA → Neighbors → UMAP → Leiden → Marker → 註解，scanpy 一條龍。</p><p data-lang="en">QC → Normalize → HVG → PCA → Neighbors → UMAP → Leiden → Markers → Annotation in scanpy.</p></a>
+  <a href="spatial.html" class="hub-card"><div class="hub-emoji">🗺️</div><span class="step-num">Ch 15</span><h3 data-zh="空間轉錄組 (Squidpy)" data-en="Spatial Transcriptomics">空間轉錄組 (Squidpy)</h3><p data-lang="zh">Visium / Xenium / MERFISH、空間鄰居圖、空間自相關 (Moran's I)、SVG 偵測、影像對齊。</p><p data-lang="en">Visium / Xenium / MERFISH, spatial neighbors, Moran's I, SVG detection, image registration.</p></a>
+</div>
+
+<h2 class="hub-section-title"><span>06</span> <span data-zh="進階 AI 與多體學" data-en="Advanced AI & Multi-omics">進階 AI 與多體學</span></h2>
+<div class="hub-steps-grid">
+  <a href="multi-omics.html" class="hub-card"><div class="hub-emoji">🔗</div><span class="step-num">Ch 16</span><h3 data-zh="多體學整合" data-en="Multi-omics Integration">多體學整合</h3><p data-lang="zh">CITE-seq、Multiome (RNA + ATAC)、MOFA、totalVI / multiVI、垂直 vs 水平整合。</p><p data-lang="en">CITE-seq, Multiome (RNA + ATAC), MOFA, totalVI / multiVI, vertical vs horizontal integration.</p></a>
+  <a href="scllms.html" class="hub-card"><div class="hub-emoji">🧠</div><span class="step-num">Ch 17</span><h3 data-zh="單細胞大型語言模型 (scLLMs)" data-en="Single-Cell LLMs">單細胞 LLMs</h3><p data-lang="zh">scGPT、Geneformer、scFoundation：transformer 在 scRNA-seq 的應用、zero-shot embeddings、fine-tuning。</p><p data-lang="en">scGPT, Geneformer, scFoundation: transformers for scRNA-seq, zero-shot embeddings, fine-tuning.</p></a>
+  <a href="ai-bioinformatics.html" class="hub-card"><div class="hub-emoji">🤖</div><span class="step-num">Ch 18</span><h3 data-zh="AI 在生物資訊應用" data-en="AI in Bioinformatics">AI 在生物資訊應用</h3><p data-lang="zh">AlphaFold、PyTorch 入門、CNN/Transformer 預測序列功能、HuggingFace 生資模型。</p><p data-lang="en">AlphaFold, PyTorch primer, CNN/Transformer for sequence function, HuggingFace bio models.</p></a>
+</div>
+
+<h2 class="hub-section-title"><span>07</span> <span data-zh="延伸學習" data-en="Further Learning">延伸學習</span></h2>
+<div class="hub-steps-grid">
+  <a href="../references/index.html" class="hub-card"><div class="hub-emoji">📚</div><span class="step-num">References</span><h3 data-zh="參考資料佐證" data-en="References &amp; Citations">參考資料佐證</h3><p data-lang="zh">18 章主題的學術論文、官方文件、Best Practices 綜述與工具庫整理，附 DOI 連結與時效注記。</p><p data-lang="en">Academic papers, official docs, best-practice reviews, and tool repos for all 18 topics — with DOI links and errata notes.</p></a>
+  <a href="../python-quiz/index.html" class="hub-card"><div class="hub-emoji">📝</div><span class="step-num">Quiz</span><h3 data-zh="互動式考題（144 題）" data-en="Interactive Quiz (144 Questions)">互動式考題</h3><p data-lang="zh">涵蓋 18 章的單選、多選、是非題，內建錯題複習、隨機練習與多使用者進度。</p><p data-lang="en">Single-choice, multi-select, and true/false questions covering all 18 chapters, with wrong-answer review, random practice, and multi-user progress tracking.</p></a>
+</div>
+
+<div style="height:60px"></div>
+<footer class="site-footer">© Charlene — Python for Bioinformatics Interactive Tutorial</footer>
+<script src="i18n.js"></script>
+</body></html>

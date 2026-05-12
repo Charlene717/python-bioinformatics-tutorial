@@ -1,0 +1,240 @@
+<!DOCTYPE html><html lang="zh-Hant"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Ch 12: 變異呼叫 & VCF — Python BioInfo Tutorial</title>
+<link rel="stylesheet" href="styles.css">
+</head><body>
+<nav class="top-nav"><div class="top-nav-inner">
+  <a href="index.html" class="top-nav-brand"><span>🐍</span> <span data-zh="Python 生資教學" data-en="Python BioInfo Tutorial">Python 生資教學</span></a>
+  <ul class="top-nav-links">
+    <li><a href="setup.html">Setup</a></li><li><a href="syntax.html">Syntax</a></li><li><a href="paths.html">Paths</a></li><li><a href="functions.html">Func</a></li><li><a href="numpy.html">NumPy</a></li><li><a href="pandas.html">Pandas</a></li><li><a href="visualization.html">Viz</a></li><li><a href="biopython.html">Biopy</a></li><li><a href="fasta-fastq.html">FASTQ</a></li><li><a href="blast.html">BLAST</a></li><li><a href="pysam.html">pysam</a></li><li><a href="variant-calling.html" class="active">Variant</a></li><li><a href="scanpy-anndata.html">scanpy</a></li><li><a href="scrna-workflow.html">scRNA</a></li><li><a href="spatial.html">Spatial</a></li><li><a href="multi-omics.html">Multi</a></li><li><a href="scllms.html">scLLMs</a></li><li><a href="ai-bioinformatics.html">AI</a></li>
+  </ul>
+</div></nav>
+<div class="progress-bar-container"><div class="progress-bar" id="progressBar"></div></div>
+<header class="page-hero"><div class="step-badge">CHAPTER 12 / 18</div>
+<h1 data-zh="變異呼叫 & VCF" data-en="Variant Calling & VCF">變異呼叫 & VCF</h1>
+<p class="subtitle" data-lang="zh">從 BAM 到突變列表 — pipeline 概念、VCF 格式、用 cyvcf2 / pysam 解析。</p>
+<p class="subtitle" data-lang="en">From BAM to a list of mutations — pipeline overview, VCF format, parsing with cyvcf2 / pysam.</p>
+</header>
+<main class="content-wrap">
+
+<section class="section">
+<div class="section-label" data-zh="概念" data-en="OVERVIEW">概念</div>
+<h2 data-zh="一、什麼是變異？SNP / Indel / SV / CNV" data-en="I. What is a variant? SNP / Indel / SV / CNV">一、變異的種類</h2>
+<table class="comp-table">
+<thead><tr><th data-zh="類型" data-en="Type">類型</th><th data-zh="意義" data-en="Meaning">意義</th><th data-zh="呼叫工具" data-en="Caller">呼叫工具</th></tr></thead>
+<tbody>
+<tr><td><strong>SNP / SNV</strong></td><td data-lang="zh">單個 base 的取代（最常見）</td><td>GATK HaplotypeCaller, bcftools, DeepVariant</td>
+<td data-lang="en">Single-base substitution (most common)</td></tr>
+<tr><td><strong>Indel</strong></td><td data-lang="zh">小段（&lt;50 bp）插入或刪除</td><td>GATK, bcftools, FreeBayes</td>
+<td data-lang="en">Small (&lt;50 bp) insertion or deletion</td></tr>
+<tr><td><strong>SV</strong></td><td data-lang="zh">結構變異（&gt;50 bp 重排、倒置、易位）</td><td>Manta, DELLY, Lumpy</td>
+<td data-lang="en">Structural variant (&gt;50 bp rearrangement)</td></tr>
+<tr><td><strong>CNV</strong></td><td data-lang="zh">複本數變異（區段倍增 / 缺失）</td><td>CNVkit, GATK CNV, Control-FREEC</td>
+<td data-lang="en">Copy number variant</td></tr>
+<tr><td><strong>Somatic mutation</strong></td><td data-lang="zh">癌細胞特有的突變（vs 正常組織）</td><td>Mutect2, Strelka, VarScan</td>
+<td data-lang="en">Tumor-specific mutation (vs normal tissue)</td></tr>
+</tbody></table>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="工作流" data-en="WORKFLOW">工作流</div>
+<h2 data-zh="二、germline SNP/Indel 標準工作流 (GATK Best Practices)" data-en="II. Germline SNP/Indel pipeline (GATK Best Practices)">二、標準工作流</h2>
+<div class="workflow">
+  <div class="workflow-step" data-step="1"><h4 data-zh="原始資料 QC" data-en="Raw QC">原始資料 QC</h4>
+    <div data-lang="zh"><p>FastQC + fastp / trim_galore 修剪 adapter、低品質端。</p></div>
+    <div data-lang="en"><p>FastQC + fastp / trim_galore for adapter and low-Q trimming.</p></div></div>
+  <div class="workflow-step" data-step="2"><h4 data-zh="比對到參考基因組" data-en="Align to reference">比對到參考基因組</h4>
+    <div data-lang="zh"><p>BWA-MEM2 (DNA) 對到 hg38。輸出 BAM。</p></div>
+    <div data-lang="en"><p>BWA-MEM2 (DNA) → hg38 → BAM.</p></div></div>
+  <div class="workflow-step" data-step="3"><h4 data-zh="處理 BAM" data-en="Process BAM">處理 BAM</h4>
+    <div data-lang="zh"><p>排序 (samtools sort) → 標記重複 (Picard MarkDuplicates) → BQSR (GATK BaseRecalibrator)。</p></div>
+    <div data-lang="en"><p>Sort (samtools sort) → MarkDuplicates (Picard) → BQSR (GATK BaseRecalibrator).</p></div></div>
+  <div class="workflow-step" data-step="4"><h4 data-zh="呼叫變異" data-en="Call variants">呼叫變異</h4>
+    <div data-lang="zh"><p>GATK HaplotypeCaller 產生 g.VCF；多樣本聯合 → GenomicsDB → GenotypeGVCFs → cohort VCF。</p></div>
+    <div data-lang="en"><p>GATK HaplotypeCaller → g.VCF; joint calling → GenomicsDB → GenotypeGVCFs → cohort VCF.</p></div></div>
+  <div class="workflow-step" data-step="5"><h4 data-zh="過濾與註解" data-en="Filter & annotate">過濾與註解</h4>
+    <div data-lang="zh"><p>VQSR / hard filters → VCF 過濾 → SnpEff / VEP / ANNOVAR 加上基因/影響註解。</p></div>
+    <div data-lang="en"><p>VQSR / hard filters → SnpEff / VEP / ANNOVAR for gene/effect annotation.</p></div></div>
+  <div class="workflow-step" data-step="6"><h4 data-zh="下游分析" data-en="Downstream">下游分析</h4>
+    <div data-lang="zh"><p>篩選稀有變異、查 ClinVar / OMIM / gnomAD、做 GWAS / 連鎖分析。</p></div>
+    <div data-lang="en"><p>Filter rare variants, cross-check ClinVar / OMIM / gnomAD, GWAS / linkage.</p></div></div>
+</div>
+<div class="callout tip"><span class="callout-icon">💡</span><div>
+<span data-lang="zh">完整 pipeline 通常用 <strong>Snakemake</strong> 或 <strong>Nextflow</strong> 串起來。經典開源範例：<code>nf-core/sarek</code>（癌症 / germline）、<code>snakemake-workflows/dna-seq-varlociraptor</code>。</span>
+<span data-lang="en">Full pipelines are typically orchestrated with <strong>Snakemake</strong> or <strong>Nextflow</strong>. Open-source classics: <code>nf-core/sarek</code> (cancer / germline) and <code>snakemake-workflows/dna-seq-varlociraptor</code>.</span>
+</div></div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="VCF 格式" data-en="VCF FORMAT">VCF 格式</div>
+<h2 data-zh="三、VCF 檔案結構" data-en="III. VCF file structure">三、VCF 檔案結構</h2>
+<div class="path-box">
+##fileformat=VCFv4.2
+##INFO=&lt;ID=DP,Number=1,Type=Integer,Description="Total depth"&gt;
+##FORMAT=&lt;ID=GT,Number=1,Type=String,Description="Genotype"&gt;
+##FORMAT=&lt;ID=AD,Number=R,Type=Integer,Description="Allelic depths"&gt;
+#CHROM  POS    ID         REF  ALT  QUAL  FILTER  INFO          FORMAT      Sample1
+chr1    14653  rs76343445  C    T    99    PASS    DP=53;AF=0.5  GT:AD:DP   0/1:25,28:53
+chr1    14671  .           G    A    63    PASS    DP=42         GT:AD:DP   1/1:0,42:42
+</div>
+<div data-lang="zh">
+<ul>
+<li><strong>標頭 (##)：</strong>定義 INFO/FORMAT/FILTER 欄位的意義。</li>
+<li><strong>主表 8+ 欄：</strong>CHROM/POS/ID/REF/ALT/QUAL/FILTER/INFO 後面接 FORMAT + 每個樣本的值。</li>
+<li><strong>GT (基因型)：</strong> 0/0=純合野生、0/1=異合、1/1=純合突變、1/2=兩種不同 ALT。</li>
+<li><strong>AD (allelic depth)：</strong>每個 allele 的 read 數。</li>
+<li><strong>DP：</strong>該位點總深度。</li>
+</ul>
+</div>
+<div data-lang="en">
+<ul>
+<li><strong>Header (##):</strong> defines INFO/FORMAT/FILTER fields.</li>
+<li><strong>Body 8+ columns:</strong> CHROM/POS/ID/REF/ALT/QUAL/FILTER/INFO + FORMAT + per-sample values.</li>
+<li><strong>GT (genotype):</strong> 0/0 hom ref, 0/1 het, 1/1 hom alt, 1/2 two different ALTs.</li>
+<li><strong>AD (allelic depth):</strong> reads supporting each allele.</li>
+<li><strong>DP:</strong> total depth at the site.</li>
+</ul>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="解析" data-en="PARSING">解析</div>
+<h2 data-zh="四、用 Python 解析 VCF" data-en="IV. Parsing VCF in Python">四、用 Python 解析</h2>
+<div class="code-tabs"><div class="code-tab-btns">
+<button class="code-tab-btn active" onclick="switchTab(this,'v1')">cyvcf2 (推薦)</button>
+<button class="code-tab-btn" onclick="switchTab(this,'v2')">pysam.VariantFile</button>
+<button class="code-tab-btn" onclick="switchTab(this,'v3')">pandas 直讀</button>
+</div>
+<div class="code-tab-content active" id="v1"><pre><span class="comment"># cyvcf2: 純 C 寫，速度比 PyVCF 快 50 倍以上</span>
+<span class="comment"># cyvcf2: written in C, &gt;50× faster than PyVCF</span>
+<span class="comment"># conda install -c bioconda cyvcf2</span>
+
+<span class="kw">from</span> cyvcf2 <span class="kw">import</span> VCF
+
+vcf = VCF(<span class="str">"data/raw/cohort.vcf.gz"</span>)
+<span class="builtin">print</span>(vcf.samples)               <span class="comment"># 樣本列表</span>
+
+<span class="kw">for</span> v <span class="kw">in</span> vcf:
+    <span class="builtin">print</span>(v.CHROM, v.POS, v.REF, v.ALT,
+          v.QUAL, v.INFO.get(<span class="str">"DP"</span>),
+          v.gt_types)              <span class="comment"># 0=hom ref, 1=het, 2=hom alt, 3=missing</span>
+    <span class="kw">break</span>
+
+<span class="comment"># 抓特定區段 (要有 .tbi index)</span>
+<span class="kw">for</span> v <span class="kw">in</span> vcf(<span class="str">"chr17:7670000-7690000"</span>):
+    <span class="builtin">print</span>(v.POS, v.gt_quals)
+
+<span class="comment"># 過濾：只保留高品質、PASS、QD 高的</span>
+filtered = (v <span class="kw">for</span> v <span class="kw">in</span> vcf
+            <span class="kw">if</span> v.FILTER <span class="kw">is</span> <span class="kw">None</span>           <span class="comment"># 'PASS'</span>
+            <span class="kw">and</span> v.QUAL &gt; <span class="num">30</span>
+            <span class="kw">and</span> v.INFO.get(<span class="str">"QD"</span>, <span class="num">0</span>) &gt; <span class="num">2</span>)</pre></div>
+<div class="code-tab-content" id="v2"><pre><span class="kw">import</span> pysam
+
+vcf = pysam.VariantFile(<span class="str">"data/raw/cohort.vcf.gz"</span>)
+<span class="kw">for</span> rec <span class="kw">in</span> vcf:
+    <span class="builtin">print</span>(rec.contig, rec.pos, rec.ref, rec.alts,
+          rec.qual, <span class="builtin">dict</span>(rec.info))
+    <span class="kw">for</span> sample, sv <span class="kw">in</span> rec.samples.items():
+        <span class="builtin">print</span>(sample, sv[<span class="str">"GT"</span>], sv.get(<span class="str">"AD"</span>), sv.get(<span class="str">"DP"</span>))
+    <span class="kw">break</span>
+
+<span class="comment"># 區段查詢</span>
+<span class="kw">for</span> rec <span class="kw">in</span> vcf.fetch(<span class="str">"chr17"</span>, <span class="num">7670000</span>, <span class="num">7690000</span>):
+    <span class="builtin">print</span>(rec.pos)</pre></div>
+<div class="code-tab-content" id="v3"><pre><span class="comment"># 簡單分析時，把 VCF 用 pandas 讀 (略過 ## header)</span>
+<span class="kw">import</span> pandas <span class="kw">as</span> pd
+
+<span class="comment"># 找出 #CHROM 那行的位置</span>
+<span class="kw">def</span> read_vcf(fp):
+    <span class="kw">with</span> <span class="builtin">open</span>(fp) <span class="kw">as</span> f:
+        <span class="kw">for</span> i, line <span class="kw">in</span> <span class="builtin">enumerate</span>(f):
+            <span class="kw">if</span> line.startswith(<span class="str">"#CHROM"</span>):
+                header = line.lstrip(<span class="str">"#"</span>).strip().split(<span class="str">"\t"</span>)
+                <span class="kw">return</span> pd.read_csv(fp, sep=<span class="str">"\t"</span>, comment=<span class="str">"#"</span>,
+                                   names=header)
+df = read_vcf(<span class="str">"sample.vcf"</span>)
+<span class="builtin">print</span>(df[[<span class="str">"CHROM"</span>,<span class="str">"POS"</span>,<span class="str">"REF"</span>,<span class="str">"ALT"</span>,<span class="str">"QUAL"</span>,<span class="str">"FILTER"</span>]].head())</pre></div>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="實戰範例" data-en="WORKED EXAMPLE">實戰範例</div>
+<h2 data-zh="五、實戰：找 TP53 上的稀有有害變異" data-en="V. Worked example: rare deleterious variants in TP53">五、找 TP53 稀有有害變異</h2>
+<div class="code-tabs"><div class="code-tab-btns"><button class="code-tab-btn active" onclick="switchTab(this,'w1')">完整流程</button></div>
+<div class="code-tab-content active" id="w1"><pre><span class="kw">from</span> cyvcf2 <span class="kw">import</span> VCF
+<span class="kw">import</span> pandas <span class="kw">as</span> pd
+
+vcf = VCF(<span class="str">"data/raw/cohort.snpeff.vcf.gz"</span>)
+
+rows = []
+<span class="kw">for</span> v <span class="kw">in</span> vcf(<span class="str">"chr17:7670000-7690000"</span>):              <span class="comment"># TP53 region</span>
+    <span class="kw">if</span> v.FILTER <span class="kw">is</span> <span class="kw">not</span> <span class="kw">None</span>: <span class="kw">continue</span>            <span class="comment"># 只留 PASS</span>
+    af = v.INFO.get(<span class="str">"AF"</span>) <span class="kw">or</span> v.INFO.get(<span class="str">"gnomAD_AF"</span>) <span class="kw">or</span> <span class="num">0</span>
+    <span class="kw">if</span> af <span class="kw">and</span> af &gt; <span class="num">0.01</span>: <span class="kw">continue</span>                    <span class="comment"># 排除常見變異</span>
+
+    ann = v.INFO.get(<span class="str">"ANN"</span>, <span class="str">""</span>).split(<span class="str">","</span>)
+    <span class="kw">if</span> <span class="kw">not</span> ann: <span class="kw">continue</span>
+    fields = ann[<span class="num">0</span>].split(<span class="str">"|"</span>)
+    impact = fields[<span class="num">2</span>] <span class="kw">if</span> <span class="builtin">len</span>(fields) &gt; <span class="num">2</span> <span class="kw">else</span> <span class="str">""</span>
+    gene   = fields[<span class="num">3</span>] <span class="kw">if</span> <span class="builtin">len</span>(fields) &gt; <span class="num">3</span> <span class="kw">else</span> <span class="str">""</span>
+    effect = fields[<span class="num">1</span>] <span class="kw">if</span> <span class="builtin">len</span>(fields) &gt; <span class="num">1</span> <span class="kw">else</span> <span class="str">""</span>
+
+    <span class="kw">if</span> impact <span class="kw">in</span> (<span class="str">"HIGH"</span>, <span class="str">"MODERATE"</span>) <span class="kw">and</span> gene == <span class="str">"TP53"</span>:
+        rows.append({
+            <span class="str">"chr"</span>: v.CHROM, <span class="str">"pos"</span>: v.POS,
+            <span class="str">"ref"</span>: v.REF, <span class="str">"alt"</span>: <span class="str">","</span>.join(v.ALT),
+            <span class="str">"effect"</span>: effect, <span class="str">"impact"</span>: impact, <span class="str">"AF"</span>: af,
+            <span class="str">"qual"</span>: v.QUAL,
+        })
+
+df = pd.DataFrame(rows).sort_values(<span class="str">"pos"</span>)
+df.to_csv(<span class="str">"results/tp53_rare.tsv"</span>, sep=<span class="str">"\t"</span>, index=<span class="kw">False</span>)
+<span class="builtin">print</span>(df)</pre></div>
+</div>
+</section>
+
+<!-- Quiz -->
+<section class="quiz-section">
+<h3>📝 <span data-zh="自我檢測" data-en="Self-Check">自我檢測</span></h3>
+<div class="quiz-q" data-answer="2">
+<p data-lang="zh">1. VCF 的 <code>GT=0/1</code> 代表？</p>
+<p data-lang="en">1. <code>GT=0/1</code> in VCF means:</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. 純合野生</span><span data-lang="en">A. Homozygous reference</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. 純合突變</span><span data-lang="en">B. Homozygous alternate</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. 異合（一條 ref、一條 alt）</span><span data-lang="en">C. Heterozygous (one ref, one alt)</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. 缺失值</span><span data-lang="en">D. Missing</span></div>
+</div></div>
+<div class="quiz-q" data-answer="1">
+<p data-lang="zh">2. 處理大型 cohort VCF (千樣本級) 想最快速跑完，最佳選擇？</p>
+<p data-lang="en">2. For a cohort-scale VCF (thousands of samples), fastest parser?</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span><strong>PyVCF</strong></span></div>
+<div class="quiz-opt" data-idx="1"><span><strong>cyvcf2</strong>（C 編譯，速度極快）</span></div>
+<div class="quiz-opt" data-idx="2"><span><strong>純 csv 模組逐行讀</strong></span></div>
+<div class="quiz-opt" data-idx="3"><span><strong>Excel</strong></span></div>
+</div></div>
+<div class="quiz-q" data-answer="0">
+<p data-lang="zh">3. GATK Best Practices 在 BAM 處理階段做的關鍵步驟是？</p>
+<p data-lang="en">3. The key BAM-processing step in GATK Best Practices is:</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. 標記重複 (MarkDuplicates) + BQSR</span><span data-lang="en">A. MarkDuplicates + BQSR</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. 把 BAM 轉回 FASTQ</span><span data-lang="en">B. Convert BAM back to FASTQ</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. 再 BLAST 一次</span><span data-lang="en">C. Re-run BLAST</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. 跳過排序直接 call</span><span data-lang="en">D. Skip sorting</span></div>
+</div></div>
+</section>
+
+<nav class="page-nav">
+<a href="pysam.html"><span class="nav-dir" data-zh="← 上一章" data-en="← Prev">← 上一章</span><span class="nav-title">Ch 11: pysam</span></a>
+<a href="scanpy-anndata.html"><span class="nav-dir" data-zh="下一章 →" data-en="Next →">下一章 →</span><span class="nav-title">Ch 13: AnnData & scanpy</span></a>
+</nav>
+</main>
+<footer class="site-footer">© Charlene — Python for Bioinformatics Interactive Tutorial</footer>
+<script src="i18n.js"></script>
+<script>
+window.addEventListener('scroll',()=>{const h=document.documentElement;document.getElementById('progressBar').style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight))*100+'%';});
+function switchTab(b,id){const p=b.closest('.code-tabs');p.querySelectorAll('.code-tab-btn').forEach(x=>x.classList.remove('active'));p.querySelectorAll('.code-tab-content').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById(id).classList.add('active');}
+document.querySelectorAll('.quiz-q').forEach(q=>{const ans=+q.dataset.answer;q.querySelectorAll('.quiz-opt').forEach(opt=>{opt.addEventListener('click',()=>{const idx=+opt.dataset.idx;q.querySelectorAll('.quiz-opt').forEach(o=>o.classList.remove('correct','wrong'));if(idx===ans)opt.classList.add('correct');else{opt.classList.add('wrong');q.querySelectorAll('.quiz-opt')[ans].classList.add('correct');}});});});
+</script>
+</body></html>

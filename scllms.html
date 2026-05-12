@@ -1,0 +1,264 @@
+<!DOCTYPE html><html lang="zh-Hant"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Ch 17: 單細胞大型語言模型 (scLLMs) — Python BioInfo Tutorial</title>
+<link rel="stylesheet" href="styles.css">
+</head><body>
+<nav class="top-nav"><div class="top-nav-inner">
+  <a href="index.html" class="top-nav-brand"><span>🐍</span> <span data-zh="Python 生資教學" data-en="Python BioInfo Tutorial">Python 生資教學</span></a>
+  <ul class="top-nav-links">
+    <li><a href="setup.html">Setup</a></li><li><a href="syntax.html">Syntax</a></li><li><a href="paths.html">Paths</a></li><li><a href="functions.html">Func</a></li><li><a href="numpy.html">NumPy</a></li><li><a href="pandas.html">Pandas</a></li><li><a href="visualization.html">Viz</a></li><li><a href="biopython.html">Biopy</a></li><li><a href="fasta-fastq.html">FASTQ</a></li><li><a href="blast.html">BLAST</a></li><li><a href="pysam.html">pysam</a></li><li><a href="variant-calling.html">Variant</a></li><li><a href="scanpy-anndata.html">scanpy</a></li><li><a href="scrna-workflow.html">scRNA</a></li><li><a href="spatial.html">Spatial</a></li><li><a href="multi-omics.html">Multi</a></li><li><a href="scllms.html" class="active">scLLMs</a></li><li><a href="ai-bioinformatics.html">AI</a></li>
+  </ul>
+</div></nav>
+<div class="progress-bar-container"><div class="progress-bar" id="progressBar"></div></div>
+<header class="page-hero"><div class="step-badge">CHAPTER 17 / 18</div>
+<h1 data-zh="單細胞大型語言模型 (scLLMs)" data-en="Single-Cell LLMs (scLLMs)">單細胞 LLMs</h1>
+<p class="subtitle" data-lang="zh">把每個 cell 看成一個「句子」、每個基因看成「token」— transformer 應用到 scRNA-seq 的革命。</p>
+<p class="subtitle" data-lang="en">Treat each cell as a "sentence" and each gene as a "token" — the transformer revolution in scRNA-seq.</p>
+</header>
+<main class="content-wrap">
+
+<section class="section">
+<div class="section-label" data-zh="觀念" data-en="OVERVIEW">觀念</div>
+<h2 data-zh="一、什麼是 scLLM？跟 ChatGPT 有什麼關係？" data-en="I. What is a scLLM? Is it related to ChatGPT?">一、scLLM 與 ChatGPT</h2>
+<div data-lang="zh">
+<p>大型語言模型（LLM, Large Language Model）的本質：給一段「token 序列」，學出有意義的 embedding。</p>
+<p>scLLM 的核心類比：</p>
+<ul>
+<li>一個 <strong>cell</strong> = 一個「句子」</li>
+<li>一個 <strong>gene</strong> = 一個「字 (token)」</li>
+<li>表達量 = 該字的「強度」/ rank</li>
+<li>模型用 transformer 學出每個 cell 的 latent embedding</li>
+</ul>
+<p>訓練時用大量公開 scRNA-seq 資料（千萬到億級 cells），學出泛用的「細胞語言模型」。下游任務只要 fine-tune 一下，就能做：</p>
+<ul>
+<li>跨資料集 batch 整合（zero-shot）</li>
+<li>細胞類型自動註解</li>
+<li>基因擾動效應預測（perturb-seq）</li>
+<li>缺失值填補 (imputation)</li>
+<li>跨物種對應</li>
+</ul>
+</div>
+<div data-lang="en">
+<p>An LLM's core idea: given a sequence of tokens, learn meaningful embeddings.</p>
+<p>scLLM analogy:</p>
+<ul>
+<li>One <strong>cell</strong> = one "sentence"</li>
+<li>One <strong>gene</strong> = one "token"</li>
+<li>Expression = token strength / rank</li>
+<li>A transformer learns a latent embedding per cell</li>
+</ul>
+<p>Trained on tens-to-hundreds of millions of public scRNA-seq cells, the model learns a general "cell language model." With light fine-tuning it can do:</p>
+<ul>
+<li>Cross-dataset batch integration (zero-shot)</li>
+<li>Automatic cell-type annotation</li>
+<li>Predict gene perturbation effects (perturb-seq)</li>
+<li>Imputation</li>
+<li>Cross-species mapping</li>
+</ul>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="主流模型" data-en="MAJOR MODELS">主流模型</div>
+<h2 data-zh="二、目前主流的 scLLMs 比較" data-en="II. Current major scLLMs compared">二、主流模型比較</h2>
+<table class="comp-table">
+<thead><tr><th data-zh="模型" data-en="Model">模型</th><th data-zh="作者 / 年" data-en="Author / Year">作者 / 年</th><th data-zh="訓練資料" data-en="Training data">訓練資料</th><th data-zh="特色" data-en="Notable feature">特色</th></tr></thead>
+<tbody>
+<tr><td><strong>Geneformer</strong></td><td>Theodoris et al., 2023</td><td>30M cells</td><td data-lang="zh">用「基因排名」(rank value encoding) 表示一個 cell；context-aware fine-tuning</td>
+<td data-lang="en">Encodes a cell as a gene rank order; context-aware fine-tuning</td></tr>
+<tr><td><strong>scGPT</strong></td><td>Cui et al., Nature Methods 2024</td><td>33M cells (multi-omics)</td><td data-lang="zh">generative transformer；支援 perturb 預測、多 omics、整合</td>
+<td data-lang="en">Generative transformer; supports perturbation prediction, multi-omics, integration</td></tr>
+<tr><td><strong>scFoundation</strong></td><td>Hao et al., 2023</td><td>50M cells</td><td data-lang="zh">read depth-aware；非對稱 encoder/decoder；強在 small samples</td>
+<td data-lang="en">Read-depth aware; asymmetric encoder/decoder; strong on small samples</td></tr>
+<tr><td><strong>scBERT</strong></td><td>Yang et al., 2022</td><td>1M cells</td><td data-lang="zh">先驅之一，Performer 架構處理長序列</td>
+<td data-lang="en">Early pioneer, Performer architecture for long sequences</td></tr>
+<tr><td><strong>UCE (Universal Cell Embeddings)</strong></td><td>Rosen et al., 2023</td><td>36M cells, 8 種物種</td><td data-lang="zh">跨物種統一 embedding</td>
+<td data-lang="en">Cross-species unified embedding</td></tr>
+<tr><td><strong>CellPLM</strong></td><td>Wen et al., 2024</td><td>11M cells</td><td data-lang="zh">同時建模 cell 與空間鄰居（cell-as-sentence + ligand-receptor）</td>
+<td data-lang="en">Models cells and spatial neighbors jointly</td></tr>
+</tbody></table>
+<div class="callout warn"><span class="callout-icon">⚠️</span><div>
+<span data-lang="zh"><strong>實事求是：</strong>2024–2025 的多份基準測試（Kedzierska et al., Boiarsky et al.）發現，目前 scLLMs 在 <strong>zero-shot</strong> 整合上仍常輸給傳統方法 (scVI, Harmony)。優勢主要在 fine-tune 後的 perturbation prediction 與少樣本場景。請當工具用，不要當神。</span>
+<span data-lang="en"><strong>Reality check:</strong> 2024-2025 benchmarks (Kedzierska et al., Boiarsky et al.) show scLLMs often <strong>underperform classical methods</strong> (scVI, Harmony) in zero-shot integration. Their edge appears in fine-tuned perturbation prediction and low-sample regimes. Treat them as tools, not oracles.</span>
+</div></div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="實作 scGPT" data-en="HANDS-ON scGPT">實作</div>
+<h2 data-zh="三、用 scGPT 取得 zero-shot embedding" data-en="III. Get zero-shot embeddings with scGPT">三、scGPT zero-shot 實作</h2>
+<div class="path-box">
+<span class="comment"># GPU 環境，安裝 / GPU env, install</span>
+<span class="label">$</span> pip install scgpt
+<span class="comment"># 下載預訓練模型 / Download pretrained checkpoint</span>
+<span class="comment"># https://github.com/bowang-lab/scGPT 提供多個 checkpoint (whole-human, ...)</span>
+</div>
+<div class="code-tabs"><div class="code-tab-btns">
+<button class="code-tab-btn active" onclick="switchTab(this,'g1')">zero-shot 整合</button>
+<button class="code-tab-btn" onclick="switchTab(this,'g2')">細胞註解 fine-tune</button>
+<button class="code-tab-btn" onclick="switchTab(this,'g3')">擾動預測</button>
+</div>
+<div class="code-tab-content active" id="g1"><pre><span class="kw">import</span> scanpy <span class="kw">as</span> sc
+<span class="kw">import</span> torch
+<span class="kw">from</span> scgpt.tasks <span class="kw">import</span> embed_data
+<span class="kw">from</span> pathlib <span class="kw">import</span> Path
+
+adata = sc.read_h5ad(<span class="str">"data/processed/multi_sample.h5ad"</span>)
+
+<span class="comment"># scGPT 預訓練 checkpoint 路徑</span>
+model_dir = Path(<span class="str">"models/scgpt_human"</span>)
+
+<span class="comment"># 一行得到 cell embedding</span>
+adata = embed_data(
+    adata,
+    model_dir=model_dir,
+    gene_col=<span class="str">"gene_name"</span>,
+    obs_to_save=[<span class="str">"batch"</span>, <span class="str">"cell_type"</span>],
+    batch_size=<span class="num">64</span>,
+    device=<span class="str">"cuda"</span> <span class="kw">if</span> torch.cuda.is_available() <span class="kw">else</span> <span class="str">"cpu"</span>,
+)
+<span class="comment"># scGPT embedding 存到 adata.obsm["X_scGPT"]</span>
+
+<span class="comment"># 拿來做整合 UMAP</span>
+sc.pp.neighbors(adata, use_rep=<span class="str">"X_scGPT"</span>)
+sc.tl.umap(adata)
+sc.pl.umap(adata, color=[<span class="str">"batch"</span>,<span class="str">"cell_type"</span>])
+
+<span class="comment"># 跟 scVI / Harmony 比一比，看能不能更好移除 batch</span></pre></div>
+<div class="code-tab-content" id="g2"><pre><span class="comment"># 用 scGPT fine-tune 做細胞註解</span>
+<span class="comment"># Fine-tune scGPT for cell-type classification</span>
+<span class="kw">from</span> scgpt.tasks <span class="kw">import</span> annotate_data
+
+<span class="comment"># 準備：reference (有標籤) + query (沒標籤)</span>
+ref = sc.read_h5ad(<span class="str">"reference.h5ad"</span>)         <span class="comment"># 有 cell_type 欄</span>
+query = sc.read_h5ad(<span class="str">"query.h5ad"</span>)             <span class="comment"># 待標注</span>
+
+predictions = annotate_data(
+    train_data=ref,
+    test_data=query,
+    cell_type_col=<span class="str">"cell_type"</span>,
+    model_dir=model_dir,
+    n_epochs=<span class="num">10</span>,
+    lr=<span class="num">1e-4</span>,
+)
+query.obs[<span class="str">"predicted_cell_type"</span>] = predictions
+sc.pl.umap(query, color=<span class="str">"predicted_cell_type"</span>)</pre></div>
+<div class="code-tab-content" id="g3"><pre><span class="comment"># 預測 CRISPR 擾動後的表達變化</span>
+<span class="comment"># Predict expression changes after CRISPR perturbation</span>
+<span class="kw">from</span> scgpt.tasks <span class="kw">import</span> perturb_predict
+
+<span class="comment"># Norman 2019 perturb-seq 資料：1 cell × 1-2 gene 敲降</span>
+adata = sc.read_h5ad(<span class="str">"data/perturb_train.h5ad"</span>)
+<span class="comment"># adata.obs["perturbation"] = "TP53,MYC"  例如同時敲降兩個基因</span>
+
+model = perturb_predict.train(
+    adata, model_dir=model_dir,
+    n_epochs=<span class="num">15</span>, batch_size=<span class="num">32</span>,
+)
+
+<span class="comment"># 預測「同時敲降 TP53+MYC」會怎樣</span>
+predicted = model.predict_perturbation([<span class="str">"TP53"</span>, <span class="str">"MYC"</span>])
+<span class="comment"># predicted: np.ndarray (n_genes,) — 預測表達變化</span></pre></div>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="Geneformer" data-en="GENEFORMER">Geneformer</div>
+<h2 data-zh="四、Geneformer：rank-based 表示法" data-en="IV. Geneformer: rank-based representation">四、Geneformer 工作流</h2>
+<div class="code-tabs"><div class="code-tab-btns"><button class="code-tab-btn active" onclick="switchTab(this,'gf1')">embedding</button></div>
+<div class="code-tab-content active" id="gf1"><pre><span class="comment"># pip install git+https://huggingface.co/ctheodoris/Geneformer</span>
+<span class="kw">from</span> geneformer <span class="kw">import</span> EmbExtractor, TranscriptomeTokenizer
+
+<span class="comment"># 1. Tokenize 你的 AnnData → Geneformer 格式</span>
+tk = TranscriptomeTokenizer(custom_attr_name_dict={<span class="str">"cell_type"</span>:<span class="str">"cell_type"</span>})
+tk.tokenize_data(<span class="str">"data/processed/"</span>, <span class="str">"output_dir/"</span>, <span class="str">"my_data"</span>, file_format=<span class="str">"h5ad"</span>)
+
+<span class="comment"># 2. 取出 embedding</span>
+extractor = EmbExtractor(model_type=<span class="str">"CellClassifier"</span>,
+                         num_classes=<span class="num">0</span>,
+                         emb_mode=<span class="str">"cell"</span>,
+                         emb_layer=<span class="num">0</span>,
+                         max_ncells=<span class="num">10000</span>)
+embs = extractor.extract_embs(
+    model_directory=<span class="str">"Geneformer/model/"</span>,
+    input_data_file=<span class="str">"output_dir/my_data.dataset/"</span>,
+    output_directory=<span class="str">"results/geneformer/"</span>,
+    output_prefix=<span class="str">"embs"</span>,
+)
+
+<span class="comment"># 3. 把 embedding 接回 AnnData 做下游</span>
+<span class="kw">import</span> anndata <span class="kw">as</span> ad
+adata.obsm[<span class="str">"X_geneformer"</span>] = embs.values
+sc.pp.neighbors(adata, use_rep=<span class="str">"X_geneformer"</span>)
+sc.tl.umap(adata)</pre></div>
+</div>
+</section>
+
+<!-- Decision tree -->
+<section class="section">
+<div class="section-label" data-zh="決策" data-en="WHEN TO USE">決策</div>
+<h2 data-zh="五、什麼時候才該用 scLLM？" data-en="V. When to actually reach for a scLLM">五、什麼時候用 scLLM</h2>
+<div class="decision-tree">
+<h4>🌳 <span data-zh="scLLM 適用情境" data-en="When scLLMs help">scLLM 何時派上用場</span></h4>
+<div data-lang="zh">
+<div class="dt-node"><span class="dt-q">✅</span><div>樣本量很少 (&lt;1000 cells) → 預訓練模型可借力大型語料</div></div>
+<div class="dt-node"><span class="dt-q">✅</span><div>要做 perturbation prediction（合成擾動效果）</div></div>
+<div class="dt-node"><span class="dt-q">✅</span><div>跨物種 / 跨組織映射 (UCE)</div></div>
+<div class="dt-node"><span class="dt-q">❌</span><div>標準 scRNA-seq 整合 → 還是 scVI / Harmony 較穩</div></div>
+<div class="dt-node"><span class="dt-q">❌</span><div>嚴格 reproducibility 場景 → 模型權重會更新、結果不穩定</div></div>
+<div class="dt-node"><span class="dt-q">⚠️</span><div>沒有 GPU → 跑會很慢，建議用 CPU 子集測試</div></div>
+</div>
+<div data-lang="en">
+<div class="dt-node"><span class="dt-q">✅</span><div>Very small datasets (&lt;1000 cells) → leverage the pretrained corpus</div></div>
+<div class="dt-node"><span class="dt-q">✅</span><div>Perturbation prediction (synthesizing knockout effects)</div></div>
+<div class="dt-node"><span class="dt-q">✅</span><div>Cross-species / cross-tissue mapping (UCE)</div></div>
+<div class="dt-node"><span class="dt-q">❌</span><div>Standard integration → scVI / Harmony usually wins</div></div>
+<div class="dt-node"><span class="dt-q">❌</span><div>Strict reproducibility — checkpoints can update; results may shift</div></div>
+<div class="dt-node"><span class="dt-q">⚠️</span><div>No GPU → it's slow; subset for CPU testing</div></div>
+</div>
+</div>
+</section>
+
+<!-- Quiz -->
+<section class="quiz-section">
+<h3>📝 <span data-zh="自我檢測" data-en="Self-Check">自我檢測</span></h3>
+<div class="quiz-q" data-answer="2">
+<p data-lang="zh">1. scLLM 把 cell 對應到 NLP 中的什麼？</p>
+<p data-lang="en">1. In a scLLM, a cell maps to which NLP concept?</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. 一個字</span><span data-lang="en">A. A word</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. 一個段落</span><span data-lang="en">B. A paragraph</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. 一個句子；基因是字 (token)</span><span data-lang="en">C. A sentence; genes are words (tokens)</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. 整個語料庫</span><span data-lang="en">D. The whole corpus</span></div>
+</div></div>
+<div class="quiz-q" data-answer="1">
+<p data-lang="zh">2. 2024-2025 基準測試顯示 scLLMs 在哪個任務目前較弱？</p>
+<p data-lang="en">2. 2024-2025 benchmarks suggest scLLMs are currently weakest at:</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. 擾動預測</span><span data-lang="en">A. Perturbation prediction</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. 標準 zero-shot batch 整合（常輸給 scVI / Harmony）</span><span data-lang="en">B. Standard zero-shot batch integration (often loses to scVI / Harmony)</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. 跨物種對應</span><span data-lang="en">C. Cross-species mapping</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. 細胞註解</span><span data-lang="en">D. Cell annotation</span></div>
+</div></div>
+<div class="quiz-q" data-answer="0">
+<p data-lang="zh">3. Geneformer 的核心輸入表示法是？</p>
+<p data-lang="en">3. Geneformer's core input representation is:</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. 基因表達量的 rank 順序（rank value encoding）</span><span data-lang="en">A. Gene expression rank order (rank value encoding)</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. 連續表達量的浮點向量</span><span data-lang="en">B. Continuous expression float vector</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. 染色質開放度</span><span data-lang="en">C. Chromatin accessibility</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. cell-cell distance matrix</span><span data-lang="en">D. cell-cell distance matrix</span></div>
+</div></div>
+</section>
+
+<nav class="page-nav">
+<a href="multi-omics.html"><span class="nav-dir" data-zh="← 上一章" data-en="← Prev">← 上一章</span><span class="nav-title">Ch 16: Multi-omics</span></a>
+<a href="ai-bioinformatics.html"><span class="nav-dir" data-zh="下一章 →" data-en="Next →">下一章 →</span><span class="nav-title">Ch 18: AI in Bioinformatics</span></a>
+</nav>
+</main>
+<footer class="site-footer">© Charlene — Python for Bioinformatics Interactive Tutorial</footer>
+<script src="i18n.js"></script>
+<script>
+window.addEventListener('scroll',()=>{const h=document.documentElement;document.getElementById('progressBar').style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight))*100+'%';});
+function switchTab(b,id){const p=b.closest('.code-tabs');p.querySelectorAll('.code-tab-btn').forEach(x=>x.classList.remove('active'));p.querySelectorAll('.code-tab-content').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById(id).classList.add('active');}
+document.querySelectorAll('.quiz-q').forEach(q=>{const ans=+q.dataset.answer;q.querySelectorAll('.quiz-opt').forEach(opt=>{opt.addEventListener('click',()=>{const idx=+opt.dataset.idx;q.querySelectorAll('.quiz-opt').forEach(o=>o.classList.remove('correct','wrong'));if(idx===ans)opt.classList.add('correct');else{opt.classList.add('wrong');q.querySelectorAll('.quiz-opt')[ans].classList.add('correct');}});});});
+</script>
+</body></html>

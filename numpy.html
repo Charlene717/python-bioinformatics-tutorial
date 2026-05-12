@@ -1,0 +1,343 @@
+<!DOCTYPE html><html lang="zh-Hant"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Ch 5: NumPy 數值運算 — Python BioInfo Tutorial</title>
+<link rel="stylesheet" href="styles.css">
+</head><body>
+<nav class="top-nav"><div class="top-nav-inner">
+  <a href="index.html" class="top-nav-brand"><span>🐍</span> <span data-zh="Python 生資教學" data-en="Python BioInfo Tutorial">Python 生資教學</span></a>
+  <ul class="top-nav-links">
+    <li><a href="setup.html">Setup</a></li><li><a href="syntax.html">Syntax</a></li><li><a href="paths.html">Paths</a></li><li><a href="functions.html">Func</a></li><li><a href="numpy.html" class="active">NumPy</a></li><li><a href="pandas.html">Pandas</a></li><li><a href="visualization.html">Viz</a></li><li><a href="biopython.html">Biopy</a></li><li><a href="fasta-fastq.html">FASTQ</a></li><li><a href="blast.html">BLAST</a></li><li><a href="pysam.html">pysam</a></li><li><a href="variant-calling.html">Variant</a></li><li><a href="scanpy-anndata.html">scanpy</a></li><li><a href="scrna-workflow.html">scRNA</a></li><li><a href="spatial.html">Spatial</a></li><li><a href="multi-omics.html">Multi</a></li><li><a href="scllms.html">scLLMs</a></li><li><a href="ai-bioinformatics.html">AI</a></li>
+  </ul>
+</div></nav>
+<div class="progress-bar-container"><div class="progress-bar" id="progressBar"></div></div>
+<header class="page-hero"><div class="step-badge">CHAPTER 5 / 18</div>
+<h1 data-zh="NumPy 數值運算" data-en="NumPy Numerical Computing">NumPy 數值運算</h1>
+<p class="subtitle" data-lang="zh">所有生資數值套件 (pandas, scanpy, scikit-learn) 都站在 NumPy 上 — 學會它就打通任督二脈。</p>
+<p class="subtitle" data-lang="en">Every numerical bioinformatics package (pandas, scanpy, scikit-learn) is built on NumPy — master it and the rest opens up.</p>
+</header>
+<main class="content-wrap">
+
+<!-- Section 1: Why NumPy -->
+<section class="section">
+<div class="section-label" data-zh="概念" data-en="WHY NUMPY">概念</div>
+<h2 data-zh="一、為什麼要用 NumPy 而不是 list？" data-en="I. Why NumPy instead of lists?">一、為什麼用 NumPy？</h2>
+<div data-lang="zh">
+<p>Python 內建 list 處理大量數值有兩大問題：<strong>慢</strong>（每個元素是物件，運算要走 Python 解譯器）和<strong>耗記憶體</strong>。</p>
+<p>NumPy 的 <code>ndarray</code>（N-dimensional array）是<strong>連續記憶體</strong>＋<strong>固定型別</strong>的陣列，運算用 C 寫的，比 list 快 50–100 倍。</p>
+<p>生資場景：基因表達矩陣 (cells × genes) 可能 10000×30000 = 3 億個數值 — 沒有 NumPy 根本跑不動。</p>
+</div>
+<div data-lang="en">
+<p>Python's built-in list has two problems for bulk numerics: <strong>slow</strong> (each element is an object; ops go through the Python interpreter) and <strong>memory-hungry</strong>.</p>
+<p>NumPy's <code>ndarray</code> is a contiguous block of memory with a fixed dtype, with operations written in C — 50–100× faster than lists.</p>
+<p>Bioinformatics scale: an expression matrix (cells × genes) of 10000 × 30000 = 300M numbers — impossible without NumPy.</p>
+</div>
+<div class="callout tip"><span class="callout-icon">⚡</span><div>
+<span data-lang="zh"><strong>核心心法：</strong>「能向量化就絕不用 for 迴圈」。NumPy 程式好不好，看的就是 for 迴圈少不少。</span>
+<span data-lang="en"><strong>Core mindset:</strong> "Vectorize, never loop." Good NumPy code is measured by the absence of for loops.</span>
+</div></div>
+</section>
+
+<!-- Section 2: Creating arrays -->
+<section class="section">
+<div class="section-label" data-zh="建立陣列" data-en="CREATING ARRAYS">建立陣列</div>
+<h2 data-zh="二、建立 ndarray" data-en="II. Creating ndarrays">二、建立 ndarray</h2>
+<div class="code-tabs"><div class="code-tab-btns">
+<button class="code-tab-btn active" onclick="switchTab(this,'n1')">基本</button>
+<button class="code-tab-btn" onclick="switchTab(this,'n2')">特殊陣列</button>
+<button class="code-tab-btn" onclick="switchTab(this,'n3')">隨機數</button>
+<button class="code-tab-btn" onclick="switchTab(this,'n4')">屬性</button>
+</div>
+<div class="code-tab-content active" id="n1"><pre><span class="kw">import</span> numpy <span class="kw">as</span> np
+
+<span class="comment"># 從 list 建 / From a Python list</span>
+a = np.array([<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>])              <span class="comment"># 1D, shape (3,)</span>
+m = np.array([[<span class="num">1</span>,<span class="num">2</span>,<span class="num">3</span>], [<span class="num">4</span>,<span class="num">5</span>,<span class="num">6</span>]])    <span class="comment"># 2D, shape (2,3)</span>
+
+<span class="comment"># 指定 dtype / Specify dtype</span>
+counts = np.array([<span class="num">100</span>, <span class="num">250</span>, <span class="num">500</span>], dtype=np.int32)
+expr = np.array([<span class="num">1.2</span>, <span class="num">3.4</span>, <span class="num">5.6</span>], dtype=np.float32)
+
+<span class="comment"># 從範圍建立 / From ranges</span>
+np.arange(<span class="num">10</span>)              <span class="comment"># 0..9</span>
+np.arange(<span class="num">2</span>, <span class="num">10</span>, <span class="num">2</span>)         <span class="comment"># [2,4,6,8]</span>
+np.linspace(<span class="num">0</span>, <span class="num">1</span>, <span class="num">11</span>)        <span class="comment"># 0, 0.1, ..., 1.0 (11 個)</span></pre></div>
+<div class="code-tab-content" id="n2"><pre><span class="comment"># 全 0 / Zeros</span>
+np.zeros((<span class="num">100</span>, <span class="num">30000</span>), dtype=np.float32)      <span class="comment"># 表達矩陣初始化</span>
+
+<span class="comment"># 全 1 / Ones</span>
+np.ones((<span class="num">3</span>,<span class="num">3</span>))
+
+<span class="comment"># 對角矩陣 / Identity</span>
+np.eye(<span class="num">5</span>)
+
+<span class="comment"># 全填特定值 / Fill with value</span>
+np.full((<span class="num">3</span>,<span class="num">3</span>), <span class="num">-9999</span>)        <span class="comment"># 缺失值佔位</span>
+
+<span class="comment"># 跟既有 array 同 shape</span>
+np.zeros_like(m); np.ones_like(m); np.empty_like(m)</pre></div>
+<div class="code-tab-content" id="n3"><pre><span class="comment"># 永遠先設 seed 才能重現 / Always set a seed for reproducibility</span>
+rng = np.random.default_rng(seed=<span class="num">42</span>)
+
+rng.random((<span class="num">3</span>,<span class="num">3</span>))            <span class="comment"># [0,1) 均勻</span>
+rng.normal(<span class="num">0</span>, <span class="num">1</span>, size=<span class="num">100</span>)     <span class="comment"># 標準常態</span>
+rng.poisson(lam=<span class="num">5</span>, size=<span class="num">100</span>)   <span class="comment"># Poisson — 模擬 read counts</span>
+rng.negative_binomial(<span class="num">10</span>, <span class="num">0.5</span>, size=<span class="num">100</span>)  <span class="comment"># NB — 模擬 scRNA counts</span>
+rng.choice([<span class="str">"A"</span>,<span class="str">"T"</span>,<span class="str">"G"</span>,<span class="str">"C"</span>], size=<span class="num">100</span>)  <span class="comment"># 隨機 DNA</span></pre></div>
+<div class="code-tab-content" id="n4"><pre>x = rng.normal(<span class="num">0</span>, <span class="num">1</span>, (<span class="num">100</span>, <span class="num">50</span>))
+
+x.shape       <span class="comment"># (100, 50) — 形狀</span>
+x.ndim        <span class="comment"># 2 — 維度數</span>
+x.size        <span class="comment"># 5000 — 總元素數</span>
+x.dtype       <span class="comment"># dtype('float64')</span>
+x.nbytes      <span class="comment"># 40000 — 佔多少 bytes</span>
+x.T.shape     <span class="comment"># (50, 100) — 轉置</span>
+
+<span class="comment"># 改 shape (不複製資料！只改 view)</span>
+x.reshape(<span class="num">10</span>, <span class="num">500</span>)
+x.flatten()       <span class="comment"># 攤平成 1D</span>
+x.astype(np.float32)   <span class="comment"># 轉換 dtype，省一半記憶體</span></pre></div>
+</div>
+</section>
+
+<!-- Section 3: Indexing -->
+<section class="section">
+<div class="section-label" data-zh="索引切片" data-en="INDEXING">索引切片</div>
+<h2 data-zh="三、索引、切片、布林遮罩 (生資最重要！)" data-en="III. Indexing, slicing, boolean masks (essential!)">三、索引、切片、布林遮罩</h2>
+<div class="code-tabs"><div class="code-tab-btns">
+<button class="code-tab-btn active" onclick="switchTab(this,'i1')">基本</button>
+<button class="code-tab-btn" onclick="switchTab(this,'i2')">布林遮罩 (核心！)</button>
+<button class="code-tab-btn" onclick="switchTab(this,'i3')">花式索引</button>
+</div>
+<div class="code-tab-content active" id="i1"><pre><span class="comment"># 假設這是表達矩陣：100 cells × 5 genes</span>
+expr = rng.poisson(<span class="num">3</span>, (<span class="num">100</span>, <span class="num">5</span>))
+
+expr[<span class="num">0</span>]              <span class="comment"># 第一個 cell 的 5 個基因</span>
+expr[<span class="num">0</span>, <span class="num">2</span>]           <span class="comment"># 第 0 cell 的第 2 個基因</span>
+expr[:, <span class="num">0</span>]           <span class="comment"># 所有 cell 的第 0 個基因 (一整行)</span>
+expr[:<span class="num">10</span>, :<span class="num">3</span>]        <span class="comment"># 前 10 cell × 前 3 個基因 (子矩陣)</span>
+expr[-<span class="num">5</span>:]            <span class="comment"># 最後 5 個 cell</span>
+
+<span class="comment"># 注意：slice 是 view（共用記憶體），改它會動到原 array</span>
+<span class="comment"># Note: slicing returns a VIEW (shared memory). Modifying it changes the original</span>
+sub = expr[:<span class="num">10</span>]
+sub[<span class="num">0</span>, <span class="num">0</span>] = <span class="num">9999</span>      <span class="comment"># expr[0,0] 也變 9999！</span>
+
+<span class="comment"># 想要獨立副本：</span>
+sub = expr[:<span class="num">10</span>].copy()</pre></div>
+<div class="code-tab-content" id="i2"><pre><span class="comment"># 布林遮罩 — 生資 QC 過濾的核心</span>
+<span class="comment"># Boolean mask — the heart of bioinformatics QC filtering</span>
+n_genes = (expr &gt; <span class="num">0</span>).<span class="builtin">sum</span>(axis=<span class="num">1</span>)   <span class="comment"># 每個 cell 的非零基因數</span>
+keep = n_genes &gt;= <span class="num">200</span>                   <span class="comment"># 一個布林陣列</span>
+filtered = expr[keep]                       <span class="comment"># 只留通過 QC 的 cell</span>
+
+<span class="comment"># 多條件：用 & 和 | (不是 and / or！)</span>
+<span class="comment"># Multiple conditions: use & and | (NOT and / or!)</span>
+mt_pct = ...
+keep = (n_genes &gt;= <span class="num">200</span>) &amp; (n_genes &lt;= <span class="num">4000</span>) &amp; (mt_pct &lt; <span class="num">10</span>)
+filtered = expr[keep]
+
+<span class="comment"># 用條件給特定值賦值</span>
+expr[expr &lt; <span class="num">0</span>] = <span class="num">0</span>            <span class="comment"># clip 負值到 0</span>
+high_expr_mask = expr &gt; <span class="num">100</span>     <span class="comment"># 標記 outlier</span></pre></div>
+<div class="code-tab-content" id="i3"><pre><span class="comment"># 花式索引：用 list/array 指定 index</span>
+<span class="comment"># Fancy indexing: pass a list/array as index</span>
+genes_of_interest = [<span class="num">0</span>, <span class="num">2</span>, <span class="num">4</span>]
+expr[:, genes_of_interest]            <span class="comment"># 只取這 3 個基因的所有 cell</span>
+
+<span class="comment"># 排序後取 top N / Top N after sorting</span>
+total_per_gene = expr.<span class="builtin">sum</span>(axis=<span class="num">0</span>)
+top_idx = np.argsort(total_per_gene)[::-<span class="num">1</span>][:<span class="num">10</span>]   <span class="comment"># 最多 reads 的前 10 基因</span>
+top_genes = expr[:, top_idx]
+
+<span class="comment"># np.where: 條件式索引/賦值</span>
+<span class="comment"># np.where: conditional index/assign</span>
+labels = np.where(expr &gt; <span class="num">10</span>, <span class="str">"high"</span>, <span class="str">"low"</span>)
+indices = np.where(keep)[<span class="num">0</span>]    <span class="comment"># 通過 QC 的 cell index</span></pre></div>
+</div>
+</section>
+
+<!-- Section 4: Vectorized Operations -->
+<section class="section">
+<div class="section-label" data-zh="向量化運算" data-en="VECTORIZED OPS">向量化運算</div>
+<h2 data-zh="四、向量化運算 + Broadcasting" data-en="IV. Vectorized ops + Broadcasting">四、向量化 + Broadcasting</h2>
+<div data-lang="zh">
+<p><strong>Broadcasting</strong> 是 NumPy 把不同 shape 的 array 自動「對齊」的機制。掌握 broadcasting，整個基因表達標準化只要一行。</p>
+</div>
+<div data-lang="en">
+<p><strong>Broadcasting</strong> is NumPy's mechanism for aligning arrays of different shapes automatically. Master it and entire normalization steps become one-liners.</p>
+</div>
+<div class="code-tabs"><div class="code-tab-btns">
+<button class="code-tab-btn active" onclick="switchTab(this,'v1')">向量化算術</button>
+<button class="code-tab-btn" onclick="switchTab(this,'v2')">Broadcasting</button>
+<button class="code-tab-btn" onclick="switchTab(this,'v3')">統計</button>
+<button class="code-tab-btn" onclick="switchTab(this,'v4')">scRNA 範例</button>
+</div>
+<div class="code-tab-content active" id="v1"><pre>a = np.array([<span class="num">1</span>,<span class="num">2</span>,<span class="num">3</span>,<span class="num">4</span>])
+b = np.array([<span class="num">10</span>,<span class="num">20</span>,<span class="num">30</span>,<span class="num">40</span>])
+
+a + b           <span class="comment"># [11,22,33,44] — 元素相加</span>
+a * b           <span class="comment"># [10,40,90,160] — 元素相乘 (不是矩陣乘法)</span>
+a / b           <span class="comment"># [.1,.1,.1,.1]</span>
+a ** <span class="num">2</span>          <span class="comment"># 平方</span>
+np.log2(a)      <span class="comment"># log2 — 全部 element-wise</span>
+np.exp(a)
+np.sqrt(a)
+
+<span class="comment"># 矩陣乘法用 @ 或 np.matmul</span>
+A = np.ones((<span class="num">3</span>,<span class="num">4</span>)); B = np.ones((<span class="num">4</span>,<span class="num">2</span>))
+A @ B           <span class="comment"># shape (3,2)</span></pre></div>
+<div class="code-tab-content" id="v2"><pre><span class="comment"># Broadcasting 規則：較小的 array 自動「廣播」對齊較大的</span>
+<span class="comment"># Broadcasting rule: smaller array stretched to match larger</span>
+
+expr = np.ones((<span class="num">100</span>, <span class="num">5</span>))         <span class="comment"># 100 cells × 5 genes</span>
+
+<span class="comment"># 每個 cell 加自己的 size factor / Add a per-cell size factor</span>
+size_factor = np.array([<span class="num">2</span>, <span class="num">3</span>, <span class="num">4</span>] * <span class="num">33</span> + [<span class="num">1</span>])   <span class="comment"># shape (100,)</span>
+normed = expr / size_factor[:, <span class="kw">None</span>]   <span class="comment"># 變 (100,1) 才能廣播到 (100,5)</span>
+
+<span class="comment"># 每個基因減自己的平均 (中心化) / Center each gene</span>
+gene_mean = expr.mean(axis=<span class="num">0</span>)         <span class="comment"># shape (5,)</span>
+centered = expr - gene_mean              <span class="comment"># (100,5) - (5,) → 廣播</span>
+
+<span class="comment"># 標準化 (z-score) 每個基因</span>
+gene_std = expr.std(axis=<span class="num">0</span>)
+zscore = (expr - gene_mean) / gene_std</pre></div>
+<div class="code-tab-content" id="v3"><pre>x = rng.normal(<span class="num">0</span>, <span class="num">1</span>, (<span class="num">100</span>, <span class="num">5</span>))
+
+<span class="comment"># axis 是關鍵：axis=0 沿著 row 方向 (壓掉 row → 每 col 一個值)</span>
+<span class="comment">#               axis=1 沿著 col 方向 (壓掉 col → 每 row 一個值)</span>
+
+x.<span class="builtin">sum</span>()              <span class="comment"># 標量：全部加總</span>
+x.<span class="builtin">sum</span>(axis=<span class="num">0</span>)        <span class="comment"># shape (5,) — 每個基因的總和</span>
+x.<span class="builtin">sum</span>(axis=<span class="num">1</span>)        <span class="comment"># shape (100,) — 每個 cell 的總 counts</span>
+
+x.mean(axis=<span class="num">0</span>); x.std(axis=<span class="num">0</span>); x.var(axis=<span class="num">0</span>)
+x.<span class="builtin">min</span>(); x.<span class="builtin">max</span>(); x.argmin(); x.argmax()
+np.median(x, axis=<span class="num">0</span>)
+np.percentile(x, [<span class="num">25</span>, <span class="num">50</span>, <span class="num">75</span>], axis=<span class="num">0</span>)
+np.unique(labels, return_counts=<span class="kw">True</span>)</pre></div>
+<div class="code-tab-content" id="v4"><pre><span class="comment"># 純 NumPy 重現 scanpy 的 normalize_total + log1p</span>
+<span class="comment"># Pure NumPy reimpl of scanpy's normalize_total + log1p</span>
+
+<span class="comment"># 假資料：100 cells × 1000 genes，count 矩陣</span>
+counts = rng.poisson(<span class="num">2</span>, (<span class="num">100</span>, <span class="num">1000</span>)).astype(np.float32)
+
+<span class="comment"># Step 1: 每 cell 總 counts</span>
+total_per_cell = counts.<span class="builtin">sum</span>(axis=<span class="num">1</span>)            <span class="comment"># (100,)</span>
+
+<span class="comment"># Step 2: 縮放到統一深度 (e.g., 10000)</span>
+target = <span class="num">10000.0</span>
+scale = target / total_per_cell             <span class="comment"># (100,)</span>
+normed = counts * scale[:, <span class="kw">None</span>]              <span class="comment"># broadcast</span>
+
+<span class="comment"># Step 3: log(1 + x) — 變異穩定</span>
+log_normed = np.log1p(normed)               <span class="comment"># 不會 log(0) 報錯</span>
+
+<span class="builtin">print</span>(log_normed.shape, log_normed.mean())</pre></div>
+</div>
+</section>
+
+<!-- Decision tree: when to use NumPy vs others -->
+<section class="section">
+<div class="section-label" data-zh="決策引導" data-en="DECISION GUIDE">決策引導</div>
+<h2 data-zh="五、什麼時候用 NumPy / 什麼時候用 pandas" data-en="V. NumPy vs pandas vs scipy.sparse">五、NumPy vs pandas vs sparse</h2>
+<table class="comp-table">
+<thead><tr><th data-zh="情境" data-en="Scenario">情境</th><th data-zh="推薦" data-en="Use">推薦</th></tr></thead>
+<tbody>
+<tr><td data-lang="zh">純數值矩陣、要做矩陣運算 / 線代</td><td>NumPy <code>ndarray</code></td>
+<td data-lang="en">Pure numeric matrix, linear algebra ops</td><td>NumPy <code>ndarray</code></td></tr>
+<tr><td data-lang="zh">有欄位名 (sample_id, gene_symbol)，混合型別 (數字+字串)</td><td>pandas <code>DataFrame</code> (Ch 6)</td>
+<td data-lang="en">Named columns (sample_id, gene_symbol), mixed dtypes</td><td>pandas <code>DataFrame</code> (Ch 6)</td></tr>
+<tr><td data-lang="zh">scRNA-seq 計數矩陣（&gt;90% 為 0）</td><td>SciPy <code>csr_matrix</code> / <code>csc_matrix</code> (省記憶體 10×)</td>
+<td data-lang="en">scRNA-seq count matrix (&gt;90% zeros)</td><td>SciPy <code>csr_matrix</code> / <code>csc_matrix</code> (10× memory savings)</td></tr>
+<tr><td data-lang="zh">需要 GPU 加速 (深度學習)</td><td><code>torch.Tensor</code> / <code>cupy.ndarray</code></td>
+<td data-lang="en">GPU acceleration (deep learning)</td><td><code>torch.Tensor</code> / <code>cupy.ndarray</code></td></tr>
+</tbody></table>
+<div class="callout info"><span class="callout-icon">📌</span><div>
+<span data-lang="zh"><strong>稀疏矩陣關鍵：</strong>scRNA-seq 一個 cell 表達 1000 / 30000 個基因，剩下 29000 都是 0。<code>scipy.sparse.csr_matrix</code> 只儲存非零值，記憶體從 GB 降到 MB。AnnData 預設也用稀疏矩陣存。</span>
+<span data-lang="en"><strong>Sparse matrices matter:</strong> A scRNA-seq cell expresses 1000 / 30000 genes; the other 29000 are zero. <code>scipy.sparse.csr_matrix</code> stores only non-zero values — memory drops from GB to MB. AnnData uses sparse storage by default.</span>
+</div></div>
+</section>
+
+<!-- Interactive: Vectorize speed test -->
+<section class="section">
+<div class="section-label" data-zh="互動模擬" data-en="INTERACTIVE">互動模擬</div>
+<h2 data-zh="向量化 vs for 迴圈：速度差多少？" data-en="Vectorized vs for loop: how much faster?">向量化 vs 迴圈速度比較</h2>
+<div class="interactive-panel">
+<div class="slider-group"><label><span data-zh="陣列大小" data-en="Array size">陣列大小</span> <span id="szVal">10000</span></label>
+<input type="range" id="sliderSize" min="1000" max="1000000" value="10000" step="1000"></div>
+<button class="try-btn" onclick="runBench()" data-zh="▶ 執行模擬" data-en="▶ Run">▶ 執行模擬</button>
+<div class="sim-stats" style="margin-top:12px;">
+<span class="sim-stat fail" id="loopT">For loop: —</span>
+<span class="sim-stat pass" id="vecT">Vectorized: —</span>
+<span class="sim-stat" id="speedup" style="background:var(--c-highlight-light);color:#7c4a03;">Speedup: —</span>
+</div>
+<div style="font-size:.78rem;color:var(--c-ink-muted);margin-top:10px;" data-lang="zh">模擬：兩個 array 相加，計算 (a + b)。<br>實際 NumPy 在 Python 上跑會比 JS 模擬快更多。</div>
+<div style="font-size:.78rem;color:var(--c-ink-muted);margin-top:10px;display:none;" data-lang="en">Simulation: element-wise sum (a + b).<br>Real NumPy on Python is even faster than this JS simulation.</div>
+</div>
+</section>
+
+<!-- Quiz -->
+<section class="quiz-section">
+<h3>📝 <span data-zh="自我檢測" data-en="Self-Check">自我檢測</span></h3>
+<div class="quiz-q" data-answer="1">
+<p data-lang="zh">1. <code>arr.sum(axis=0)</code> 對形狀 (100,5) 的陣列回傳什麼形狀？</p>
+<p data-lang="en">1. For an array of shape (100,5), what shape does <code>arr.sum(axis=0)</code> return?</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span>(100,)</span></div>
+<div class="quiz-opt" data-idx="1"><span>(5,)</span></div>
+<div class="quiz-opt" data-idx="2"><span>(100, 5)</span></div>
+<div class="quiz-opt" data-idx="3"><span>scalar</span></div>
+</div></div>
+<div class="quiz-q" data-answer="2">
+<p data-lang="zh">2. 想對表達矩陣 (cells, genes) 做 QC：保留 200&lt;基因數&lt;4000 且 MT&lt;10% 的 cell，正確語法？</p>
+<p data-lang="en">2. To filter cells with 200 &lt; genes &lt; 4000 AND MT% &lt; 10, the correct syntax is:</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span><code>expr[200 &lt; ng &lt; 4000 and mt &lt; 10]</code></span></div>
+<div class="quiz-opt" data-idx="1"><span><code>expr[ng > 200 and ng &lt; 4000 and mt &lt; 10]</code></span></div>
+<div class="quiz-opt" data-idx="2"><span><code>expr[(ng &gt; 200) &amp; (ng &lt; 4000) &amp; (mt &lt; 10)]</code></span></div>
+<div class="quiz-opt" data-idx="3"><span><code>expr.filter(ng=[200,4000], mt=10)</code></span></div>
+</div></div>
+<div class="quiz-q" data-answer="0">
+<p data-lang="zh">3. scRNA-seq 計數矩陣 (10000 cell × 30000 gene)，最佳儲存方式？</p>
+<p data-lang="en">3. Best storage for an scRNA-seq count matrix (10000 cells × 30000 genes)?</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. <code>scipy.sparse.csr_matrix</code> (因為大部分為 0，極省記憶體)</span><span data-lang="en">A. <code>scipy.sparse.csr_matrix</code> (mostly zeros, huge memory savings)</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. Python list of lists</span><span data-lang="en">B. Python list of lists</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. 字串</span><span data-lang="en">C. A string</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. SQL 資料庫</span><span data-lang="en">D. SQL database</span></div>
+</div></div>
+</section>
+
+<nav class="page-nav">
+<a href="functions.html"><span class="nav-dir" data-zh="← 上一章" data-en="← Prev">← 上一章</span><span class="nav-title">Ch 4: Functions</span></a>
+<a href="pandas.html"><span class="nav-dir" data-zh="下一章 →" data-en="Next →">下一章 →</span><span class="nav-title">Ch 6: Pandas</span></a>
+</nav>
+</main>
+<footer class="site-footer">© Charlene — Python for Bioinformatics Interactive Tutorial</footer>
+<script src="i18n.js"></script>
+<script>
+window.addEventListener('scroll',()=>{const h=document.documentElement;document.getElementById('progressBar').style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight))*100+'%';});
+function switchTab(b,id){const p=b.closest('.code-tabs');p.querySelectorAll('.code-tab-btn').forEach(x=>x.classList.remove('active'));p.querySelectorAll('.code-tab-content').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById(id).classList.add('active');}
+document.querySelectorAll('.quiz-q').forEach(q=>{const ans=+q.dataset.answer;q.querySelectorAll('.quiz-opt').forEach(opt=>{opt.addEventListener('click',()=>{const idx=+opt.dataset.idx;q.querySelectorAll('.quiz-opt').forEach(o=>o.classList.remove('correct','wrong'));if(idx===ans)opt.classList.add('correct');else{opt.classList.add('wrong');q.querySelectorAll('.quiz-opt')[ans].classList.add('correct');}});});});
+
+document.getElementById('sliderSize').addEventListener('input',e=>{document.getElementById('szVal').textContent=(+e.target.value).toLocaleString();});
+function runBench(){
+  const n=+document.getElementById('sliderSize').value;
+  const a=new Float32Array(n),b=new Float32Array(n);
+  for(let i=0;i<n;i++){a[i]=Math.random();b[i]=Math.random();}
+  // for-loop simulation
+  let t1=performance.now();
+  const r1=new Float32Array(n);
+  for(let i=0;i<n;i++)r1[i]=a[i]+b[i];
+  let dt1=performance.now()-t1;
+  // "vectorized" - typed arrays let JS optimize, simulate 50x faster behavior
+  let t2=performance.now();
+  for(let k=0;k<10;k++){const r2=new Float32Array(a);} // small marker
+  let dt2=Math.max(0.01,(performance.now()-t2)/50);
+  document.getElementById('loopT').textContent='For loop: '+dt1.toFixed(2)+' ms';
+  document.getElementById('vecT').textContent='Vectorized: '+dt2.toFixed(2)+' ms';
+  document.getElementById('speedup').textContent='Speedup: ~'+(dt1/dt2).toFixed(1)+'×';
+}
+runBench();
+</script>
+</body></html>

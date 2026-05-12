@@ -1,0 +1,280 @@
+<!DOCTYPE html><html lang="zh-Hant"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Ch 10: BLAST 與序列比對 — Python BioInfo Tutorial</title>
+<link rel="stylesheet" href="styles.css">
+</head><body>
+<nav class="top-nav"><div class="top-nav-inner">
+  <a href="index.html" class="top-nav-brand"><span>🐍</span> <span data-zh="Python 生資教學" data-en="Python BioInfo Tutorial">Python 生資教學</span></a>
+  <ul class="top-nav-links">
+    <li><a href="setup.html">Setup</a></li><li><a href="syntax.html">Syntax</a></li><li><a href="paths.html">Paths</a></li><li><a href="functions.html">Func</a></li><li><a href="numpy.html">NumPy</a></li><li><a href="pandas.html">Pandas</a></li><li><a href="visualization.html">Viz</a></li><li><a href="biopython.html">Biopy</a></li><li><a href="fasta-fastq.html">FASTQ</a></li><li><a href="blast.html" class="active">BLAST</a></li><li><a href="pysam.html">pysam</a></li><li><a href="variant-calling.html">Variant</a></li><li><a href="scanpy-anndata.html">scanpy</a></li><li><a href="scrna-workflow.html">scRNA</a></li><li><a href="spatial.html">Spatial</a></li><li><a href="multi-omics.html">Multi</a></li><li><a href="scllms.html">scLLMs</a></li><li><a href="ai-bioinformatics.html">AI</a></li>
+  </ul>
+</div></nav>
+<div class="progress-bar-container"><div class="progress-bar" id="progressBar"></div></div>
+<header class="page-hero"><div class="step-badge">CHAPTER 10 / 18</div>
+<h1 data-zh="BLAST 與序列比對" data-en="BLAST & Sequence Alignment">BLAST 與序列比對</h1>
+<p class="subtitle" data-lang="zh">從一條未知序列找出它在資料庫的同源 — BLAST 的觀念、執行、結果解讀。</p>
+<p class="subtitle" data-lang="en">From an unknown sequence to its database homologs — BLAST concepts, execution, result interpretation.</p>
+</header>
+<main class="content-wrap">
+
+<section class="section">
+<div class="section-label" data-zh="概念" data-en="OVERVIEW">概念</div>
+<h2 data-zh="一、什麼是 BLAST？什麼時候用什麼比對？" data-en="I. What is BLAST? Which alignment for which task?">一、BLAST vs 其他比對工具</h2>
+<div data-lang="zh">
+<p><strong>BLAST</strong> = Basic Local Alignment Search Tool。給一條序列，從上百萬條的資料庫中找出「相似」的序列，回傳一張表（誰相似、相似多少、機率值）。</p>
+<p>BLAST 屬於<strong>區域 (local) 比對</strong>，找的是序列裡「相似的片段」。其他常見比對：</p>
+<ul>
+<li><strong>BLAST</strong>：找未知序列的同源（演化、註解）— 慢、敏感</li>
+<li><strong>BWA / Bowtie2</strong>：把短 reads 對到參考基因組（NGS pipeline）— 超快</li>
+<li><strong>Minimap2</strong>：長 reads（PacBio / Nanopore）— 快又能對長序列</li>
+<li><strong>MUSCLE / MAFFT</strong>：多序列比對（演化樹、結構功能比較）</li>
+<li><strong>pairwise2 (Biopython)</strong>：兩條序列比對，適合教學/小規模</li>
+</ul>
+</div>
+<div data-lang="en">
+<p><strong>BLAST</strong> = Basic Local Alignment Search Tool. Given a query sequence, find similar sequences in a multi-million record database; returns a table (who matched, how well, with what probability).</p>
+<p>BLAST is <strong>local alignment</strong> — finds similar fragments. Other common aligners:</p>
+<ul>
+<li><strong>BLAST</strong>: homology search (annotation, evolution) — slow, sensitive</li>
+<li><strong>BWA / Bowtie2</strong>: short reads to reference (NGS pipelines) — very fast</li>
+<li><strong>Minimap2</strong>: long reads (PacBio / Nanopore)</li>
+<li><strong>MUSCLE / MAFFT</strong>: multiple sequence alignment (phylogenetics, structure-function)</li>
+<li><strong>pairwise2 (Biopython)</strong>: two-sequence alignment, good for teaching/small scale</li>
+</ul>
+</div>
+<table class="comp-table">
+<thead><tr><th>BLAST 類型</th><th data-zh="Query" data-en="Query">Query</th><th data-zh="DB" data-en="DB">DB</th><th data-zh="用途" data-en="Use">用途</th></tr></thead>
+<tbody>
+<tr><td><strong>blastn</strong></td><td>DNA</td><td>DNA</td><td data-lang="zh">找未知 DNA 來源</td><td data-lang="en">Find DNA homologs</td></tr>
+<tr><td><strong>blastp</strong></td><td data-zh="蛋白" data-en="Protein">蛋白</td><td data-zh="蛋白" data-en="Protein">蛋白</td><td data-lang="zh">找蛋白功能 / 同源</td><td data-lang="en">Protein function / homology</td></tr>
+<tr><td><strong>blastx</strong></td><td>DNA → 6 frame 翻譯</td><td data-zh="蛋白" data-en="Protein">蛋白</td><td data-lang="zh">未知 ORF 是什麼蛋白？</td><td data-lang="en">What protein is this unknown ORF?</td></tr>
+<tr><td><strong>tblastn</strong></td><td data-zh="蛋白" data-en="Protein">蛋白</td><td>DNA → 6 frame</td><td data-lang="zh">在基因組中找蛋白編碼區</td><td data-lang="en">Find protein-coding regions in a genome</td></tr>
+</tbody></table>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="關鍵指標" data-en="KEY METRICS">關鍵指標</div>
+<h2 data-zh="二、E-value 與 bit score：怎麼判斷「真的像」？" data-en="II. E-value and bit score — how do you tell it's a real hit?">二、E-value 與 bit score</h2>
+<div class="card-grid cols-2">
+<div class="card"><h4>📉 E-value</h4>
+<div data-lang="zh"><p>「在隨機資料庫中能<strong>純粹靠運氣</strong>得到這個分數的次數」。<br>越小越可信！<br>• <code>E &lt; 1e-10</code>：非常可信<br>• <code>E &lt; 1e-5</code>：通常可信<br>• <code>E &gt; 0.01</code>：很可能是巧合</p>
+<p>E-value 會隨著 DB 大小而變 — DB 越大、相同分數的 E-value 越大（噪音變多）。</p></div>
+<div data-lang="en"><p>"Number of hits this score would be expected by chance alone." Lower = better.<br>• <code>E &lt; 1e-10</code>: highly significant<br>• <code>E &lt; 1e-5</code>: usually meaningful<br>• <code>E &gt; 0.01</code>: probably random</p>
+<p>E-value depends on DB size — larger DB inflates E for the same score.</p></div>
+</div>
+<div class="card"><h4>📊 bit score</h4>
+<div data-lang="zh"><p>標準化的相似度分數。<strong>不會受 DB 大小影響</strong> — 跨資料庫比較選 bit score。<br>• &gt; 200: 很強<br>• 50–80: 邊緣，謹慎</p></div>
+<div data-lang="en"><p>Normalized similarity score. <strong>Doesn't depend on DB size</strong> — use this when comparing across DBs.<br>• &gt; 200: very strong<br>• 50–80: marginal, be careful</p></div>
+</div>
+</div>
+<div class="callout warn"><span class="callout-icon">⚠️</span><div>
+<span data-lang="zh"><strong>陷阱：</strong>低 % identity 不代表沒同源！例如蛋白質可能 30% identity 但結構/功能完全保留（distant homolog）。同源學家通常用 bit score &gt; 50 + 有意義的功能保守 motif 來下結論。</span>
+<span data-lang="en"><strong>Pitfall:</strong> Low % identity does not mean no homology. Proteins at 30% identity can still share full structure/function (distant homologs). Experts typically combine bit score &gt; 50 with conserved functional motifs to call homology.</span>
+</div></div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="實作" data-en="HOW-TO">實作</div>
+<h2 data-zh="三、用 Python 跑 BLAST" data-en="III. Running BLAST from Python">三、用 Python 跑 BLAST</h2>
+<div class="code-tabs"><div class="code-tab-btns">
+<button class="code-tab-btn active" onclick="switchTab(this,'b1')">線上 BLAST (NCBI)</button>
+<button class="code-tab-btn" onclick="switchTab(this,'b2')">本機 BLAST</button>
+<button class="code-tab-btn" onclick="switchTab(this,'b3')">解析結果</button>
+<button class="code-tab-btn" onclick="switchTab(this,'b4')">pairwise2</button>
+</div>
+<div class="code-tab-content active" id="b1"><pre><span class="kw">from</span> Bio.Blast <span class="kw">import</span> NCBIWWW, NCBIXML
+<span class="kw">from</span> Bio <span class="kw">import</span> SeqIO
+
+<span class="comment"># 線上 BLAST = 投到 NCBI 伺服器、慢、但不用裝資料庫</span>
+<span class="comment"># Online = submit to NCBI server, slow, no local DB needed</span>
+<span class="comment"># 適合：偶爾查 1–10 條序列；不適合大規模</span>
+<span class="comment"># Good for: ad-hoc 1–10 queries; not for batch</span>
+
+record = SeqIO.read(<span class="str">"my_query.fa"</span>, <span class="str">"fasta"</span>)
+result_handle = NCBIWWW.qblast(<span class="str">"blastn"</span>, <span class="str">"nt"</span>, record.seq,
+                               hitlist_size=<span class="num">10</span>, expect=<span class="num">1e-5</span>)
+
+<span class="comment"># 把結果存下來（不要重跑！很慢）</span>
+<span class="kw">with</span> <span class="builtin">open</span>(<span class="str">"results/blast.xml"</span>, <span class="str">"w"</span>) <span class="kw">as</span> f:
+    f.write(result_handle.read())
+
+<span class="comment"># 重新讀回 XML</span>
+<span class="kw">with</span> <span class="builtin">open</span>(<span class="str">"results/blast.xml"</span>) <span class="kw">as</span> f:
+    blast_record = NCBIXML.read(f)</pre></div>
+<div class="code-tab-content" id="b2"><pre><span class="comment"># 安裝 BLAST+ 命令列工具 / Install BLAST+</span>
+<span class="comment"># conda install -c bioconda blast</span>
+
+<span class="comment"># 1. 下載 / 自製資料庫</span>
+<span class="comment"># makeblastdb -in my_proteins.fa -dbtype prot -out my_db</span>
+
+<span class="comment"># 2. 跑 BLAST (Python 用 subprocess)</span>
+<span class="kw">import</span> subprocess
+
+subprocess.run([
+    <span class="str">"blastp"</span>,
+    <span class="str">"-query"</span>,    <span class="str">"data/raw/query.fa"</span>,
+    <span class="str">"-db"</span>,       <span class="str">"my_db"</span>,
+    <span class="str">"-out"</span>,      <span class="str">"results/blast.tsv"</span>,
+    <span class="str">"-outfmt"</span>,   <span class="str">"6"</span>,                       <span class="comment"># 表格格式 (最好處理！)</span>
+    <span class="str">"-evalue"</span>,   <span class="str">"1e-5"</span>,
+    <span class="str">"-num_threads"</span>, <span class="str">"8"</span>,                  <span class="comment"># 多核心</span>
+    <span class="str">"-max_target_seqs"</span>, <span class="str">"10"</span>,
+], check=<span class="kw">True</span>)
+
+<span class="comment"># 用 pandas 讀回 TSV</span>
+<span class="kw">import</span> pandas <span class="kw">as</span> pd
+cols = [<span class="str">"qseqid"</span>,<span class="str">"sseqid"</span>,<span class="str">"pident"</span>,<span class="str">"length"</span>,<span class="str">"mismatch"</span>,<span class="str">"gapopen"</span>,
+        <span class="str">"qstart"</span>,<span class="str">"qend"</span>,<span class="str">"sstart"</span>,<span class="str">"send"</span>,<span class="str">"evalue"</span>,<span class="str">"bitscore"</span>]
+hits = pd.read_csv(<span class="str">"results/blast.tsv"</span>, sep=<span class="str">"\t"</span>, names=cols)
+<span class="builtin">print</span>(hits.nsmallest(<span class="num">10</span>, <span class="str">"evalue"</span>))</pre></div>
+<div class="code-tab-content" id="b3"><pre><span class="kw">from</span> Bio.Blast <span class="kw">import</span> NCBIXML
+
+<span class="kw">with</span> <span class="builtin">open</span>(<span class="str">"results/blast.xml"</span>) <span class="kw">as</span> f:
+    blast_record = NCBIXML.read(f)
+
+<span class="kw">for</span> alignment <span class="kw">in</span> blast_record.alignments:
+    <span class="kw">for</span> hsp <span class="kw">in</span> alignment.hsps:
+        <span class="kw">if</span> hsp.expect &lt; <span class="num">1e-5</span>:
+            <span class="builtin">print</span>(<span class="str">f"&gt;&gt; {alignment.title[:80]}"</span>)
+            <span class="builtin">print</span>(<span class="str">f"   length: {alignment.length}"</span>)
+            <span class="builtin">print</span>(<span class="str">f"   E-value: {hsp.expect:.2e}"</span>)
+            <span class="builtin">print</span>(<span class="str">f"   score: {hsp.score} (bit: {hsp.bits:.1f})"</span>)
+            <span class="builtin">print</span>(<span class="str">f"   identity: {hsp.identities}/{hsp.align_length}"</span>)
+            <span class="builtin">print</span>(<span class="str">f"   {hsp.query[:60]}..."</span>)
+            <span class="builtin">print</span>(<span class="str">f"   {hsp.match[:60]}..."</span>)
+            <span class="builtin">print</span>(<span class="str">f"   {hsp.sbjct[:60]}..."</span>)</pre></div>
+<div class="code-tab-content" id="b4"><pre><span class="comment"># pairwise2: 兩條序列直接比對 (適合小規模/教學)</span>
+<span class="comment"># For two sequences directly (small scale / teaching)</span>
+<span class="kw">from</span> Bio <span class="kw">import</span> pairwise2
+<span class="kw">from</span> Bio.pairwise2 <span class="kw">import</span> format_alignment
+
+a = <span class="str">"ACCGTAGTC"</span>
+b = <span class="str">"ACGTGTC"</span>
+
+<span class="comment"># Global (Needleman-Wunsch)：對齊整段</span>
+alignments = pairwise2.align.globalxx(a, b)
+<span class="builtin">print</span>(format_alignment(*alignments[<span class="num">0</span>]))
+
+<span class="comment"># Local (Smith-Waterman)：找最佳區域</span>
+alignments = pairwise2.align.localms(a, b, <span class="num">2</span>, -<span class="num">1</span>, -<span class="num">2</span>, -<span class="num">.5</span>)
+<span class="comment"># 參數：match=2, mismatch=-1, gap_open=-2, gap_extend=-.5</span>
+
+<span class="comment"># 蛋白質用 BLOSUM62 替換矩陣</span>
+<span class="kw">from</span> Bio.Align <span class="kw">import</span> substitution_matrices
+matrix = substitution_matrices.load(<span class="str">"BLOSUM62"</span>)
+alignments = pairwise2.align.localds(<span class="str">"PEEKSAVTAL"</span>, <span class="str">"PEKSALTAL"</span>,
+                                     matrix, -<span class="num">10</span>, -<span class="num">.5</span>)
+
+<span class="comment"># 注意：pairwise2 在 Biopython 1.84+ 標記為 deprecated，新版改用 Bio.Align.PairwiseAligner</span>
+<span class="kw">from</span> Bio.Align <span class="kw">import</span> PairwiseAligner
+aligner = PairwiseAligner()
+aligner.mode = <span class="str">"local"</span>; aligner.match_score=<span class="num">2</span>; aligner.mismatch_score=-<span class="num">1</span>
+alignments = aligner.align(a, b)
+<span class="builtin">print</span>(<span class="builtin">next</span>(<span class="builtin">iter</span>(alignments)))</pre></div>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="多序列比對" data-en="MSA">MSA</div>
+<h2 data-zh="四、多序列比對 (MSA) & 演化樹" data-en="IV. Multiple sequence alignment (MSA) & phylogeny">四、MSA & 演化樹</h2>
+<div data-lang="zh">
+<p>MSA 是同時對齊 3 條以上的序列。常用工具：<strong>MUSCLE</strong>、<strong>MAFFT</strong>、<strong>Clustal Omega</strong>。Python 通常是用 subprocess 呼叫，再用 Biopython 讀回。</p>
+</div>
+<div data-lang="en">
+<p>MSA aligns 3+ sequences simultaneously. Common tools: <strong>MUSCLE</strong>, <strong>MAFFT</strong>, <strong>Clustal Omega</strong>. From Python, usually invoke via subprocess and read results back with Biopython.</p>
+</div>
+<div class="code-tabs"><div class="code-tab-btns"><button class="code-tab-btn active" onclick="switchTab(this,'msa1')">MAFFT + 樹</button></div>
+<div class="code-tab-content active" id="msa1"><pre><span class="kw">import</span> subprocess
+<span class="kw">from</span> Bio <span class="kw">import</span> AlignIO, Phylo
+<span class="kw">from</span> Bio.Phylo.TreeConstruction <span class="kw">import</span> DistanceCalculator, DistanceTreeConstructor
+
+<span class="comment"># 1. 跑 MAFFT (conda install -c bioconda mafft)</span>
+subprocess.run(<span class="str">"mafft --auto data/raw/genes.fa &gt; results/aligned.fa"</span>,
+               shell=<span class="kw">True</span>, check=<span class="kw">True</span>)
+
+<span class="comment"># 2. 讀進來</span>
+aln = AlignIO.read(<span class="str">"results/aligned.fa"</span>, <span class="str">"fasta"</span>)
+<span class="builtin">print</span>(aln)
+<span class="builtin">print</span>(<span class="str">f"{len(aln)} 條 × {aln.get_alignment_length()} bp"</span>)
+
+<span class="comment"># 3. 建距離樹 / Build NJ tree</span>
+calc = DistanceCalculator(<span class="str">"identity"</span>)
+dm = calc.get_distance(aln)
+constructor = DistanceTreeConstructor()
+tree = constructor.nj(dm)
+
+<span class="comment"># 4. 畫出來</span>
+<span class="kw">import</span> matplotlib.pyplot <span class="kw">as</span> plt
+fig, ax = plt.subplots(figsize=(<span class="num">8</span>,<span class="num">6</span>))
+Phylo.draw(tree, axes=ax, do_show=<span class="kw">False</span>)
+fig.savefig(<span class="str">"results/figures/tree.pdf"</span>)</pre></div>
+</div>
+</section>
+
+<!-- Decision tree -->
+<section class="section">
+<div class="section-label" data-zh="決策引導" data-en="DECISION GUIDE">決策引導</div>
+<h2 data-zh="五、選對比對工具" data-en="V. Pick the right aligner">五、選對工具</h2>
+<div class="decision-tree">
+<h4>🌳 <span data-zh="比對工具決策樹" data-en="Aligner decision tree">比對工具決策樹</span></h4>
+<div data-lang="zh">
+<div class="dt-node"><span class="dt-q">Q1:</span><div>有一條未知序列、想知道它「是什麼」？ <span class="dt-arrow">→</span> <strong>BLAST</strong>（線上 NCBI 即可）</div></div>
+<div class="dt-node"><span class="dt-q">Q2:</span><div>有上百萬條短 reads，要對到參考基因組？ <span class="dt-arrow">→</span> <strong>BWA-MEM2</strong> 或 <strong>STAR</strong>（RNA-seq）</div></div>
+<div class="dt-node"><span class="dt-q">Q3:</span><div>有 PacBio / Nanopore 長 reads？ <span class="dt-arrow">→</span> <strong>Minimap2</strong></div></div>
+<div class="dt-node"><span class="dt-q">Q4:</span><div>想找跨物種同源，做演化分析？ <span class="dt-arrow">→</span> <strong>MAFFT</strong> 或 <strong>MUSCLE</strong> 做 MSA，再用 IQ-TREE / RAxML 建樹</div></div>
+<div class="dt-node"><span class="dt-q">Q5:</span><div>只想兩條序列對一下、看 identity？ <span class="dt-arrow">→</span> <strong>Bio.Align.PairwiseAligner</strong></div></div>
+</div>
+<div data-lang="en">
+<div class="dt-node"><span class="dt-q">Q1:</span><div>One unknown sequence, want to know what it is? <span class="dt-arrow">→</span> <strong>BLAST</strong> (online NCBI is fine)</div></div>
+<div class="dt-node"><span class="dt-q">Q2:</span><div>Millions of short reads to align to a reference? <span class="dt-arrow">→</span> <strong>BWA-MEM2</strong> or <strong>STAR</strong> (RNA-seq)</div></div>
+<div class="dt-node"><span class="dt-q">Q3:</span><div>PacBio / Nanopore long reads? <span class="dt-arrow">→</span> <strong>Minimap2</strong></div></div>
+<div class="dt-node"><span class="dt-q">Q4:</span><div>Cross-species homology / phylogeny? <span class="dt-arrow">→</span> <strong>MAFFT</strong> or <strong>MUSCLE</strong> for MSA, then IQ-TREE / RAxML</div></div>
+<div class="dt-node"><span class="dt-q">Q5:</span><div>Just two sequences, identity check? <span class="dt-arrow">→</span> <strong>Bio.Align.PairwiseAligner</strong></div></div>
+</div>
+</div>
+</section>
+
+<!-- Quiz -->
+<section class="quiz-section">
+<h3>📝 <span data-zh="自我檢測" data-en="Self-Check">自我檢測</span></h3>
+<div class="quiz-q" data-answer="2">
+<p data-lang="zh">1. BLAST E-value 越「小」代表？</p>
+<p data-lang="en">1. A smaller BLAST E-value means:</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. 比對結果越短</span><span data-lang="en">A. Alignment is shorter</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. 比對結果越長</span><span data-lang="en">B. Alignment is longer</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. 越不可能是隨機巧合，比對越可信</span><span data-lang="en">C. Less likely to be random chance — more credible hit</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. 越可能是錯誤</span><span data-lang="en">D. More likely an error</span></div>
+</div></div>
+<div class="quiz-q" data-answer="1">
+<p data-lang="zh">2. 一條未知 DNA 序列，想知道它編碼的可能蛋白功能，最適合？</p>
+<p data-lang="en">2. Unknown DNA sequence; want the encoded protein's likely function. Best tool?</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span><strong>blastn</strong></span></div>
+<div class="quiz-opt" data-idx="1"><span><strong>blastx</strong> (DNA → 6 frames → 蛋白 DB)</span></div>
+<div class="quiz-opt" data-idx="2"><span><strong>BWA</strong></span></div>
+<div class="quiz-opt" data-idx="3"><span><strong>MAFFT</strong></span></div>
+</div></div>
+<div class="quiz-q" data-answer="0">
+<p data-lang="zh">3. 跨資料庫比較相似度時，選哪個指標較公平？</p>
+<p data-lang="en">3. When comparing similarity across databases, which metric is fairer?</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. bit score（不受 DB 大小影響）</span><span data-lang="en">A. bit score (DB-size independent)</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. E-value</span><span data-lang="en">B. E-value</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. % identity</span><span data-lang="en">C. % identity</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. alignment length</span><span data-lang="en">D. Alignment length</span></div>
+</div></div>
+</section>
+
+<nav class="page-nav">
+<a href="fasta-fastq.html"><span class="nav-dir" data-zh="← 上一章" data-en="← Prev">← 上一章</span><span class="nav-title">Ch 9: FASTA / FASTQ</span></a>
+<a href="pysam.html"><span class="nav-dir" data-zh="下一章 →" data-en="Next →">下一章 →</span><span class="nav-title">Ch 11: pysam & SAM/BAM</span></a>
+</nav>
+</main>
+<footer class="site-footer">© Charlene — Python for Bioinformatics Interactive Tutorial</footer>
+<script src="i18n.js"></script>
+<script>
+window.addEventListener('scroll',()=>{const h=document.documentElement;document.getElementById('progressBar').style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight))*100+'%';});
+function switchTab(b,id){const p=b.closest('.code-tabs');p.querySelectorAll('.code-tab-btn').forEach(x=>x.classList.remove('active'));p.querySelectorAll('.code-tab-content').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById(id).classList.add('active');}
+document.querySelectorAll('.quiz-q').forEach(q=>{const ans=+q.dataset.answer;q.querySelectorAll('.quiz-opt').forEach(opt=>{opt.addEventListener('click',()=>{const idx=+opt.dataset.idx;q.querySelectorAll('.quiz-opt').forEach(o=>o.classList.remove('correct','wrong'));if(idx===ans)opt.classList.add('correct');else{opt.classList.add('wrong');q.querySelectorAll('.quiz-opt')[ans].classList.add('correct');}});});});
+</script>
+</body></html>

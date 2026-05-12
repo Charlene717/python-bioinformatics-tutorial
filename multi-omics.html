@@ -1,0 +1,234 @@
+<!DOCTYPE html><html lang="zh-Hant"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Ch 16: 多體學整合 — Python BioInfo Tutorial</title>
+<link rel="stylesheet" href="styles.css">
+</head><body>
+<nav class="top-nav"><div class="top-nav-inner">
+  <a href="index.html" class="top-nav-brand"><span>🐍</span> <span data-zh="Python 生資教學" data-en="Python BioInfo Tutorial">Python 生資教學</span></a>
+  <ul class="top-nav-links">
+    <li><a href="setup.html">Setup</a></li><li><a href="syntax.html">Syntax</a></li><li><a href="paths.html">Paths</a></li><li><a href="functions.html">Func</a></li><li><a href="numpy.html">NumPy</a></li><li><a href="pandas.html">Pandas</a></li><li><a href="visualization.html">Viz</a></li><li><a href="biopython.html">Biopy</a></li><li><a href="fasta-fastq.html">FASTQ</a></li><li><a href="blast.html">BLAST</a></li><li><a href="pysam.html">pysam</a></li><li><a href="variant-calling.html">Variant</a></li><li><a href="scanpy-anndata.html">scanpy</a></li><li><a href="scrna-workflow.html">scRNA</a></li><li><a href="spatial.html">Spatial</a></li><li><a href="multi-omics.html" class="active">Multi</a></li><li><a href="scllms.html">scLLMs</a></li><li><a href="ai-bioinformatics.html">AI</a></li>
+  </ul>
+</div></nav>
+<div class="progress-bar-container"><div class="progress-bar" id="progressBar"></div></div>
+<header class="page-hero"><div class="step-badge">CHAPTER 16 / 18</div>
+<h1 data-zh="多體學整合" data-en="Multi-omics Integration">多體學整合</h1>
+<p class="subtitle" data-lang="zh">RNA + ATAC + 蛋白 + 代謝 — 把多種分子層次整合到同一張圖譜。</p>
+<p class="subtitle" data-lang="en">RNA + ATAC + protein + metabolite — integrate multiple molecular layers into one map.</p>
+</header>
+<main class="content-wrap">
+
+<section class="section">
+<div class="section-label" data-zh="概念" data-en="OVERVIEW">概念</div>
+<h2 data-zh="一、多體學是什麼？" data-en="I. What is multi-omics?">一、多體學定義</h2>
+<div data-lang="zh">
+<p>「Omics」= 全方位測量某層次的分子：transcript<strong>omics</strong>、prote<strong>omics</strong>、metabol<strong>omics</strong>、epigen<strong>omics</strong>。</p>
+<p>多體學整合分兩大類：</p>
+<ul>
+<li><strong>水平整合 (horizontal)：</strong>多個樣本、相同 omics → 解 batch effect (Ch 14 的 Harmony / scVI)。</li>
+<li><strong>垂直整合 (vertical)：</strong>同一群細胞，多種 omics → 找跨層級的關聯（基因表現 ↔ 染色質開放、ligand ↔ receptor、表型 ↔ 突變）。</li>
+</ul>
+<p>本章重點是「<strong>垂直整合</strong>」：一個細胞同時量到 RNA + ATAC，怎麼一起分析？</p>
+</div>
+<div data-lang="en">
+<p>"Omics" = comprehensive measurement of one molecular layer: transcript<strong>omics</strong>, prote<strong>omics</strong>, metabol<strong>omics</strong>, epigen<strong>omics</strong>.</p>
+<p>Multi-omics integration falls into two camps:</p>
+<ul>
+<li><strong>Horizontal:</strong> multiple samples, same omics → batch correction (Harmony / scVI in Ch 14).</li>
+<li><strong>Vertical:</strong> same cells, multiple omics → cross-layer relationships (RNA ↔ chromatin, ligand ↔ receptor, phenotype ↔ mutation).</li>
+</ul>
+<p>This chapter focuses on <strong>vertical integration</strong>: how do you analyze RNA + ATAC measured from the same cell?</p>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="平台" data-en="ASSAYS">平台</div>
+<h2 data-zh="二、常見多體學技術" data-en="II. Common multi-omics assays">二、常見技術</h2>
+<table class="comp-table">
+<thead><tr><th data-zh="技術" data-en="Assay">技術</th><th data-zh="量到" data-en="Measures">量到</th><th data-zh="代表分析工具" data-en="Tool">代表工具</th></tr></thead>
+<tbody>
+<tr><td><strong>10X Multiome</strong></td><td data-lang="zh">同一 cell 的 RNA + ATAC</td><td>scanpy + muon, scglue, MultiVI</td>
+<td data-lang="en">RNA + ATAC from the same cell</td></tr>
+<tr><td><strong>CITE-seq</strong></td><td data-lang="zh">RNA + 表面蛋白 (抗體 barcode)</td><td>scanpy + totalVI</td>
+<td data-lang="en">RNA + surface proteins (antibody-derived tags)</td></tr>
+<tr><td><strong>Perturb-seq</strong></td><td data-lang="zh">RNA + CRISPR 基因擾動</td><td>scanpy + Mixscape, scperturb</td>
+<td data-lang="en">RNA + CRISPR perturbation</td></tr>
+<tr><td><strong>10X Visium HD + IF</strong></td><td data-lang="zh">空間 RNA + 蛋白螢光染色</td><td>SpatialData + Squidpy</td>
+<td data-lang="en">Spatial RNA + protein IF</td></tr>
+<tr><td><strong>SHARE-seq, SNARE-seq</strong></td><td data-lang="zh">學術版 RNA + ATAC</td><td>scanpy + signac (R)</td>
+<td data-lang="en">Academic RNA + ATAC</td></tr>
+</tbody></table>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="muon" data-en="MUON">muon 套件</div>
+<h2 data-zh="三、MuData：多 omics 的 AnnData" data-en="III. MuData: AnnData for multi-omics">三、MuData 資料結構</h2>
+<div data-lang="zh">
+<p><strong>muon</strong> 是 scverse 的多 omics 工具，它的核心 <code>MuData</code> 物件就像「裝多個 AnnData 的盒子」：</p>
+</div>
+<div data-lang="en">
+<p><strong>muon</strong> is the scverse multi-omics toolkit; its core <code>MuData</code> object is "a container of multiple AnnDatas":</p>
+</div>
+<div class="path-box">
+mdata = MuData({"rna": adata_rna, "atac": adata_atac})
+mdata
+├── .mod          <span class="comment"># dict of AnnData，每個 omics 一個</span>
+│   ├── rna       <span class="comment"># AnnData (n_cells × n_genes)</span>
+│   └── atac      <span class="comment"># AnnData (n_cells × n_peaks)</span>
+├── .obs          <span class="comment"># 跨 omics 共享的 cell metadata</span>
+├── .obsm         <span class="comment"># 整合後的 cell embedding (X_mofa, X_mowgli)</span>
+└── .uns
+</div>
+<div class="code-tabs"><div class="code-tab-btns">
+<button class="code-tab-btn active" onclick="switchTab(this,'m1')">讀 10X Multiome</button>
+<button class="code-tab-btn" onclick="switchTab(this,'m2')">每 omics QC</button>
+<button class="code-tab-btn" onclick="switchTab(this,'m3')">整合 (MOFA / MultiVI)</button>
+</div>
+<div class="code-tab-content active" id="m1"><pre><span class="kw">import</span> muon <span class="kw">as</span> mu
+
+<span class="comment"># 一行讀入 10X Multiome (RNA + ATAC) → MuData</span>
+mdata = mu.read_10x_h5(<span class="str">"data/raw/multiome/filtered_feature_bc_matrix.h5"</span>)
+<span class="builtin">print</span>(mdata)
+<span class="comment"># MuData object with n_obs × n_vars = 8000 × 150000
+<span class="comment">#   2 modalities: 'rna' (8000 × 30000), 'atac' (8000 × 120000)</span>
+
+<span class="comment"># 個別 modality</span>
+rna = mdata.mod[<span class="str">"rna"</span>]
+atac = mdata.mod[<span class="str">"atac"</span>]</pre></div>
+<div class="code-tab-content" id="m2"><pre><span class="comment"># RNA 端走標準 scanpy 流程 (Ch 14)</span>
+<span class="kw">import</span> scanpy <span class="kw">as</span> sc
+sc.pp.calculate_qc_metrics(mdata.mod[<span class="str">"rna"</span>], inplace=<span class="kw">True</span>)
+<span class="comment"># ... QC, normalize, HVG, PCA</span>
+
+<span class="comment"># ATAC 端走特定流程 / ATAC-specific pipeline</span>
+mu.atac.pp.tfidf(mdata.mod[<span class="str">"atac"</span>])           <span class="comment"># TF-IDF 標準化</span>
+sc.tl.pca(mdata.mod[<span class="str">"atac"</span>])                    <span class="comment"># LSI</span>
+
+<span class="comment"># 同步 cell barcode (兩 modality 細胞要對齊)</span>
+mu.pp.intersect_obs(mdata)                       <span class="comment"># 只留兩端都有的 cell</span></pre></div>
+<div class="code-tab-content" id="m3"><pre><span class="comment"># 方法 1: MOFA+ (因子分解，可解釋性強)</span>
+<span class="comment"># pip install mofapy2</span>
+<span class="kw">import</span> muon <span class="kw">as</span> mu
+mu.tl.mofa(mdata, n_factors=<span class="num">15</span>, outfile=<span class="str">"results/mofa.hdf5"</span>)
+<span class="comment"># 結果存到 mdata.obsm["X_mofa"]</span>
+sc.pp.neighbors(mdata, use_rep=<span class="str">"X_mofa"</span>)
+sc.tl.umap(mdata)
+sc.pl.umap(mdata, color=[<span class="str">"rna:cell_type"</span>])
+
+<span class="comment"># 方法 2: MultiVI (深度學習 VAE)</span>
+<span class="kw">import</span> scvi
+scvi.model.MULTIVI.setup_anndata(mdata, ...)
+model = scvi.model.MULTIVI(mdata, n_genes=<span class="num">30000</span>, n_regions=<span class="num">120000</span>)
+model.train()
+mdata.obsm[<span class="str">"X_multivi"</span>] = model.get_latent_representation()
+
+<span class="comment"># 方法 3: scglue (跨 modality 細胞對應，需 GRN prior)</span>
+<span class="comment"># 適合 modality 沒有 1:1 配對的場景</span>
+
+<span class="comment"># 方法 4: WNN (Weighted Nearest Neighbor) - Seurat 風格</span>
+<span class="comment"># muon 也支援：mu.pp.neighbors(mdata, use_rep="X_pca")</span></pre></div>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="特殊技術" data-en="SPECIFIC PIPELINES">特殊技術</div>
+<h2 data-zh="四、CITE-seq (蛋白 + RNA) 流程" data-en="IV. CITE-seq (protein + RNA) workflow">四、CITE-seq 流程</h2>
+<div class="code-tabs"><div class="code-tab-btns"><button class="code-tab-btn active" onclick="switchTab(this,'cite1')">totalVI</button></div>
+<div class="code-tab-content active" id="cite1"><pre><span class="kw">import</span> scvi, scanpy <span class="kw">as</span> sc
+
+<span class="comment"># adata.X 是 RNA；adata.obsm["protein_expression"] 是抗體 counts</span>
+<span class="comment"># adata.X = RNA; adata.obsm["protein_expression"] = ADT counts</span>
+adata = sc.read_h5ad(<span class="str">"data/raw/cite_seq.h5ad"</span>)
+
+scvi.model.TOTALVI.setup_anndata(
+    adata,
+    protein_expression_obsm_key=<span class="str">"protein_expression"</span>,
+    batch_key=<span class="str">"batch"</span>,
+)
+model = scvi.model.TOTALVI(adata, latent_distribution=<span class="str">"normal"</span>)
+model.train()
+
+<span class="comment"># 整合後的 latent space</span>
+adata.obsm[<span class="str">"X_totalVI"</span>] = model.get_latent_representation()
+
+<span class="comment"># totalVI 還能去噪、預測未測蛋白</span>
+adata.obsm[<span class="str">"protein_foreground_prob"</span>] = model.get_protein_foreground_probability()
+denoised_genes, denoised_protein = model.get_normalized_expression()
+
+<span class="comment"># 用整合 embedding 做下游</span>
+sc.pp.neighbors(adata, use_rep=<span class="str">"X_totalVI"</span>)
+sc.tl.umap(adata); sc.tl.leiden(adata)
+
+<span class="comment"># 同時看 RNA marker 與蛋白 marker</span>
+sc.pl.umap(adata, color=[<span class="str">"CD3D"</span>,<span class="str">"CD8A"</span>])           <span class="comment"># RNA</span>
+sc.pl.embedding(adata, basis=<span class="str">"X_totalVI"</span>,
+               color=[<span class="str">"CD3_TotalSeqB"</span>,<span class="str">"CD8_TotalSeqB"</span>])   <span class="comment"># 蛋白</span></pre></div>
+</div>
+</section>
+
+<!-- Decision tree -->
+<section class="section">
+<div class="section-label" data-zh="決策引導" data-en="DECISION GUIDE">決策引導</div>
+<h2 data-zh="五、選對整合方法" data-en="V. Pick the right integration method">五、選對工具</h2>
+<div class="decision-tree">
+<h4>🌳 <span data-zh="多體學整合決策樹" data-en="Multi-omics decision tree">多體學整合決策樹</span></h4>
+<div data-lang="zh">
+<div class="dt-node"><span class="dt-q">Q1:</span><div>同一 cell 的 RNA + ATAC？ <span class="dt-arrow">→</span> <strong>MultiVI / MOFA+</strong></div></div>
+<div class="dt-node"><span class="dt-q">Q2:</span><div>RNA + 表面蛋白 (CITE-seq)？ <span class="dt-arrow">→</span> <strong>totalVI</strong></div></div>
+<div class="dt-node"><span class="dt-q">Q3:</span><div>不同樣本、不同 omics（cell 沒對齊）？ <span class="dt-arrow">→</span> <strong>scglue</strong></div></div>
+<div class="dt-node"><span class="dt-q">Q4:</span><div>想要可解釋的因子（哪個基因 + 哪個 peak 最重要）？ <span class="dt-arrow">→</span> <strong>MOFA+</strong></div></div>
+<div class="dt-node"><span class="dt-q">Q5:</span><div>大型資料 (&gt; 100k cells)？ <span class="dt-arrow">→</span> 深度學習方法 (MultiVI / totalVI / scvi-tools 系列)</div></div>
+</div>
+<div data-lang="en">
+<div class="dt-node"><span class="dt-q">Q1:</span><div>Same-cell RNA + ATAC? <span class="dt-arrow">→</span> <strong>MultiVI / MOFA+</strong></div></div>
+<div class="dt-node"><span class="dt-q">Q2:</span><div>RNA + surface protein (CITE-seq)? <span class="dt-arrow">→</span> <strong>totalVI</strong></div></div>
+<div class="dt-node"><span class="dt-q">Q3:</span><div>Different samples, different omics (unpaired cells)? <span class="dt-arrow">→</span> <strong>scglue</strong></div></div>
+<div class="dt-node"><span class="dt-q">Q4:</span><div>Need interpretable factors (which gene + which peak)? <span class="dt-arrow">→</span> <strong>MOFA+</strong></div></div>
+<div class="dt-node"><span class="dt-q">Q5:</span><div>Large data (&gt;100k cells)? <span class="dt-arrow">→</span> Deep-learning methods (MultiVI / totalVI / scvi-tools)</div></div>
+</div>
+</div>
+</section>
+
+<!-- Quiz -->
+<section class="quiz-section">
+<h3>📝 <span data-zh="自我檢測" data-en="Self-Check">自我檢測</span></h3>
+<div class="quiz-q" data-answer="1">
+<p data-lang="zh">1. CITE-seq 同時量了什麼？</p>
+<p data-lang="en">1. CITE-seq simultaneously measures:</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. RNA + 染色質開放</span><span data-lang="en">A. RNA + chromatin accessibility</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. RNA + 表面蛋白（抗體 barcode）</span><span data-lang="en">B. RNA + surface proteins (antibody-derived tags)</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. RNA + DNA 突變</span><span data-lang="en">C. RNA + DNA mutations</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. RNA + 代謝物</span><span data-lang="en">D. RNA + metabolites</span></div>
+</div></div>
+<div class="quiz-q" data-answer="2">
+<p data-lang="zh">2. 想做「水平整合」(同 omics、跨樣本去除 batch)，最常用的工具是？</p>
+<p data-lang="en">2. For horizontal integration (same omics, cross-sample batch removal), the most common tool is:</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span><strong>totalVI</strong></span></div>
+<div class="quiz-opt" data-idx="1"><span><strong>MultiVI</strong></span></div>
+<div class="quiz-opt" data-idx="2"><span><strong>Harmony / scVI / scanorama</strong></span></div>
+<div class="quiz-opt" data-idx="3"><span><strong>BLAST</strong></span></div>
+</div></div>
+<div class="quiz-q" data-answer="0">
+<p data-lang="zh">3. <code>MuData</code> 跟 <code>AnnData</code> 的關係？</p>
+<p data-lang="en">3. Relationship between <code>MuData</code> and <code>AnnData</code>?</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. MuData 是「裝多個 AnnData 的盒子」，每個 modality 一個 AnnData</span><span data-lang="en">A. MuData is a container of multiple AnnDatas, one per modality</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. MuData 取代了 AnnData</span><span data-lang="en">B. MuData replaces AnnData</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. 兩個沒關係</span><span data-lang="en">C. Unrelated</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. MuData 是 AnnData 的子類</span><span data-lang="en">D. MuData is a subclass of AnnData</span></div>
+</div></div>
+</section>
+
+<nav class="page-nav">
+<a href="spatial.html"><span class="nav-dir" data-zh="← 上一章" data-en="← Prev">← 上一章</span><span class="nav-title">Ch 15: Spatial</span></a>
+<a href="scllms.html"><span class="nav-dir" data-zh="下一章 →" data-en="Next →">下一章 →</span><span class="nav-title">Ch 17: scLLMs</span></a>
+</nav>
+</main>
+<footer class="site-footer">© Charlene — Python for Bioinformatics Interactive Tutorial</footer>
+<script src="i18n.js"></script>
+<script>
+window.addEventListener('scroll',()=>{const h=document.documentElement;document.getElementById('progressBar').style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight))*100+'%';});
+function switchTab(b,id){const p=b.closest('.code-tabs');p.querySelectorAll('.code-tab-btn').forEach(x=>x.classList.remove('active'));p.querySelectorAll('.code-tab-content').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById(id).classList.add('active');}
+document.querySelectorAll('.quiz-q').forEach(q=>{const ans=+q.dataset.answer;q.querySelectorAll('.quiz-opt').forEach(opt=>{opt.addEventListener('click',()=>{const idx=+opt.dataset.idx;q.querySelectorAll('.quiz-opt').forEach(o=>o.classList.remove('correct','wrong'));if(idx===ans)opt.classList.add('correct');else{opt.classList.add('wrong');q.querySelectorAll('.quiz-opt')[ans].classList.add('correct');}});});});
+</script>
+</body></html>

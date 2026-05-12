@@ -1,0 +1,445 @@
+<!DOCTYPE html><html lang="zh-Hant"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Ch 3: 檔案路徑與 I/O — Python BioInfo Tutorial</title>
+<link rel="stylesheet" href="styles.css">
+</head><body>
+<nav class="top-nav"><div class="top-nav-inner">
+  <a href="index.html" class="top-nav-brand"><span>🐍</span> <span data-zh="Python 生資教學" data-en="Python BioInfo Tutorial">Python 生資教學</span></a>
+  <ul class="top-nav-links">
+    <li><a href="setup.html">Setup</a></li><li><a href="syntax.html">Syntax</a></li><li><a href="paths.html" class="active">Paths</a></li><li><a href="functions.html">Func</a></li><li><a href="numpy.html">NumPy</a></li><li><a href="pandas.html">Pandas</a></li><li><a href="visualization.html">Viz</a></li><li><a href="biopython.html">Biopy</a></li><li><a href="fasta-fastq.html">FASTQ</a></li><li><a href="blast.html">BLAST</a></li><li><a href="pysam.html">pysam</a></li><li><a href="variant-calling.html">Variant</a></li><li><a href="scanpy-anndata.html">scanpy</a></li><li><a href="scrna-workflow.html">scRNA</a></li><li><a href="spatial.html">Spatial</a></li><li><a href="multi-omics.html">Multi</a></li><li><a href="scllms.html">scLLMs</a></li><li><a href="ai-bioinformatics.html">AI</a></li>
+  </ul>
+</div></nav>
+<div class="progress-bar-container"><div class="progress-bar" id="progressBar"></div></div>
+<header class="page-hero"><div class="step-badge">CHAPTER 3 / 18</div>
+<h1 data-zh="檔案路徑與 I/O" data-en="File Paths & I/O">檔案路徑與 I/O</h1>
+<p class="subtitle" data-lang="zh">FileNotFoundError 是 Python 新手最常見的錯誤 — 本章把路徑問題講到清楚。</p>
+<p class="subtitle" data-lang="en">FileNotFoundError is the #1 newbie error in Python — this chapter clears the path problem once and for all.</p>
+</header>
+<main class="content-wrap">
+
+<!-- Section 1: Why paths are confusing -->
+<section class="section">
+<div class="section-label" data-zh="概念" data-en="CONCEPT">概念</div>
+<h2 data-zh="一、為什麼路徑這麼容易出錯？" data-en="I. Why are paths so easy to mess up?">一、為什麼路徑這麼容易出錯？</h2>
+<div data-lang="zh">
+<p>當你寫 <code>open("data.csv")</code>，Python 會去「<strong>當前工作目錄 (CWD, Current Working Directory)</strong>」找 <code>data.csv</code>。問題是：CWD 是什麼？這要看你<strong>怎麼啟動 Python</strong>：</p>
+<ul>
+<li>用終端機 <code>cd /path/to/proj && python script.py</code> → CWD = <code>/path/to/proj</code></li>
+<li>在 VSCode 點「Run Python File」 → CWD 通常是<strong>專案根目錄</strong>（<code>workspace</code> 資料夾）</li>
+<li>在 Jupyter Notebook → CWD = notebook 所在的資料夾</li>
+<li>用 <code>cron / systemd</code> 排程 → CWD = <code>/</code> 或 <code>/root</code></li>
+</ul>
+<p>同一段 <code>open("data.csv")</code> 在不同情境會找到不同的 (或找不到) 檔案 — 這就是 90% 路徑錯誤的根源。</p>
+</div>
+<div data-lang="en">
+<p>When you write <code>open("data.csv")</code>, Python looks for <code>data.csv</code> in the <strong>Current Working Directory (CWD)</strong>. The catch: CWD depends on <strong>how you launched Python</strong>:</p>
+<ul>
+<li>Terminal: <code>cd /path/to/proj && python script.py</code> → CWD = <code>/path/to/proj</code></li>
+<li>VSCode "Run Python File" → CWD usually = workspace root</li>
+<li>Jupyter Notebook → CWD = the notebook's folder</li>
+<li><code>cron / systemd</code> jobs → CWD = <code>/</code> or <code>/root</code></li>
+</ul>
+<p>The same <code>open("data.csv")</code> finds (or fails to find) different files in different contexts — root cause of 90% of path errors.</p>
+</div>
+<div class="callout danger"><span class="callout-icon">🚨</span><div>
+<span data-lang="zh"><strong>遇到 FileNotFoundError 第一件事：</strong>印出 <code>os.getcwd()</code>，看 Python 現在以為自己在哪個資料夾。99% 你會發現 CWD 跟你想的不一樣。</span>
+<span data-lang="en"><strong>First action on FileNotFoundError:</strong> print <code>os.getcwd()</code> to see where Python thinks it is. 99% of the time CWD differs from what you assumed.</span>
+</div></div>
+</section>
+
+<!-- Section 2: Absolute vs Relative -->
+<section class="section">
+<div class="section-label" data-zh="路徑兩大類" data-en="TWO KINDS OF PATHS">路徑兩大類</div>
+<h2 data-zh="二、絕對路徑 vs 相對路徑" data-en="II. Absolute vs Relative paths">二、絕對路徑 vs 相對路徑</h2>
+<table class="comp-table">
+<thead><tr><th>&nbsp;</th><th data-zh="絕對路徑" data-en="Absolute">絕對路徑</th><th data-zh="相對路徑" data-en="Relative">相對路徑</th></tr></thead>
+<tbody>
+<tr><td data-lang="zh"><strong>定義</strong></td><td data-lang="zh">從根目錄寫起的完整位置</td><td data-lang="zh">相對於 CWD 的位置</td>
+<td data-lang="en"><strong>Definition</strong></td><td data-lang="en">Full location from filesystem root</td><td data-lang="en">Location relative to CWD</td></tr>
+<tr><td data-lang="zh"><strong>Windows 例</strong></td><td><code>C:\Users\charlene\proj\data.csv</code></td><td><code>data\sample.csv</code> 或 <code>..\figs\out.png</code></td>
+<td data-lang="en"><strong>Windows ex.</strong></td><td><code>C:\Users\charlene\proj\data.csv</code></td><td><code>data\sample.csv</code> or <code>..\figs\out.png</code></td></tr>
+<tr><td data-lang="zh"><strong>Linux/Mac 例</strong></td><td><code>/home/charlene/proj/data.csv</code></td><td><code>./data/sample.csv</code></td>
+<td data-lang="en"><strong>Linux/Mac ex.</strong></td><td><code>/home/charlene/proj/data.csv</code></td><td><code>./data/sample.csv</code></td></tr>
+<tr><td data-lang="zh"><strong>優點</strong></td><td data-lang="zh">100% 不會找錯位置</td><td data-lang="zh">專案搬家、給協作者用都還能跑</td>
+<td data-lang="en"><strong>Pros</strong></td><td data-lang="en">Always finds the file</td><td data-lang="en">Portable across machines/collaborators</td></tr>
+<tr><td data-lang="zh"><strong>缺點</strong></td><td data-lang="zh">換電腦就壞、不能進 git</td><td data-lang="zh">取決於 CWD，新手容易搞錯</td>
+<td data-lang="en"><strong>Cons</strong></td><td data-lang="en">Breaks on other machines, not git-friendly</td><td data-lang="en">Depends on CWD, easy to get wrong</td></tr>
+<tr><td data-lang="zh"><strong>建議</strong></td><td colspan="2" data-lang="zh">兩者結合：用 <code>pathlib.Path(__file__).parent</code> 找腳本位置，再用相對路徑接到 data/。最穩、最 portable。</td>
+<td data-lang="en"><strong>Recommended</strong></td><td colspan="2" data-lang="en">Combine both: use <code>pathlib.Path(__file__).parent</code> to anchor at the script's location, then relative paths down to data/. Most robust and portable.</td></tr>
+</tbody></table>
+
+<div class="callout warn"><span class="callout-icon">⚠️</span><div>
+<span data-lang="zh"><strong>Windows 反斜線坑：</strong>Python 字串裡 <code>\</code> 是「跳脫字元」，所以 <code>"C:\new"</code> 會被當成 <code>C:</code> + 換行 (<code>\n</code>) + <code>ew</code>！解法：<br>① 改用正斜線 <code>"C:/Users/.../data.csv"</code>（Windows 也吃這個），或<br>② 用 raw string <code>r"C:\Users\..."</code>（前面加 r 表示不解析跳脫字元），或<br>③ 用 <code>pathlib.Path</code>（推薦）。</span>
+<span data-lang="en"><strong>Windows backslash trap:</strong> In Python strings, <code>\</code> is the escape character, so <code>"C:\new"</code> becomes <code>C:</code> + newline (<code>\n</code>) + <code>ew</code>! Fixes:<br>① Use forward slashes <code>"C:/Users/.../data.csv"</code> (Windows accepts these), or<br>② raw string <code>r"C:\Users\..."</code> (the r disables escape parsing), or<br>③ <code>pathlib.Path</code> (recommended).</span>
+</div></div>
+</section>
+
+<!-- Section 3: pathlib -->
+<section class="section">
+<div class="section-label" data-zh="現代寫法" data-en="MODERN PATHLIB">現代寫法</div>
+<h2 data-zh="三、現代解法：pathlib (取代 os.path)" data-en="III. The modern way: pathlib">三、現代解法：pathlib (取代 os.path)</h2>
+<div data-lang="zh">
+<p>Python 3.4 起內建 <code>pathlib</code>，比舊版 <code>os.path</code> 更乾淨、更跨平台、操作更直覺。<strong>新專案請一律用 pathlib</strong>。</p>
+</div>
+<div data-lang="en">
+<p>Python 3.4+ ships <code>pathlib</code>, which is cleaner, more cross-platform, and more intuitive than the old <code>os.path</code>. <strong>Always use pathlib for new projects.</strong></p>
+</div>
+
+<div class="code-tabs"><div class="code-tab-btns">
+<button class="code-tab-btn active" onclick="switchTab(this,'p1')">建立 Path / Make path</button>
+<button class="code-tab-btn" onclick="switchTab(this,'p2')">查詢 / Query</button>
+<button class="code-tab-btn" onclick="switchTab(this,'p3')">操作 / Operate</button>
+<button class="code-tab-btn" onclick="switchTab(this,'p4')">os.path 對照</button>
+</div>
+<div class="code-tab-content active" id="p1"><pre><span class="kw">from</span> pathlib <span class="kw">import</span> Path
+
+<span class="comment"># 跨平台：用 / 串接，自動處理斜線方向</span>
+<span class="comment"># Cross-platform: chain with /, slash direction handled automatically</span>
+proj = Path(<span class="str">"C:/Users/charlene/my_project"</span>)   <span class="comment"># Windows OK</span>
+data = proj / <span class="str">"data"</span> / <span class="str">"raw"</span> / <span class="str">"sample.fasta"</span>
+
+<span class="comment"># 從目前腳本位置找專案根 (最常用！)</span>
+<span class="comment"># Anchor at the script's own location (the most useful pattern!)</span>
+HERE = Path(__file__).parent.resolve()       <span class="comment"># 腳本所在資料夾的絕對路徑</span>
+DATA = HERE.parent / <span class="str">"data"</span> / <span class="str">"raw"</span>      <span class="comment"># scripts/ 旁邊的 data/raw/</span>
+
+<span class="comment"># 使用者 home 目錄</span>
+home = Path.home()       <span class="comment"># C:\Users\charlene 或 /home/charlene</span>
+cwd = Path.cwd()         <span class="comment"># 當前工作目錄 = os.getcwd()</span></pre></div>
+<div class="code-tab-content" id="p2"><pre>p = Path(<span class="str">"data/raw/sample.fastq.gz"</span>)
+
+p.name             <span class="comment"># 'sample.fastq.gz' — 完整檔名</span>
+p.stem             <span class="comment"># 'sample.fastq'   — 去掉最後一個副檔名</span>
+p.suffix           <span class="comment"># '.gz'</span>
+p.suffixes         <span class="comment"># ['.fastq', '.gz'] — 全部副檔名</span>
+p.parent           <span class="comment"># Path('data/raw') — 上一層</span>
+p.parent.parent    <span class="comment"># Path('data')</span>
+p.parts            <span class="comment"># ('data','raw','sample.fastq.gz')</span>
+
+p.exists()         <span class="comment"># True/False — 檔案存在嗎</span>
+p.is_file()        <span class="comment"># True/False — 是檔案嗎</span>
+p.is_dir()         <span class="comment"># True/False — 是資料夾嗎</span>
+p.absolute()       <span class="comment"># 轉成絕對路徑</span>
+p.resolve()        <span class="comment"># 解析符號連結 + 轉絕對</span></pre></div>
+<div class="code-tab-content" id="p3"><pre><span class="comment"># 建立資料夾 / Make directory</span>
+out = Path(<span class="str">"results/figures"</span>)
+out.mkdir(parents=<span class="kw">True</span>, exist_ok=<span class="kw">True</span>)
+<span class="comment"># parents=True → 連同上層一起建</span>
+<span class="comment"># exist_ok=True → 已存在不報錯（很重要！避免每次都要 if not exists）</span>
+
+<span class="comment"># 列出資料夾內容 / List dir contents</span>
+data_dir = Path(<span class="str">"data/raw"</span>)
+<span class="kw">for</span> f <span class="kw">in</span> data_dir.iterdir():       <span class="comment"># 一層</span>
+    <span class="builtin">print</span>(f)
+<span class="kw">for</span> f <span class="kw">in</span> data_dir.glob(<span class="str">"*.fastq.gz"</span>):  <span class="comment"># 通配符</span>
+    <span class="builtin">print</span>(f)
+<span class="kw">for</span> f <span class="kw">in</span> data_dir.rglob(<span class="str">"*.bam"</span>):    <span class="comment"># 遞迴所有子資料夾</span>
+    <span class="builtin">print</span>(f)
+
+<span class="comment"># 改名 / 移動 / 刪除</span>
+p.rename(p.with_suffix(<span class="str">".bak"</span>))     <span class="comment"># 改副檔名</span>
+p.unlink()                            <span class="comment"># 刪檔案</span>
+out.rmdir()                           <span class="comment"># 刪「空」資料夾</span></pre></div>
+<div class="code-tab-content" id="p4"><pre><span class="comment"># 舊寫法 (os.path) → 新寫法 (pathlib)</span>
+<span class="comment"># Old (os.path)              → New (pathlib)</span>
+
+<span class="kw">import</span> os, os.path
+os.path.join(<span class="str">"data"</span>,<span class="str">"raw"</span>,<span class="str">"a.fa"</span>)   <span class="comment"># →  Path("data") / "raw" / "a.fa"</span>
+os.path.exists(p)                  <span class="comment"># →  Path(p).exists()</span>
+os.path.basename(p)                <span class="comment"># →  Path(p).name</span>
+os.path.dirname(p)                 <span class="comment"># →  Path(p).parent</span>
+os.path.splitext(p)                <span class="comment"># →  (Path(p).stem, Path(p).suffix)</span>
+os.makedirs(p, exist_ok=<span class="kw">True</span>)     <span class="comment"># →  Path(p).mkdir(parents=True, exist_ok=True)</span>
+os.listdir(p)                      <span class="comment"># →  list(Path(p).iterdir())</span>
+os.getcwd()                        <span class="comment"># →  Path.cwd()</span></pre></div>
+</div>
+</section>
+
+<!-- Section 4: open() and file I/O -->
+<section class="section">
+<div class="section-label" data-zh="檔案讀寫" data-en="FILE I/O">檔案讀寫</div>
+<h2 data-zh="四、open()、模式、編碼" data-en="IV. open(), modes, encoding">四、open()、模式、編碼</h2>
+<div data-lang="zh">
+<p>讀寫檔案永遠用 <code>with open(...) as f:</code>，這個 <code>with</code> 區塊結束時會自動關閉檔案，避免忘記 <code>close()</code> 造成資料漏寫。</p>
+</div>
+<div data-lang="en">
+<p>Always use <code>with open(...) as f:</code>. The <code>with</code> block auto-closes the file when it exits, so you can't forget <code>close()</code> and lose buffered writes.</p>
+</div>
+<table class="comp-table">
+<thead><tr><th data-zh="模式" data-en="Mode">模式</th><th data-zh="意義" data-en="Meaning">意義</th><th data-zh="檔案不存在時" data-en="If file missing">檔案不存在時</th></tr></thead>
+<tbody>
+<tr><td><code>"r"</code></td><td data-lang="zh">讀取（預設，文字模式）</td><td data-lang="zh">FileNotFoundError</td><td data-lang="en">Read (default, text mode)</td><td data-lang="en">FileNotFoundError</td></tr>
+<tr><td><code>"w"</code></td><td data-lang="zh">寫入（會覆蓋既有內容！）</td><td data-lang="zh">建立新檔</td><td data-lang="en">Write (overwrites!)</td><td data-lang="en">Creates new file</td></tr>
+<tr><td><code>"a"</code></td><td data-lang="zh">附加到尾端</td><td data-lang="zh">建立新檔</td><td data-lang="en">Append</td><td data-lang="en">Creates new file</td></tr>
+<tr><td><code>"x"</code></td><td data-lang="zh">獨佔建立（已存在則報錯）</td><td data-lang="zh">建立新檔</td><td data-lang="en">Exclusive create</td><td data-lang="en">Creates; errors if exists</td></tr>
+<tr><td><code>"rb" / "wb"</code></td><td data-lang="zh">二進位模式 (讀/寫)，給 BAM/圖片/壓縮檔</td><td colspan="2" data-lang="zh">處理 .bam .png .gz 等非文字檔必用</td>
+<td data-lang="en">Binary mode, for BAM/images/compressed</td><td colspan="2" data-lang="en">Required for .bam .png .gz</td></tr>
+</tbody></table>
+
+<div class="code-tabs"><div class="code-tab-btns">
+<button class="code-tab-btn active" onclick="switchTab(this,'i1')">讀文字 / Read text</button>
+<button class="code-tab-btn" onclick="switchTab(this,'i2')">寫文字 / Write text</button>
+<button class="code-tab-btn" onclick="switchTab(this,'i3')">CSV / TSV</button>
+<button class="code-tab-btn" onclick="switchTab(this,'i4')">JSON</button>
+<button class="code-tab-btn" onclick="switchTab(this,'i5')">壓縮檔 / Compressed</button>
+</div>
+<div class="code-tab-content active" id="i1"><pre><span class="kw">from</span> pathlib <span class="kw">import</span> Path
+fp = Path(<span class="str">"data/raw/genes.txt"</span>)
+
+<span class="comment"># 方法 1：一次讀全檔 / Read whole file</span>
+text = fp.read_text(encoding=<span class="str">"utf-8"</span>)
+
+<span class="comment"># 方法 2：逐行讀（大檔必用！）/ Line-by-line (essential for large files)</span>
+<span class="kw">with</span> <span class="builtin">open</span>(fp, <span class="str">"r"</span>, encoding=<span class="str">"utf-8"</span>) <span class="kw">as</span> f:
+    <span class="kw">for</span> line <span class="kw">in</span> f:                 <span class="comment"># 一次只讀一行 → 記憶體友善</span>
+        line = line.rstrip(<span class="str">"\n"</span>)      <span class="comment"># 移除行尾換行</span>
+        <span class="kw">if</span> line.startswith(<span class="str">"#"</span>):
+            <span class="kw">continue</span>                <span class="comment"># 跳過註解行</span>
+        <span class="builtin">print</span>(line)
+
+<span class="comment"># 方法 3：全部讀成 list / Read all lines into a list</span>
+<span class="kw">with</span> <span class="builtin">open</span>(fp) <span class="kw">as</span> f:
+    lines = f.readlines()</pre></div>
+<div class="code-tab-content" id="i2"><pre><span class="comment"># 寫入 / Write</span>
+out = Path(<span class="str">"results/de_genes.txt"</span>)
+out.parent.mkdir(parents=<span class="kw">True</span>, exist_ok=<span class="kw">True</span>)   <span class="comment"># 確保資料夾存在！</span>
+
+<span class="comment"># 一次寫 / One-shot</span>
+out.write_text(<span class="str">"TP53\nMYC\nBRCA1\n"</span>, encoding=<span class="str">"utf-8"</span>)
+
+<span class="comment"># 多次寫 / Multiple writes</span>
+genes = [<span class="str">"TP53"</span>, <span class="str">"MYC"</span>, <span class="str">"BRCA1"</span>]
+<span class="kw">with</span> <span class="builtin">open</span>(out, <span class="str">"w"</span>, encoding=<span class="str">"utf-8"</span>) <span class="kw">as</span> f:
+    f.write(<span class="str">"# Top DE genes\n"</span>)
+    <span class="kw">for</span> g <span class="kw">in</span> genes:
+        f.write(g + <span class="str">"\n"</span>)
+<span class="comment"># 用 print 寫入 (自動加換行) / Use print() (auto newline)</span>
+<span class="kw">with</span> <span class="builtin">open</span>(out, <span class="str">"w"</span>) <span class="kw">as</span> f:
+    <span class="kw">for</span> g <span class="kw">in</span> genes:
+        <span class="builtin">print</span>(g, file=f)</pre></div>
+<div class="code-tab-content" id="i3"><pre><span class="kw">import</span> csv
+
+<span class="comment"># 讀 CSV / Read CSV — 使用內建 csv 模組（小檔簡單用）</span>
+<span class="kw">with</span> <span class="builtin">open</span>(<span class="str">"data/raw/metadata.csv"</span>, newline=<span class="str">""</span>, encoding=<span class="str">"utf-8"</span>) <span class="kw">as</span> f:
+    reader = csv.DictReader(f)        <span class="comment"># 第一列當欄位名</span>
+    <span class="kw">for</span> row <span class="kw">in</span> reader:
+        <span class="builtin">print</span>(row[<span class="str">"sample_id"</span>], row[<span class="str">"condition"</span>])
+
+<span class="comment"># 寫 CSV / Write CSV</span>
+rows = [{<span class="str">"gene"</span>:<span class="str">"TP53"</span>,<span class="str">"fc"</span>:<span class="num">2.3</span>},{<span class="str">"gene"</span>:<span class="str">"MYC"</span>,<span class="str">"fc"</span>:<span class="num">1.8</span>}]
+<span class="kw">with</span> <span class="builtin">open</span>(<span class="str">"out.csv"</span>, <span class="str">"w"</span>, newline=<span class="str">""</span>, encoding=<span class="str">"utf-8"</span>) <span class="kw">as</span> f:
+    w = csv.DictWriter(f, fieldnames=[<span class="str">"gene"</span>, <span class="str">"fc"</span>])
+    w.writeheader()
+    w.writerows(rows)
+
+<span class="comment"># TSV (Tab-separated) — 生資最常見格式 / Most common in bioinformatics</span>
+<span class="kw">with</span> <span class="builtin">open</span>(<span class="str">"counts.tsv"</span>, newline=<span class="str">""</span>) <span class="kw">as</span> f:
+    reader = csv.reader(f, delimiter=<span class="str">"\t"</span>)
+    <span class="kw">for</span> row <span class="kw">in</span> reader: <span class="builtin">print</span>(row)
+
+<span class="comment"># 真正大型分析請用 pandas (Ch6)！</span>
+<span class="comment"># For real datasets, use pandas (Ch6)!</span></pre></div>
+<div class="code-tab-content" id="i4"><pre><span class="kw">import</span> json
+<span class="kw">from</span> pathlib <span class="kw">import</span> Path
+
+<span class="comment"># 寫 JSON / Write JSON</span>
+config = {
+  <span class="str">"sample_id"</span>: <span class="str">"PBMC1"</span>,
+  <span class="str">"min_genes"</span>: <span class="num">200</span>,
+  <span class="str">"max_mt_pct"</span>: <span class="num">10</span>,
+  <span class="str">"markers"</span>: [<span class="str">"CD3D"</span>, <span class="str">"CD8A"</span>, <span class="str">"MS4A1"</span>],
+}
+Path(<span class="str">"config.json"</span>).write_text(
+    json.dumps(config, indent=<span class="num">2</span>, ensure_ascii=<span class="kw">False</span>),
+    encoding=<span class="str">"utf-8"</span>
+)
+
+<span class="comment"># 讀 JSON / Read JSON</span>
+cfg = json.loads(Path(<span class="str">"config.json"</span>).read_text(encoding=<span class="str">"utf-8"</span>))
+<span class="builtin">print</span>(cfg[<span class="str">"min_genes"</span>])     <span class="comment"># 200</span></pre></div>
+<div class="code-tab-content" id="i5"><pre><span class="kw">import</span> gzip
+
+<span class="comment"># 讀 .gz 文字檔 (FASTQ 常見) / Read .gz text (typical for FASTQ)</span>
+<span class="kw">with</span> gzip.open(<span class="str">"reads.fastq.gz"</span>, <span class="str">"rt"</span>, encoding=<span class="str">"utf-8"</span>) <span class="kw">as</span> f:
+    <span class="kw">for</span> line <span class="kw">in</span> f:
+        <span class="builtin">print</span>(line.rstrip())
+
+<span class="comment"># "rt" = read text；"rb" = read binary</span>
+<span class="comment"># 用 read text 模式可以直接得到 str；不指定時是 bytes</span>
+
+<span class="comment"># 寫 .gz</span>
+<span class="kw">with</span> gzip.open(<span class="str">"out.fastq.gz"</span>, <span class="str">"wt"</span>, encoding=<span class="str">"utf-8"</span>) <span class="kw">as</span> f:
+    f.write(<span class="str">"@read1\nATGC\n+\nIIII\n"</span>)</pre></div>
+</div>
+</section>
+
+<!-- Section 5: Best Practices -->
+<section class="section">
+<div class="section-label" data-zh="專案結構" data-en="PROJECT STRUCTURE">專案結構</div>
+<h2 data-zh="五、推薦的專案路徑寫法" data-en="V. Recommended project path patterns">五、推薦的專案路徑寫法</h2>
+
+<div class="code-tabs"><div class="code-tab-btns">
+<button class="code-tab-btn active" onclick="switchTab(this,'b1')">推薦 / Recommended</button>
+<button class="code-tab-btn" onclick="switchTab(this,'b2')">不推薦 / Anti-pattern</button>
+</div>
+<div class="code-tab-content active" id="b1"><pre><span class="comment"># scripts/run_qc.py</span>
+<span class="kw">from</span> pathlib <span class="kw">import</span> Path
+
+<span class="comment"># ① 用 __file__ 鎖定腳本位置，再相對地走</span>
+<span class="comment"># ① Anchor at the script file, then walk relatively</span>
+PROJ = Path(__file__).resolve().parent.parent   <span class="comment"># scripts/ 的上一層 = 專案根</span>
+DATA = PROJ / <span class="str">"data"</span>
+RESULTS = PROJ / <span class="str">"results"</span>
+
+<span class="comment"># ② 子路徑以 / 串接</span>
+RAW = DATA / <span class="str">"raw"</span>
+FIG = RESULTS / <span class="str">"figures"</span>
+FIG.mkdir(parents=<span class="kw">True</span>, exist_ok=<span class="kw">True</span>)   <span class="comment"># 確保輸出資料夾存在</span>
+
+<span class="comment"># ③ 用 glob 找檔案 (支援萬用字元)</span>
+<span class="kw">for</span> fq <span class="kw">in</span> RAW.glob(<span class="str">"*.fastq.gz"</span>):
+    <span class="builtin">print</span>(fq.name)
+
+<span class="comment"># ④ 輸出帶日期標籤，避免覆蓋舊結果</span>
+<span class="kw">from</span> datetime <span class="kw">import</span> datetime
+ts = datetime.now().strftime(<span class="str">"%Y%m%d_%H%M"</span>)
+out_csv = RESULTS / <span class="str">f"de_results_{ts}.csv"</span></pre></div>
+<div class="code-tab-content" id="b2"><pre><span class="comment"># ❌ 寫死絕對路徑 — 換電腦就壞</span>
+fp = <span class="str">"C:\\Users\\charlene\\Desktop\\proj\\data.csv"</span>
+<span class="comment"># ❌ 雙倍倒霉：反斜線沒處理 + 桌面這種隨時搬家的位置</span>
+
+<span class="comment"># ❌ 假設 CWD 是某個位置</span>
+fp = <span class="str">"data/sample.csv"</span>
+<span class="comment"># 在 VSCode 開根目錄能跑，cd scripts/ 後就壞</span>
+
+<span class="comment"># ❌ 字串拼接 (跨平台會出事)</span>
+fp = data_dir + <span class="str">"/"</span> + filename
+<span class="comment"># 應改用 Path(data_dir) / filename</span>
+
+<span class="comment"># ❌ 沒檢查資料夾就寫</span>
+<span class="builtin">open</span>(<span class="str">"out/figs/result.png"</span>, <span class="str">"w"</span>)
+<span class="comment"># FileNotFoundError: out/figs/ 不存在</span>
+<span class="comment"># 改：Path("out/figs").mkdir(parents=True, exist_ok=True)</span>
+
+<span class="comment"># ❌ 讀完忘記關</span>
+f = <span class="builtin">open</span>(<span class="str">"big.fastq"</span>)
+<span class="kw">for</span> line <span class="kw">in</span> f: process(line)
+<span class="comment"># 應該用 with open(...) as f:</span></pre></div>
+</div>
+</section>
+
+<!-- Decision Tree -->
+<section class="section">
+<div class="section-label" data-zh="決策引導" data-en="DECISION GUIDE">決策引導</div>
+<h2 data-zh="六、路徑寫法決策樹" data-en="VI. Path-style decision tree">六、路徑寫法決策樹</h2>
+<div class="decision-tree">
+<h4>🌳 <span data-zh="如何選路徑寫法？" data-en="How to pick a path style?">如何選路徑寫法？</span></h4>
+<div data-lang="zh">
+<div class="dt-node"><span class="dt-q">Q1:</span><div>是<strong>可重複執行</strong>的腳本嗎（要交給別人/丟到伺服器）？<span class="dt-arrow">→ 是 →</span> 用 <code>Path(__file__).parent</code> 為錨</div></div>
+<div class="dt-node"><span class="dt-q">Q2:</span><div>是<strong>互動式 Jupyter notebook</strong>？<span class="dt-arrow">→ 是 →</span> 用 <code>Path.cwd()</code>（notebook 的位置）；或在 cell 開頭 <code>%cd /path/to/proj</code></div></div>
+<div class="dt-node"><span class="dt-q">Q3:</span><div>是<strong>大型 Snakemake / Nextflow pipeline</strong>？<span class="dt-arrow">→ 是 →</span> 用 pipeline 框架的內建路徑變數（<code>config["data_dir"]</code>）</div></div>
+<div class="dt-node"><span class="dt-q">Q4:</span><div>路徑要寫到 git？<span class="dt-arrow">→ 一律相對 →</span> 任何含使用者名稱的絕對路徑都不該進 git</div></div>
+</div>
+<div data-lang="en">
+<div class="dt-node"><span class="dt-q">Q1:</span><div>Is it a <strong>repeatable script</strong> (shared with others / on a server)? <span class="dt-arrow">→ Yes →</span> Anchor with <code>Path(__file__).parent</code></div></div>
+<div class="dt-node"><span class="dt-q">Q2:</span><div>Is it an <strong>interactive Jupyter notebook</strong>? <span class="dt-arrow">→ Yes →</span> Use <code>Path.cwd()</code>, or <code>%cd /path/to/proj</code> in the first cell</div></div>
+<div class="dt-node"><span class="dt-q">Q3:</span><div>Is it a <strong>Snakemake / Nextflow pipeline</strong>? <span class="dt-arrow">→ Yes →</span> Use the framework's path variables (<code>config["data_dir"]</code>)</div></div>
+<div class="dt-node"><span class="dt-q">Q4:</span><div>Will the path be committed to git? <span class="dt-arrow">→ Always relative →</span> Never commit paths containing user names</div></div>
+</div>
+</div>
+</section>
+
+<!-- Interactive: Path resolver -->
+<section class="section">
+<div class="section-label" data-zh="互動模擬" data-en="INTERACTIVE">互動模擬</div>
+<h2 data-zh="路徑解析器：CWD 改變時會發生什麼？" data-en="Path resolver: what happens when CWD changes?">路徑解析器</h2>
+<div class="interactive-panel">
+<div class="slider-group"><label><span data-zh="當前工作目錄 (CWD)" data-en="Current Working Directory">當前工作目錄</span></label>
+<select id="cwdSel" style="width:100%;padding:8px;border-radius:6px;font-family:var(--font-mono);">
+<option value="/home/charlene/proj">/home/charlene/proj</option>
+<option value="/home/charlene/proj/scripts">/home/charlene/proj/scripts</option>
+<option value="/home/charlene">/home/charlene</option>
+<option value="/">/</option>
+</select></div>
+<div class="slider-group"><label><span data-zh="open() 裡寫的路徑" data-en="Path passed to open()">open() 路徑</span></label>
+<input type="text" id="pathIn" value="data/raw/sample.fastq" style="width:100%;padding:8px 12px;border:1px solid var(--c-border);border-radius:6px;font-family:var(--font-mono);"></div>
+<div style="font-size:.82rem;color:var(--c-ink-muted);margin-top:14px;font-weight:600;" data-zh="Python 實際會找的位置：" data-en="Where Python will actually look:">Python 實際會找的位置：</div>
+<div class="console-out" id="resolvedOut" style="min-height:auto;"></div>
+<div class="sim-stats" style="margin-top:12px;"><span class="sim-stat" id="resStat" style="background:var(--c-accent-light);color:var(--c-accent-dark);">—</span></div>
+</div>
+</section>
+
+<!-- Quiz -->
+<section class="quiz-section">
+<h3>📝 <span data-zh="自我檢測" data-en="Self-Check">自我檢測</span></h3>
+<div class="quiz-q" data-answer="2">
+<p data-lang="zh">1. <code>open("data.csv")</code> 跳 FileNotFoundError，最該先做什麼？</p>
+<p data-lang="en">1. <code>open("data.csv")</code> raises FileNotFoundError. What should you check FIRST?</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. 重新安裝 Python</span><span data-lang="en">A. Reinstall Python</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. 檢查 data.csv 編碼是否為 UTF-8</span><span data-lang="en">B. Check if data.csv is UTF-8</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. 印出 <code>os.getcwd()</code> 或 <code>Path.cwd()</code> 看 CWD 在哪</span><span data-lang="en">C. Print <code>os.getcwd()</code> / <code>Path.cwd()</code> to see CWD</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. 把檔案改名為英文</span><span data-lang="en">D. Rename the file to ASCII</span></div>
+</div></div>
+
+<div class="quiz-q" data-answer="1">
+<p data-lang="zh">2. Windows 寫絕對路徑，下列哪個寫法<strong>會出錯</strong>？</p>
+<p data-lang="en">2. On Windows, which absolute-path style <strong>will break</strong>?</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span><code>"C:/Users/charlene/data.csv"</code></span></div>
+<div class="quiz-opt" data-idx="1"><span><code>"C:\Users\new_data\sample.csv"</code></span></div>
+<div class="quiz-opt" data-idx="2"><span><code>r"C:\Users\charlene\data.csv"</code></span></div>
+<div class="quiz-opt" data-idx="3"><span><code>Path("C:/Users/charlene/data.csv")</code></span></div>
+</div></div>
+
+<div class="quiz-q" data-answer="0">
+<p data-lang="zh">3. 寫腳本給協作者，最 portable 的路徑寫法是？</p>
+<p data-lang="en">3. For a portable script shared with collaborators, the best path pattern is:</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. <code>PROJ = Path(__file__).resolve().parent.parent</code> 然後相對地走</span><span data-lang="en">A. <code>PROJ = Path(__file__).resolve().parent.parent</code> then relative</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. 寫死 <code>/home/myname/proj/data/...</code></span><span data-lang="en">B. Hardcode <code>/home/myname/proj/data/...</code></span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. 假設 CWD 永遠是專案根</span><span data-lang="en">C. Assume CWD is always project root</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. 用桌面當工作目錄</span><span data-lang="en">D. Use Desktop as workdir</span></div>
+</div></div>
+</section>
+
+<nav class="page-nav">
+<a href="syntax.html"><span class="nav-dir" data-zh="← 上一章" data-en="← Prev">← 上一章</span><span class="nav-title">Ch 2: Syntax</span></a>
+<a href="functions.html"><span class="nav-dir" data-zh="下一章 →" data-en="Next →">下一章 →</span><span class="nav-title">Ch 4: Functions & Modules</span></a>
+</nav>
+</main>
+<footer class="site-footer">© Charlene — Python for Bioinformatics Interactive Tutorial</footer>
+<script src="i18n.js"></script>
+<script>
+window.addEventListener('scroll',()=>{const h=document.documentElement;document.getElementById('progressBar').style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight))*100+'%';});
+function switchTab(b,id){const p=b.closest('.code-tabs');p.querySelectorAll('.code-tab-btn').forEach(x=>x.classList.remove('active'));p.querySelectorAll('.code-tab-content').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById(id).classList.add('active');}
+document.querySelectorAll('.quiz-q').forEach(q=>{const ans=+q.dataset.answer;q.querySelectorAll('.quiz-opt').forEach(opt=>{opt.addEventListener('click',()=>{const idx=+opt.dataset.idx;q.querySelectorAll('.quiz-opt').forEach(o=>o.classList.remove('correct','wrong'));if(idx===ans)opt.classList.add('correct');else{opt.classList.add('wrong');q.querySelectorAll('.quiz-opt')[ans].classList.add('correct');}});});});
+
+// Path resolver simulator
+function resolvePath(){
+  const cwd=document.getElementById('cwdSel').value;
+  const p=document.getElementById('pathIn').value.trim();
+  let resolved;
+  if(p.startsWith('/')||/^[A-Za-z]:/.test(p)){resolved=p;} // absolute
+  else{
+    let parts=cwd.split('/').filter(Boolean);
+    p.replace(/\\/g,'/').split('/').forEach(seg=>{
+      if(seg==''||seg=='.')return;
+      if(seg=='..')parts.pop();
+      else parts.push(seg);
+    });
+    resolved='/'+parts.join('/');
+  }
+  document.getElementById('resolvedOut').textContent=resolved;
+  // Heuristic: assume /home/charlene/proj/data/raw/sample.fastq exists
+  const exists=resolved==='/home/charlene/proj/data/raw/sample.fastq';
+  const lang=I18n?I18n.get():'zh';
+  const stat=document.getElementById('resStat');
+  if(exists){stat.textContent=lang==='zh'?'✅ 找到檔案':'✅ File found';stat.style.background='var(--c-accent-light)';stat.style.color='var(--c-accent-dark)';}
+  else{stat.textContent=lang==='zh'?'❌ FileNotFoundError':'❌ FileNotFoundError';stat.style.background='var(--c-danger-light)';stat.style.color='var(--c-danger)';}
+}
+document.getElementById('cwdSel').addEventListener('change',resolvePath);
+document.getElementById('pathIn').addEventListener('input',resolvePath);
+document.addEventListener('langchange',resolvePath);
+resolvePath();
+</script>
+</body></html>

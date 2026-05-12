@@ -1,0 +1,237 @@
+<!DOCTYPE html><html lang="zh-Hant"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Ch 13: AnnData 與 scanpy 入門 — Python BioInfo Tutorial</title>
+<link rel="stylesheet" href="styles.css">
+</head><body>
+<nav class="top-nav"><div class="top-nav-inner">
+  <a href="index.html" class="top-nav-brand"><span>🐍</span> <span data-zh="Python 生資教學" data-en="Python BioInfo Tutorial">Python 生資教學</span></a>
+  <ul class="top-nav-links">
+    <li><a href="setup.html">Setup</a></li><li><a href="syntax.html">Syntax</a></li><li><a href="paths.html">Paths</a></li><li><a href="functions.html">Func</a></li><li><a href="numpy.html">NumPy</a></li><li><a href="pandas.html">Pandas</a></li><li><a href="visualization.html">Viz</a></li><li><a href="biopython.html">Biopy</a></li><li><a href="fasta-fastq.html">FASTQ</a></li><li><a href="blast.html">BLAST</a></li><li><a href="pysam.html">pysam</a></li><li><a href="variant-calling.html">Variant</a></li><li><a href="scanpy-anndata.html" class="active">scanpy</a></li><li><a href="scrna-workflow.html">scRNA</a></li><li><a href="spatial.html">Spatial</a></li><li><a href="multi-omics.html">Multi</a></li><li><a href="scllms.html">scLLMs</a></li><li><a href="ai-bioinformatics.html">AI</a></li>
+  </ul>
+</div></nav>
+<div class="progress-bar-container"><div class="progress-bar" id="progressBar"></div></div>
+<header class="page-hero"><div class="step-badge">CHAPTER 13 / 18</div>
+<h1 data-zh="AnnData 與 scanpy 入門" data-en="AnnData & scanpy">AnnData 與 scanpy</h1>
+<p class="subtitle" data-lang="zh">單細胞分析的核心資料結構與工具庫 — 看懂它，未來所有 scRNA / 空間 / 多體學工具都通了。</p>
+<p class="subtitle" data-lang="en">The core data structure and toolbox for single-cell analysis — master AnnData and the rest of scRNA / spatial / multi-omics opens up.</p>
+</header>
+<main class="content-wrap">
+
+<section class="section">
+<div class="section-label" data-zh="AnnData 結構" data-en="ANNDATA STRUCTURE">AnnData 結構</div>
+<h2 data-zh="一、AnnData 是什麼？" data-en="I. What is AnnData?">一、AnnData 是什麼？</h2>
+<div data-lang="zh">
+<p>AnnData = <strong>Annotated Data</strong>。一個 AnnData 物件代表一個 scRNA-seq（或任何高通量）<strong>實驗</strong>，包含：表達矩陣本身 + 每個 cell 的 metadata + 每個 gene 的 metadata + 各種降維結果。</p>
+</div>
+<div data-lang="en">
+<p>AnnData = <strong>Annotated Data</strong>. One AnnData object represents one scRNA-seq (or any high-throughput) <strong>experiment</strong>: the expression matrix + per-cell metadata + per-gene metadata + various dimensionality reduction results.</p>
+</div>
+<div class="path-box">
+<span class="comment"># 視覺化結構 / Schema</span>
+adata = AnnData(...)
+├── .X          <span class="comment"># 表達矩陣 (n_cells × n_genes)，通常為 sparse</span>
+├── .obs        <span class="comment"># pandas DataFrame，每列一 cell，欄是 cell metadata (cluster, condition, donor)</span>
+├── .var        <span class="comment"># pandas DataFrame，每列一 gene，欄是 gene metadata (mt, hvg)</span>
+├── .obsm       <span class="comment"># dict of (n_cells × d) — 降維結果 X_pca, X_umap, X_tsne</span>
+├── .varm       <span class="comment"># dict of (n_genes × d) — 基因端的多維資料</span>
+├── .obsp       <span class="comment"># dict of (n_cells × n_cells) — cell pair 距離 / connectivity</span>
+├── .uns        <span class="comment"># 任意 dict — 例如 'rank_genes_groups' 結果、palette</span>
+└── .layers     <span class="comment"># dict of 同形狀矩陣 — counts, lognorm, scaled 共存</span>
+</div>
+<div class="callout tip"><span class="callout-icon">💡</span><div>
+<span data-lang="zh"><strong>記住這 7 個欄位</strong>，scanpy / squidpy / scvelo / cellrank 全部都圍著 AnnData 轉。看到 <code>adata.obs[...]</code> 就是在看 cell metadata；<code>adata.obsm["X_umap"]</code> 就是 UMAP 座標。</span>
+<span data-lang="en"><strong>Memorize these 7 slots</strong> — scanpy / squidpy / scvelo / cellrank all revolve around AnnData. <code>adata.obs[...]</code> = cell metadata; <code>adata.obsm["X_umap"]</code> = UMAP coordinates.</span>
+</div></div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="讀進來" data-en="LOAD">讀進來</div>
+<h2 data-zh="二、把資料讀成 AnnData" data-en="II. Loading data into AnnData">二、各種讀法</h2>
+<div class="code-tabs"><div class="code-tab-btns">
+<button class="code-tab-btn active" onclick="switchTab(this,'l1')">10X CellRanger</button>
+<button class="code-tab-btn" onclick="switchTab(this,'l2')">h5ad / loom</button>
+<button class="code-tab-btn" onclick="switchTab(this,'l3')">CSV/TSV 自製</button>
+<button class="code-tab-btn" onclick="switchTab(this,'l4')">從 R Seurat 轉</button>
+</div>
+<div class="code-tab-content active" id="l1"><pre><span class="kw">import</span> scanpy <span class="kw">as</span> sc
+
+<span class="comment"># CellRanger 輸出資料夾通常結構：
+<span class="comment"># sample/outs/filtered_feature_bc_matrix/
+<span class="comment">#   ├── barcodes.tsv.gz
+<span class="comment">#   ├── features.tsv.gz
+<span class="comment">#   └── matrix.mtx.gz</span>
+adata = sc.read_10x_mtx(
+    <span class="str">"data/raw/sample/outs/filtered_feature_bc_matrix/"</span>,
+    var_names=<span class="str">"gene_symbols"</span>,    <span class="comment"># 用基因符號 (TP53)，否則是 Ensembl ID</span>
+    cache=<span class="kw">True</span>,                  <span class="comment"># 快取 .h5ad 加速重跑</span>
+)
+<span class="builtin">print</span>(adata)
+<span class="comment"># AnnData object with n_obs × n_vars = 5023 × 33538</span>
+<span class="comment">#     obs: (none yet)
+<span class="comment">#     var: 'gene_ids', 'feature_types'</span>
+
+<span class="comment"># 一次讀 h5 / Read the h5 file directly</span>
+adata = sc.read_10x_h5(<span class="str">"data/raw/sample.h5"</span>)</pre></div>
+<div class="code-tab-content" id="l2"><pre><span class="comment"># h5ad — AnnData 原生格式，最快、最完整 / Native format, fastest and most complete</span>
+adata.write_h5ad(<span class="str">"data/processed/pbmc.h5ad"</span>, compression=<span class="str">"gzip"</span>)
+adata = sc.read_h5ad(<span class="str">"data/processed/pbmc.h5ad"</span>)
+
+<span class="comment"># loom — 跨工具相容 (Velocyto 給的) / Cross-tool format</span>
+adata = sc.read_loom(<span class="str">"data/raw/sample.loom"</span>)
+
+<span class="comment"># 大檔技巧：backed mode (不全部載入記憶體)</span>
+adata = sc.read_h5ad(<span class="str">"big.h5ad"</span>, backed=<span class="str">"r"</span>)
+<span class="comment"># 可以瀏覽、切片，要寫入時改用 .to_memory()</span></pre></div>
+<div class="code-tab-content" id="l3"><pre><span class="kw">import</span> anndata <span class="kw">as</span> ad
+<span class="kw">import</span> pandas <span class="kw">as</span> pd
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+
+<span class="comment"># 從 CSV (cells × genes) + meta 建立 AnnData</span>
+counts = pd.read_csv(<span class="str">"counts.csv"</span>, index_col=<span class="num">0</span>)            <span class="comment"># cell × gene</span>
+meta   = pd.read_csv(<span class="str">"meta.csv"</span>, index_col=<span class="num">0</span>)              <span class="comment"># cell metadata</span>
+genes  = pd.read_csv(<span class="str">"genes.csv"</span>, index_col=<span class="num">0</span>)             <span class="comment"># gene metadata</span>
+
+adata = ad.AnnData(X=counts.values,
+                   obs=meta.loc[counts.index],
+                   var=genes.loc[counts.columns])
+
+<span class="comment"># 轉成稀疏 (省記憶體)</span>
+<span class="kw">from</span> scipy.sparse <span class="kw">import</span> csr_matrix
+adata.X = csr_matrix(adata.X)</pre></div>
+<div class="code-tab-content" id="l4"><pre><span class="comment"># R Seurat 物件 → AnnData</span>
+<span class="comment"># 方法 1：用 SeuratDisk 在 R 端轉</span>
+<span class="comment"># R: SaveH5Seurat(seurat_obj, "obj.h5Seurat"); Convert("obj.h5Seurat", "h5ad")</span>
+
+<span class="comment"># 方法 2：用 anndata2ri 在 Python 端跨橋</span>
+<span class="kw">import</span> anndata2ri
+<span class="kw">import</span> rpy2.robjects <span class="kw">as</span> ro
+anndata2ri.activate()
+adata = ro.r(<span class="str">"as.SingleCellExperiment(seurat_obj)"</span>)
+
+<span class="comment"># 方法 3：寫成 .h5ad 給 R 讀回去</span>
+<span class="comment"># R: zellkonverter::readH5AD("file.h5ad")</span></pre></div>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="基本操作" data-en="BASIC OPS">基本操作</div>
+<h2 data-zh="三、查看、切片、加 metadata" data-en="III. Inspecting, slicing, adding metadata">三、查看、切片、加 meta</h2>
+<div class="code-tabs"><div class="code-tab-btns">
+<button class="code-tab-btn active" onclick="switchTab(this,'a1')">查看</button>
+<button class="code-tab-btn" onclick="switchTab(this,'a2')">切片</button>
+<button class="code-tab-btn" onclick="switchTab(this,'a3')">加註解</button>
+</div>
+<div class="code-tab-content active" id="a1"><pre>adata.shape          <span class="comment"># (n_cells, n_genes)</span>
+adata.n_obs          <span class="comment"># 細胞數</span>
+adata.n_vars         <span class="comment"># 基因數</span>
+adata.obs.head()     <span class="comment"># cell metadata</span>
+adata.var.head()     <span class="comment"># gene metadata</span>
+adata.obs.columns    <span class="comment"># cell 端的欄位名</span>
+adata.var.columns    <span class="comment"># gene 端的欄位名</span>
+
+<span class="comment"># 表達矩陣本身 (sparse)</span>
+adata.X
+<span class="builtin">type</span>(adata.X)         <span class="comment"># scipy.sparse.csr_matrix</span>
+adata.X.<span class="builtin">sum</span>(axis=<span class="num">1</span>)   <span class="comment"># 每 cell 總 counts</span>
+adata.X.<span class="builtin">sum</span>(axis=<span class="num">0</span>)   <span class="comment"># 每 gene 總 counts</span></pre></div>
+<div class="code-tab-content" id="a2"><pre><span class="comment"># 像 pandas 一樣切：先 cell、後 gene</span>
+adata[<span class="num">0</span>:<span class="num">100</span>]                    <span class="comment"># 前 100 細胞</span>
+adata[:, <span class="str">"TP53"</span>]                <span class="comment"># 所有 cell 的 TP53 表達</span>
+adata[:, [<span class="str">"TP53"</span>,<span class="str">"MYC"</span>]]
+adata[adata.obs[<span class="str">"condition"</span>] == <span class="str">"WT"</span>]   <span class="comment"># 條件過濾 cell</span>
+
+<span class="comment"># 一條基因的所有表達 (轉成 numpy 陣列)</span>
+tp53_expr = adata[:, <span class="str">"TP53"</span>].X.toarray().flatten()
+<span class="builtin">print</span>(tp53_expr.shape)         <span class="comment"># (n_cells,)</span>
+
+<span class="comment"># 切片回來的 AnnData 是 view (共用記憶體) — 想獨立要 .copy()</span>
+sub = adata[:<span class="num">100</span>].copy()</pre></div>
+<div class="code-tab-content" id="a3"><pre><span class="comment"># 加 cell metadata：直接像 pandas 加欄</span>
+adata.obs[<span class="str">"sample"</span>] = <span class="str">"PBMC1"</span>
+adata.obs[<span class="str">"batch"</span>] = batch_array
+
+<span class="comment"># 加 gene metadata：標記粒線體基因</span>
+adata.var[<span class="str">"mt"</span>] = adata.var_names.str.startswith(<span class="str">"MT-"</span>)
+adata.var[<span class="str">"ribo"</span>] = adata.var_names.str.startswith((<span class="str">"RPS"</span>,<span class="str">"RPL"</span>))
+adata.var[<span class="str">"hb"</span>] = adata.var_names.str.contains(<span class="str">"^HB[^P]"</span>)
+
+<span class="comment"># 一次計算 QC 指標 / Compute QC metrics in one call</span>
+sc.pp.calculate_qc_metrics(adata, qc_vars=[<span class="str">"mt"</span>,<span class="str">"ribo"</span>,<span class="str">"hb"</span>],
+                           inplace=<span class="kw">True</span>, percent_top=<span class="kw">None</span>, log1p=<span class="kw">False</span>)
+<span class="comment"># 自動加進 obs:
+<span class="comment">#   n_genes_by_counts, total_counts,
+<span class="comment">#   pct_counts_mt, pct_counts_ribo, pct_counts_hb</span></pre></div>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="scanpy 模組地圖" data-en="SCANPY MODULES">scanpy 模組地圖</div>
+<h2 data-zh="四、scanpy 命名慣例 (sc.pp / sc.tl / sc.pl)" data-en="IV. scanpy conventions (sc.pp / sc.tl / sc.pl)">四、sc.pp / sc.tl / sc.pl</h2>
+<div class="card-grid cols-3">
+<div class="card"><div class="card-icon">🧹</div><h4>sc.pp — preprocessing</h4>
+<div data-lang="zh"><p>修改 <code>adata.X</code> 或 <code>adata.obs/var</code> 的「資料前處理」函式：QC、normalize、HVG、scale、neighbors。</p>
+<p>例：<code>sc.pp.filter_cells</code>、<code>sc.pp.normalize_total</code>、<code>sc.pp.highly_variable_genes</code>。</p></div>
+<div data-lang="en"><p>Functions that modify <code>adata.X</code> or metadata: QC, normalization, HVG, scaling, neighbors.</p>
+<p>e.g. <code>sc.pp.filter_cells</code>, <code>sc.pp.normalize_total</code>, <code>sc.pp.highly_variable_genes</code>.</p></div>
+</div>
+<div class="card"><div class="card-icon">🔬</div><h4>sc.tl — tools</h4>
+<div data-lang="zh"><p>分析工具：PCA、UMAP、Leiden、rank_genes、velocity、pseudotime。結果存進 <code>adata.obsm/uns</code>。</p>
+<p>例：<code>sc.tl.pca</code>、<code>sc.tl.umap</code>、<code>sc.tl.leiden</code>、<code>sc.tl.rank_genes_groups</code>。</p></div>
+<div data-lang="en"><p>Analysis tools: PCA, UMAP, Leiden, marker genes, velocity, pseudotime. Results stored in <code>adata.obsm/uns</code>.</p>
+<p>e.g. <code>sc.tl.pca</code>, <code>sc.tl.umap</code>, <code>sc.tl.leiden</code>, <code>sc.tl.rank_genes_groups</code>.</p></div>
+</div>
+<div class="card"><div class="card-icon">🎨</div><h4>sc.pl — plotting</h4>
+<div data-lang="zh"><p>繪圖。每個 tool 大多有對應的 plot：<code>sc.pl.umap</code>、<code>sc.pl.violin</code>、<code>sc.pl.dotplot</code>、<code>sc.pl.heatmap</code>。</p></div>
+<div data-lang="en"><p>Plotting. Most tools have a matching plot: <code>sc.pl.umap</code>, <code>sc.pl.violin</code>, <code>sc.pl.dotplot</code>, <code>sc.pl.heatmap</code>.</p></div>
+</div>
+</div>
+<div class="callout info"><span class="callout-icon">📌</span><div>
+<span data-lang="zh"><strong>記憶法：</strong>pp = pre-process（前處理）、tl = tool（分析）、pl = plot（畫圖）。打 <code>sc.</code> 後按 Tab 看自動補全，比看文件快。</span>
+<span data-lang="en"><strong>Mnemonic:</strong> pp = pre-process, tl = tool, pl = plot. Type <code>sc.</code> and press Tab — autocomplete is faster than docs.</span>
+</div></div>
+</section>
+
+<!-- Quiz -->
+<section class="quiz-section">
+<h3>📝 <span data-zh="自我檢測" data-en="Self-Check">自我檢測</span></h3>
+<div class="quiz-q" data-answer="2">
+<p data-lang="zh">1. UMAP 座標儲存在 AnnData 的哪個欄位？</p>
+<p data-lang="en">1. Where are UMAP coordinates stored in AnnData?</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span><code>adata.X</code></span></div>
+<div class="quiz-opt" data-idx="1"><span><code>adata.obs["umap"]</code></span></div>
+<div class="quiz-opt" data-idx="2"><span><code>adata.obsm["X_umap"]</code></span></div>
+<div class="quiz-opt" data-idx="3"><span><code>adata.uns["umap"]</code></span></div>
+</div></div>
+<div class="quiz-q" data-answer="1">
+<p data-lang="zh">2. <code>adata.obs</code> 是什麼？</p>
+<p data-lang="en">2. <code>adata.obs</code> is:</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. 表達矩陣</span><span data-lang="en">A. The expression matrix</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. cell 端的 metadata DataFrame（每列一 cell）</span><span data-lang="en">B. Per-cell metadata DataFrame (one row per cell)</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. gene 端的 metadata</span><span data-lang="en">C. Per-gene metadata</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. 顏色字典</span><span data-lang="en">D. A color dictionary</span></div>
+</div></div>
+<div class="quiz-q" data-answer="0">
+<p data-lang="zh">3. 想保留原始 counts、又要存 lognorm 資料，最好放在？</p>
+<p data-lang="en">3. To keep both raw counts and log-normalized data, the best slot is:</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span><code>adata.layers["counts"]</code> 與 <code>adata.layers["lognorm"]</code></span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. 兩個都覆蓋到 .X</span><span data-lang="en">B. Overwrite .X twice</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. 存兩個 .h5ad 檔</span><span data-lang="en">C. Save two .h5ad files</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. .obs 裡開兩個欄</span><span data-lang="en">D. Two columns in .obs</span></div>
+</div></div>
+</section>
+
+<nav class="page-nav">
+<a href="variant-calling.html"><span class="nav-dir" data-zh="← 上一章" data-en="← Prev">← 上一章</span><span class="nav-title">Ch 12: Variant Calling</span></a>
+<a href="scrna-workflow.html"><span class="nav-dir" data-zh="下一章 →" data-en="Next →">下一章 →</span><span class="nav-title">Ch 14: scRNA-seq Workflow</span></a>
+</nav>
+</main>
+<footer class="site-footer">© Charlene — Python for Bioinformatics Interactive Tutorial</footer>
+<script src="i18n.js"></script>
+<script>
+window.addEventListener('scroll',()=>{const h=document.documentElement;document.getElementById('progressBar').style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight))*100+'%';});
+function switchTab(b,id){const p=b.closest('.code-tabs');p.querySelectorAll('.code-tab-btn').forEach(x=>x.classList.remove('active'));p.querySelectorAll('.code-tab-content').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById(id).classList.add('active');}
+document.querySelectorAll('.quiz-q').forEach(q=>{const ans=+q.dataset.answer;q.querySelectorAll('.quiz-opt').forEach(opt=>{opt.addEventListener('click',()=>{const idx=+opt.dataset.idx;q.querySelectorAll('.quiz-opt').forEach(o=>o.classList.remove('correct','wrong'));if(idx===ans)opt.classList.add('correct');else{opt.classList.add('wrong');q.querySelectorAll('.quiz-opt')[ans].classList.add('correct');}});});});
+</script>
+</body></html>

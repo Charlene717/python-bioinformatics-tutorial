@@ -1,0 +1,244 @@
+<!DOCTYPE html><html lang="zh-Hant"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Ch 14: scRNA-seq 完整流程 — Python BioInfo Tutorial</title>
+<link rel="stylesheet" href="styles.css">
+</head><body>
+<nav class="top-nav"><div class="top-nav-inner">
+  <a href="index.html" class="top-nav-brand"><span>🐍</span> <span data-zh="Python 生資教學" data-en="Python BioInfo Tutorial">Python 生資教學</span></a>
+  <ul class="top-nav-links">
+    <li><a href="setup.html">Setup</a></li><li><a href="syntax.html">Syntax</a></li><li><a href="paths.html">Paths</a></li><li><a href="functions.html">Func</a></li><li><a href="numpy.html">NumPy</a></li><li><a href="pandas.html">Pandas</a></li><li><a href="visualization.html">Viz</a></li><li><a href="biopython.html">Biopy</a></li><li><a href="fasta-fastq.html">FASTQ</a></li><li><a href="blast.html">BLAST</a></li><li><a href="pysam.html">pysam</a></li><li><a href="variant-calling.html">Variant</a></li><li><a href="scanpy-anndata.html">scanpy</a></li><li><a href="scrna-workflow.html" class="active">scRNA</a></li><li><a href="spatial.html">Spatial</a></li><li><a href="multi-omics.html">Multi</a></li><li><a href="scllms.html">scLLMs</a></li><li><a href="ai-bioinformatics.html">AI</a></li>
+  </ul>
+</div></nav>
+<div class="progress-bar-container"><div class="progress-bar" id="progressBar"></div></div>
+<header class="page-hero"><div class="step-badge">CHAPTER 14 / 18</div>
+<h1 data-zh="scRNA-seq 完整流程 (scanpy)" data-en="scRNA-seq Workflow (scanpy)">scRNA-seq 完整流程</h1>
+<p class="subtitle" data-lang="zh">從 10X 矩陣到細胞類型註解 — 一份可以原封不動跑的 Python pipeline。</p>
+<p class="subtitle" data-lang="en">From a 10X matrix to annotated cell types — a Python pipeline you can run as-is.</p>
+</header>
+<main class="content-wrap">
+
+<section class="section">
+<div class="section-label" data-zh="總覽" data-en="OVERVIEW">總覽</div>
+<h2 data-zh="一、9 個步驟總覽" data-en="I. 9-step overview">一、9 個步驟</h2>
+<div class="workflow">
+  <div class="workflow-step" data-step="1"><h4>QC & filter</h4>
+    <div data-lang="zh"><p>計算 nFeature / nCount / pct_mt → 過濾低品質細胞與基因。</p></div>
+    <div data-lang="en"><p>Compute nFeature / nCount / pct_mt → filter low-quality cells and genes.</p></div></div>
+  <div class="workflow-step" data-step="2"><h4>Normalize + log1p</h4>
+    <div data-lang="zh"><p>標準化每個 cell 到固定 size factor (10000) → log1p。</p></div>
+    <div data-lang="en"><p>Normalize each cell to fixed size factor (10000) → log1p.</p></div></div>
+  <div class="workflow-step" data-step="3"><h4>HVG selection</h4>
+    <div data-lang="zh"><p>選擇高變異基因（2000–3000 個）做後續降維。</p></div>
+    <div data-lang="en"><p>Select highly variable genes (2000–3000) for downstream.</p></div></div>
+  <div class="workflow-step" data-step="4"><h4>Scale & PCA</h4>
+    <div data-lang="zh"><p>z-score 後做 PCA，保留 ~50 個 PC。</p></div>
+    <div data-lang="en"><p>Z-score then PCA, keep ~50 PCs.</p></div></div>
+  <div class="workflow-step" data-step="5"><h4>Neighbors & UMAP</h4>
+    <div data-lang="zh"><p>在 PCA 空間建近鄰圖 → UMAP 降到 2D。</p></div>
+    <div data-lang="en"><p>kNN graph in PCA space → UMAP to 2D.</p></div></div>
+  <div class="workflow-step" data-step="6"><h4>Clustering (Leiden)</h4>
+    <div data-lang="zh"><p>用 Leiden 演算法在近鄰圖上分群。</p></div>
+    <div data-lang="en"><p>Leiden community detection on the kNN graph.</p></div></div>
+  <div class="workflow-step" data-step="7"><h4>Marker genes</h4>
+    <div data-lang="zh"><p>每個 cluster 找代表基因（rank_genes_groups）。</p></div>
+    <div data-lang="en"><p>Find marker genes per cluster (rank_genes_groups).</p></div></div>
+  <div class="workflow-step" data-step="8"><h4>Cell type annotation</h4>
+    <div data-lang="zh"><p>用 marker 對照已知細胞類型，或用自動工具 (CellTypist, SingleR)。</p></div>
+    <div data-lang="en"><p>Match markers to known cell types, or use auto tools (CellTypist, SingleR).</p></div></div>
+  <div class="workflow-step" data-step="9"><h4>DE / 進階</h4>
+    <div data-lang="zh"><p>跨 condition 比較表達差異、軌跡分析、整合多樣本。</p></div>
+    <div data-lang="en"><p>DE across conditions, trajectory, multi-sample integration.</p></div></div>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="完整程式" data-en="FULL CODE">完整程式</div>
+<h2 data-zh="二、一份可以跑的 pipeline (10X PBMC)" data-en="II. End-to-end pipeline (10X PBMC)">二、可執行 pipeline</h2>
+<div class="code-tabs"><div class="code-tab-btns">
+<button class="code-tab-btn active" onclick="switchTab(this,'w1')">Step 1–4: QC → PCA</button>
+<button class="code-tab-btn" onclick="switchTab(this,'w2')">Step 5–7: UMAP → markers</button>
+<button class="code-tab-btn" onclick="switchTab(this,'w3')">Step 8: 註解 + DE</button>
+<button class="code-tab-btn" onclick="switchTab(this,'w4')">Step 9: 整合多樣本</button>
+</div>
+<div class="code-tab-content active" id="w1"><pre><span class="kw">import</span> scanpy <span class="kw">as</span> sc
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+sc.settings.verbosity = <span class="num">3</span>; sc.settings.set_figure_params(dpi=<span class="num">100</span>, facecolor=<span class="str">"white"</span>)
+
+<span class="comment"># --- Step 1: 載入 + QC ---</span>
+adata = sc.read_10x_mtx(<span class="str">"data/raw/pbmc/filtered_feature_bc_matrix/"</span>,
+                        var_names=<span class="str">"gene_symbols"</span>, cache=<span class="kw">True</span>)
+adata.var_names_make_unique()
+
+<span class="comment"># 標記 mt / ribo / hb 基因</span>
+adata.var[<span class="str">"mt"</span>]   = adata.var_names.str.startswith(<span class="str">"MT-"</span>)
+adata.var[<span class="str">"ribo"</span>] = adata.var_names.str.startswith((<span class="str">"RPS"</span>,<span class="str">"RPL"</span>))
+adata.var[<span class="str">"hb"</span>]   = adata.var_names.str.contains(<span class="str">"^HB[^P]"</span>)
+sc.pp.calculate_qc_metrics(adata, qc_vars=[<span class="str">"mt"</span>,<span class="str">"ribo"</span>,<span class="str">"hb"</span>],
+                           inplace=<span class="kw">True</span>, log1p=<span class="kw">False</span>)
+
+<span class="comment"># 視覺化 QC，先看再決定閾值！</span>
+sc.pl.violin(adata, [<span class="str">"n_genes_by_counts"</span>,<span class="str">"total_counts"</span>,<span class="str">"pct_counts_mt"</span>],
+             jitter=<span class="num">0.4</span>, multi_panel=<span class="kw">True</span>)
+sc.pl.scatter(adata, x=<span class="str">"total_counts"</span>, y=<span class="str">"n_genes_by_counts"</span>, color=<span class="str">"pct_counts_mt"</span>)
+
+<span class="comment"># 過濾</span>
+sc.pp.filter_cells(adata, min_genes=<span class="num">200</span>)
+sc.pp.filter_genes(adata, min_cells=<span class="num">3</span>)
+adata = adata[(adata.obs.n_genes_by_counts &lt; <span class="num">6000</span>) &amp;
+              (adata.obs.pct_counts_mt &lt; <span class="num">15</span>)].copy()
+
+<span class="comment"># --- Step 2: Normalize + log1p ---</span>
+adata.layers[<span class="str">"counts"</span>] = adata.X.copy()      <span class="comment"># 保留 raw counts</span>
+sc.pp.normalize_total(adata, target_sum=<span class="num">1e4</span>)
+sc.pp.log1p(adata)
+
+<span class="comment"># --- Step 3: HVG ---</span>
+sc.pp.highly_variable_genes(adata, n_top_genes=<span class="num">2000</span>, flavor=<span class="str">"seurat_v3"</span>,
+                            layer=<span class="str">"counts"</span>)
+sc.pl.highly_variable_genes(adata)
+
+<span class="comment"># --- Step 4: Scale + PCA ---</span>
+adata.raw = adata           <span class="comment"># 保留 lognorm 給後續視覺化用</span>
+adata = adata[:, adata.var.highly_variable]
+sc.pp.scale(adata, max_value=<span class="num">10</span>)
+sc.tl.pca(adata, n_comps=<span class="num">50</span>, svd_solver=<span class="str">"arpack"</span>)
+sc.pl.pca_variance_ratio(adata, n_pcs=<span class="num">50</span>, log=<span class="kw">True</span>)</pre></div>
+<div class="code-tab-content" id="w2"><pre><span class="comment"># --- Step 5: Neighbors + UMAP ---</span>
+sc.pp.neighbors(adata, n_neighbors=<span class="num">15</span>, n_pcs=<span class="num">30</span>)
+sc.tl.umap(adata)
+
+<span class="comment"># --- Step 6: Clustering ---</span>
+sc.tl.leiden(adata, resolution=<span class="num">0.6</span>, key_added=<span class="str">"leiden"</span>)
+
+<span class="comment"># 視覺化</span>
+sc.pl.umap(adata, color=[<span class="str">"leiden"</span>,<span class="str">"total_counts"</span>,<span class="str">"pct_counts_mt"</span>],
+           wspace=<span class="num">0.3</span>, ncols=<span class="num">3</span>)
+
+<span class="comment"># --- Step 7: Marker genes ---</span>
+sc.tl.rank_genes_groups(adata, <span class="str">"leiden"</span>, method=<span class="str">"wilcoxon"</span>)
+
+<span class="comment"># Top 25 markers per cluster (DataFrame)</span>
+markers = sc.get.rank_genes_groups_df(adata, group=<span class="kw">None</span>)
+top = (markers.query(<span class="str">"pvals_adj &lt; 0.01 and logfoldchanges &gt; 1"</span>)
+              .groupby(<span class="str">"group"</span>).head(<span class="num">25</span>))
+
+<span class="comment"># 各種 marker 視覺化 / Marker visualizations</span>
+sc.pl.rank_genes_groups_dotplot(adata, n_genes=<span class="num">5</span>)
+sc.pl.rank_genes_groups_heatmap(adata, n_genes=<span class="num">5</span>, show_gene_labels=<span class="kw">True</span>)
+sc.pl.umap(adata, color=[<span class="str">"CD3D"</span>,<span class="str">"CD8A"</span>,<span class="str">"MS4A1"</span>,<span class="str">"CD14"</span>,<span class="str">"NKG7"</span>], use_raw=<span class="kw">True</span>)</pre></div>
+<div class="code-tab-content" id="w3"><pre><span class="comment"># --- Step 8: Manual 註解 (依 marker 知識) ---</span>
+cluster_to_celltype = {
+    <span class="str">"0"</span>: <span class="str">"CD4 T"</span>,    <span class="str">"1"</span>: <span class="str">"CD14 Mono"</span>, <span class="str">"2"</span>: <span class="str">"B"</span>,
+    <span class="str">"3"</span>: <span class="str">"CD8 T"</span>,    <span class="str">"4"</span>: <span class="str">"NK"</span>,         <span class="str">"5"</span>: <span class="str">"FCGR3A Mono"</span>,
+    <span class="str">"6"</span>: <span class="str">"DC"</span>,       <span class="str">"7"</span>: <span class="str">"Platelet"</span>,
+}
+adata.obs[<span class="str">"cell_type"</span>] = adata.obs[<span class="str">"leiden"</span>].map(cluster_to_celltype)
+sc.pl.umap(adata, color=<span class="str">"cell_type"</span>, legend_loc=<span class="str">"on data"</span>)
+
+<span class="comment"># 自動註解 / Automatic annotation (CellTypist)</span>
+<span class="comment"># pip install celltypist</span>
+<span class="kw">import</span> celltypist
+predictions = celltypist.annotate(adata,
+    model=<span class="str">"Immune_All_Low.pkl"</span>, majority_voting=<span class="kw">True</span>)
+adata = predictions.to_adata()
+sc.pl.umap(adata, color=<span class="str">"majority_voting"</span>)
+
+<span class="comment"># --- DE 跨 condition ---</span>
+sc.tl.rank_genes_groups(adata, groupby=<span class="str">"condition"</span>,
+                        groups=[<span class="str">"KO"</span>], reference=<span class="str">"WT"</span>)
+de_df = sc.get.rank_genes_groups_df(adata, group=<span class="str">"KO"</span>)
+de_df.to_csv(<span class="str">"results/de_KO_vs_WT.csv"</span>, index=<span class="kw">False</span>)
+
+<span class="comment"># 別忘了存檔！ / Don't forget to save</span>
+adata.write_h5ad(<span class="str">"data/processed/pbmc_annotated.h5ad"</span>, compression=<span class="str">"gzip"</span>)</pre></div>
+<div class="code-tab-content" id="w4"><pre><span class="comment"># 多樣本整合 (移除 batch effect)</span>
+<span class="comment"># Multi-sample integration (remove batch effect)</span>
+<span class="kw">import</span> scanpy <span class="kw">as</span> sc
+<span class="kw">import</span> anndata <span class="kw">as</span> ad
+
+<span class="comment"># 讀入多個樣本，合併</span>
+adatas = [sc.read_h5ad(<span class="str">f"data/processed/{s}.h5ad"</span>) <span class="kw">for</span> s <span class="kw">in</span> [<span class="str">"S1"</span>,<span class="str">"S2"</span>,<span class="str">"S3"</span>]]
+<span class="kw">for</span> i, a <span class="kw">in</span> <span class="builtin">enumerate</span>(adatas): a.obs[<span class="str">"batch"</span>] = <span class="str">f"batch{i}"</span>
+adata = ad.concat(adatas, join=<span class="str">"outer"</span>, label=<span class="str">"sample"</span>, keys=[<span class="str">"S1"</span>,<span class="str">"S2"</span>,<span class="str">"S3"</span>])
+
+<span class="comment"># Harmony — 最常用的整合方法 / Most popular integration</span>
+<span class="comment"># pip install harmonypy</span>
+sc.external.pp.harmony_integrate(adata, key=<span class="str">"batch"</span>, basis=<span class="str">"X_pca"</span>,
+                                  adjusted_basis=<span class="str">"X_pca_harmony"</span>)
+sc.pp.neighbors(adata, use_rep=<span class="str">"X_pca_harmony"</span>)
+sc.tl.umap(adata)
+sc.tl.leiden(adata)
+
+<span class="comment"># scVI — 深度學習整合（推薦給大型資料集） / scVI deep-learning integration</span>
+<span class="comment"># pip install scvi-tools</span>
+<span class="kw">import</span> scvi
+scvi.model.SCVI.setup_anndata(adata, batch_key=<span class="str">"batch"</span>, layer=<span class="str">"counts"</span>)
+model = scvi.model.SCVI(adata, n_layers=<span class="num">2</span>, n_latent=<span class="num">30</span>)
+model.train(max_epochs=<span class="num">200</span>)
+adata.obsm[<span class="str">"X_scVI"</span>] = model.get_latent_representation()
+sc.pp.neighbors(adata, use_rep=<span class="str">"X_scVI"</span>)
+sc.tl.umap(adata)</pre></div>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="參數選擇" data-en="PARAM CHOICE">參數選擇</div>
+<h2 data-zh="三、關鍵超參數該怎麼選？" data-en="III. How to choose key hyperparameters">三、關鍵超參數</h2>
+<table class="comp-table">
+<thead><tr><th data-zh="參數" data-en="Param">參數</th><th data-zh="預設" data-en="Default">預設</th><th data-zh="該怎麼選" data-en="How to choose">該怎麼選</th></tr></thead>
+<tbody>
+<tr><td><code>n_top_genes</code> (HVG)</td><td>2000</td><td data-lang="zh">大資料 (&gt;100k cells) → 3000–4000；小資料 → 2000；多樣本整合可降到 1500</td><td data-lang="en">Large data (&gt;100k cells) → 3000-4000; small → 2000; integration → 1500</td></tr>
+<tr><td><code>n_pcs</code></td><td>50</td><td data-lang="zh">看 elbow plot — 通常 20–50；簡單組織 15 就夠</td><td data-lang="en">Check elbow plot — usually 20-50; simple tissues OK with 15</td></tr>
+<tr><td><code>n_neighbors</code></td><td>15</td><td data-lang="zh">小資料 10；大資料 (&gt;100k) 30；要保留稀有族群 → 較小</td><td data-lang="en">Small data 10; large (&gt;100k) 30; preserve rare populations → smaller</td></tr>
+<tr><td><code>resolution</code> (Leiden)</td><td>1.0</td><td data-lang="zh"><strong>沒有正確答案</strong>。試 0.3, 0.5, 0.8, 1.2，挑能對應到生物學意義的</td><td data-lang="en"><strong>No right answer.</strong> Try 0.3, 0.5, 0.8, 1.2; pick one that matches biology</td></tr>
+</tbody></table>
+<div class="callout warn"><span class="callout-icon">⚠️</span><div>
+<span data-lang="zh"><strong>勿盲信預設值！</strong>同一份資料用 resolution=0.3 可能 5 個 cluster、1.2 可能 20 個 cluster。先用低 resolution 看大族，再針對某個族高 resolution 細分（subset 後重跑 neighbors+leiden）。</span>
+<span data-lang="en"><strong>Don't trust defaults blindly.</strong> Same data may yield 5 clusters at resolution=0.3 and 20 at 1.2. Use low resolution for the big picture, then sub-cluster a specific population at higher resolution (subset and re-run neighbors+leiden).</span>
+</div></div>
+</section>
+
+<!-- Quiz -->
+<section class="quiz-section">
+<h3>📝 <span data-zh="自我檢測" data-en="Self-Check">自我檢測</span></h3>
+<div class="quiz-q" data-answer="2">
+<p data-lang="zh">1. <code>sc.pp.normalize_total(target_sum=1e4)</code> 之後該做什麼？</p>
+<p data-lang="en">1. After <code>sc.pp.normalize_total(target_sum=1e4)</code>, the next step is:</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. 直接 PCA</span><span data-lang="en">A. PCA directly</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. 直接 UMAP</span><span data-lang="en">B. UMAP directly</span></div>
+<div class="quiz-opt" data-idx="2"><span><code>sc.pp.log1p()</code> — log 轉換以穩定變異</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. 不用做了</span><span data-lang="en">D. No further steps</span></div>
+</div></div>
+<div class="quiz-q" data-answer="1">
+<p data-lang="zh">2. 整合多樣本去除 batch effect，最常用的工具是？</p>
+<p data-lang="en">2. Most common tool to remove batch effect when integrating samples?</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span><strong>BWA</strong></span></div>
+<div class="quiz-opt" data-idx="1"><span><strong>Harmony / scVI / scanorama</strong></span></div>
+<div class="quiz-opt" data-idx="2"><span><strong>BLAST</strong></span></div>
+<div class="quiz-opt" data-idx="3"><span><strong>FastQC</strong></span></div>
+</div></div>
+<div class="quiz-q" data-answer="0">
+<p data-lang="zh">3. 想找 cluster 0 的 marker genes，最直接的呼叫？</p>
+<p data-lang="en">3. To find marker genes for cluster 0, the direct call is:</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span><code>sc.tl.rank_genes_groups(adata, "leiden")</code></span></div>
+<div class="quiz-opt" data-idx="1"><span><code>sc.tl.umap(adata)</code></span></div>
+<div class="quiz-opt" data-idx="2"><span><code>sc.pp.scale(adata)</code></span></div>
+<div class="quiz-opt" data-idx="3"><span><code>sc.tl.pca(adata)</code></span></div>
+</div></div>
+</section>
+
+<nav class="page-nav">
+<a href="scanpy-anndata.html"><span class="nav-dir" data-zh="← 上一章" data-en="← Prev">← 上一章</span><span class="nav-title">Ch 13: AnnData & scanpy</span></a>
+<a href="spatial.html"><span class="nav-dir" data-zh="下一章 →" data-en="Next →">下一章 →</span><span class="nav-title">Ch 15: Spatial Transcriptomics</span></a>
+</nav>
+</main>
+<footer class="site-footer">© Charlene — Python for Bioinformatics Interactive Tutorial</footer>
+<script src="i18n.js"></script>
+<script>
+window.addEventListener('scroll',()=>{const h=document.documentElement;document.getElementById('progressBar').style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight))*100+'%';});
+function switchTab(b,id){const p=b.closest('.code-tabs');p.querySelectorAll('.code-tab-btn').forEach(x=>x.classList.remove('active'));p.querySelectorAll('.code-tab-content').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById(id).classList.add('active');}
+document.querySelectorAll('.quiz-q').forEach(q=>{const ans=+q.dataset.answer;q.querySelectorAll('.quiz-opt').forEach(opt=>{opt.addEventListener('click',()=>{const idx=+opt.dataset.idx;q.querySelectorAll('.quiz-opt').forEach(o=>o.classList.remove('correct','wrong'));if(idx===ans)opt.classList.add('correct');else{opt.classList.add('wrong');q.querySelectorAll('.quiz-opt')[ans].classList.add('correct');}});});});
+</script>
+</body></html>

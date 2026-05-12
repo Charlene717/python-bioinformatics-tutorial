@@ -1,0 +1,329 @@
+<!DOCTYPE html><html lang="zh-Hant"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Ch 6: Pandas 資料框 — Python BioInfo Tutorial</title>
+<link rel="stylesheet" href="styles.css">
+</head><body>
+<nav class="top-nav"><div class="top-nav-inner">
+  <a href="index.html" class="top-nav-brand"><span>🐍</span> <span data-zh="Python 生資教學" data-en="Python BioInfo Tutorial">Python 生資教學</span></a>
+  <ul class="top-nav-links">
+    <li><a href="setup.html">Setup</a></li><li><a href="syntax.html">Syntax</a></li><li><a href="paths.html">Paths</a></li><li><a href="functions.html">Func</a></li><li><a href="numpy.html">NumPy</a></li><li><a href="pandas.html" class="active">Pandas</a></li><li><a href="visualization.html">Viz</a></li><li><a href="biopython.html">Biopy</a></li><li><a href="fasta-fastq.html">FASTQ</a></li><li><a href="blast.html">BLAST</a></li><li><a href="pysam.html">pysam</a></li><li><a href="variant-calling.html">Variant</a></li><li><a href="scanpy-anndata.html">scanpy</a></li><li><a href="scrna-workflow.html">scRNA</a></li><li><a href="spatial.html">Spatial</a></li><li><a href="multi-omics.html">Multi</a></li><li><a href="scllms.html">scLLMs</a></li><li><a href="ai-bioinformatics.html">AI</a></li>
+  </ul>
+</div></nav>
+<div class="progress-bar-container"><div class="progress-bar" id="progressBar"></div></div>
+<header class="page-hero"><div class="step-badge">CHAPTER 6 / 18</div>
+<h1 data-zh="Pandas 資料框" data-en="Pandas DataFrames">Pandas 資料框</h1>
+<p class="subtitle" data-lang="zh">處理 metadata、樣本表、DE 結果、count matrix —— 生資資料分析的瑞士刀。</p>
+<p class="subtitle" data-lang="en">Metadata, sample sheets, DE results, count matrices — the Swiss Army knife of bioinformatics data wrangling.</p>
+</header>
+<main class="content-wrap">
+
+<section class="section">
+<div class="section-label" data-zh="概念" data-en="OVERVIEW">概念</div>
+<h2 data-zh="一、Series 與 DataFrame" data-en="I. Series and DataFrame">一、Series 與 DataFrame</h2>
+<div data-lang="zh">
+<p><strong>Series</strong> = 一維帶標籤陣列（像 dict + ndarray 的混合體）。<br><strong>DataFrame</strong> = 二維表格，每欄是一個 Series，欄有名字、列有 index。</p>
+<p>生資場景：sample sheet（樣本 metadata）、DE 結果表、基因註解都是 DataFrame；某 cell 跨所有基因的表達量、某基因的 p-value 跨所有比較組都是 Series。</p>
+</div>
+<div data-lang="en">
+<p><strong>Series</strong> = labeled 1-D array (a dict + ndarray hybrid).<br><strong>DataFrame</strong> = 2-D table, each column a Series with a name and a row index.</p>
+<p>Bioinformatics: sample sheets, DE results, gene annotations are all DataFrames; a single cell's expression across all genes is a Series.</p>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="建立與讀檔" data-en="CREATE & LOAD">建立與讀檔</div>
+<h2 data-zh="二、建立 DataFrame、讀寫檔案" data-en="II. Create DataFrames and read/write files">二、建立與讀寫</h2>
+<div class="code-tabs"><div class="code-tab-btns">
+<button class="code-tab-btn active" onclick="switchTab(this,'p1')">建立</button>
+<button class="code-tab-btn" onclick="switchTab(this,'p2')">讀檔</button>
+<button class="code-tab-btn" onclick="switchTab(this,'p3')">寫檔</button>
+</div>
+<div class="code-tab-content active" id="p1"><pre><span class="kw">import</span> pandas <span class="kw">as</span> pd
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+
+<span class="comment"># 從 dict 建 / From dict</span>
+df = pd.DataFrame({
+  <span class="str">"sample_id"</span>: [<span class="str">"S1"</span>, <span class="str">"S2"</span>, <span class="str">"S3"</span>, <span class="str">"S4"</span>],
+  <span class="str">"condition"</span>: [<span class="str">"WT"</span>, <span class="str">"WT"</span>, <span class="str">"KO"</span>, <span class="str">"KO"</span>],
+  <span class="str">"n_cells"</span>: [<span class="num">5000</span>, <span class="num">4800</span>, <span class="num">5200</span>, <span class="num">5100</span>],
+  <span class="str">"mt_pct"</span>: [<span class="num">5.2</span>, <span class="num">6.1</span>, <span class="num">4.8</span>, <span class="num">7.3</span>],
+})
+
+<span class="comment"># 設定 index / Set index</span>
+df = df.set_index(<span class="str">"sample_id"</span>)
+
+<span class="comment"># 從 NumPy 建 / From NumPy</span>
+expr = np.random.poisson(<span class="num">3</span>, (<span class="num">100</span>, <span class="num">5</span>))
+df_expr = pd.DataFrame(expr,
+    columns=[<span class="str">"GeneA"</span>,<span class="str">"GeneB"</span>,<span class="str">"GeneC"</span>,<span class="str">"GeneD"</span>,<span class="str">"GeneE"</span>],
+    index=[<span class="str">f"Cell{i}"</span> <span class="kw">for</span> i <span class="kw">in</span> <span class="builtin">range</span>(<span class="num">100</span>)])</pre></div>
+<div class="code-tab-content" id="p2"><pre><span class="comment"># CSV (預設逗號)</span>
+df = pd.read_csv(<span class="str">"data/raw/metadata.csv"</span>)
+
+<span class="comment"># TSV (生資最常見)</span>
+df = pd.read_csv(<span class="str">"counts.tsv"</span>, sep=<span class="str">"\t"</span>)
+<span class="comment"># 或</span>
+df = pd.read_table(<span class="str">"counts.tsv"</span>)
+
+<span class="comment"># 大檔技巧：只讀部分</span>
+df = pd.read_csv(<span class="str">"big.csv"</span>, nrows=<span class="num">1000</span>)            <span class="comment"># 只看前 1000 列</span>
+df = pd.read_csv(<span class="str">"big.csv"</span>, usecols=[<span class="str">"id"</span>,<span class="str">"fc"</span>])    <span class="comment"># 只讀部分欄</span>
+chunks = pd.read_csv(<span class="str">"big.csv"</span>, chunksize=<span class="num">100000</span>)    <span class="comment"># 分批迭代</span>
+
+<span class="comment"># Excel</span>
+df = pd.read_excel(<span class="str">"sheet.xlsx"</span>, sheet_name=<span class="str">"DE"</span>)
+
+<span class="comment"># GTF / GFF / BED 也能讀</span>
+gtf = pd.read_csv(<span class="str">"annot.gtf.gz"</span>, sep=<span class="str">"\t"</span>, comment=<span class="str">"#"</span>, header=<span class="kw">None</span>)
+
+<span class="comment"># 編碼 / Encoding 出問題時</span>
+df = pd.read_csv(fp, encoding=<span class="str">"utf-8"</span>)         <span class="comment"># 預設</span>
+df = pd.read_csv(fp, encoding=<span class="str">"big5"</span>)          <span class="comment"># 中文 Windows</span>
+df = pd.read_csv(fp, encoding=<span class="str">"latin-1"</span>)       <span class="comment"># 救命選項</span></pre></div>
+<div class="code-tab-content" id="p3"><pre><span class="comment"># 永遠關掉 index 欄 (除非你需要)</span>
+df.to_csv(<span class="str">"out.csv"</span>, index=<span class="kw">False</span>)
+df.to_csv(<span class="str">"out.tsv"</span>, sep=<span class="str">"\t"</span>, index=<span class="kw">False</span>)
+df.to_excel(<span class="str">"out.xlsx"</span>, sheet_name=<span class="str">"DE"</span>, index=<span class="kw">False</span>)
+
+<span class="comment"># Parquet — 又快又小，多分析師之間傳檔首選</span>
+df.to_parquet(<span class="str">"out.parquet"</span>)
+df = pd.read_parquet(<span class="str">"out.parquet"</span>)
+
+<span class="comment"># Feather — 最快讀寫</span>
+df.to_feather(<span class="str">"out.feather"</span>)</pre></div>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="探索" data-en="EXPLORE">探索</div>
+<h2 data-zh="三、初步檢視一個資料框" data-en="III. First look at a DataFrame">三、初步檢視</h2>
+<div class="code-tabs"><div class="code-tab-btns"><button class="code-tab-btn active" onclick="switchTab(this,'e1')">基本探索</button></div>
+<div class="code-tab-content active" id="e1"><pre>df.shape        <span class="comment"># (列, 欄)</span>
+df.head(<span class="num">5</span>)      <span class="comment"># 前 5 列</span>
+df.tail(<span class="num">5</span>)      <span class="comment"># 後 5 列</span>
+df.sample(<span class="num">10</span>)   <span class="comment"># 隨機 10 列</span>
+df.columns      <span class="comment"># 欄位名 list</span>
+df.index        <span class="comment"># 列 index</span>
+df.dtypes       <span class="comment"># 每欄的資料型別</span>
+df.info()       <span class="comment"># 全方位摘要：欄名/型別/缺失/記憶體</span>
+df.describe()   <span class="comment"># 數值欄統計：count/mean/std/min/25%/50%/75%/max</span>
+df.describe(include=<span class="str">"object"</span>)    <span class="comment"># 字串欄</span>
+
+<span class="comment"># 缺失值 / Missing values</span>
+df.isna().<span class="builtin">sum</span>()             <span class="comment"># 每欄缺幾個</span>
+df.dropna()                  <span class="comment"># 丟掉有缺的列</span>
+df.fillna(<span class="num">0</span>)                 <span class="comment"># 用 0 填補</span>
+df[<span class="str">"col"</span>].fillna(df[<span class="str">"col"</span>].median())  <span class="comment"># 用中位數填</span>
+
+<span class="comment"># 唯一值 / Unique</span>
+df[<span class="str">"condition"</span>].unique()      <span class="comment"># array(['WT','KO'])</span>
+df[<span class="str">"condition"</span>].value_counts()  <span class="comment"># 每類有幾筆</span>
+df[<span class="str">"condition"</span>].nunique()     <span class="comment"># 幾種唯一值</span></pre></div>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="選資料" data-en="SELECTING">選資料</div>
+<h2 data-zh="四、選欄、選列、條件過濾 (.loc / .iloc)" data-en="IV. Selecting columns, rows, conditional filtering (.loc / .iloc)">四、選資料</h2>
+<div class="callout warn"><span class="callout-icon">📌</span><div>
+<span data-lang="zh"><strong>核心區別：</strong> <code>.loc[]</code> 用<strong>標籤名</strong>選；<code>.iloc[]</code> 用<strong>整數位置</strong>選。混用是新手 bug 大宗 — 永遠寫明哪個。</span>
+<span data-lang="en"><strong>Core distinction:</strong> <code>.loc[]</code> selects by <strong>label</strong>; <code>.iloc[]</code> selects by <strong>integer position</strong>. Mixing them is a top source of bugs — always be explicit.</span>
+</div></div>
+<div class="code-tabs"><div class="code-tab-btns">
+<button class="code-tab-btn active" onclick="switchTab(this,'s1')">選欄</button>
+<button class="code-tab-btn" onclick="switchTab(this,'s2')">.loc / .iloc</button>
+<button class="code-tab-btn" onclick="switchTab(this,'s3')">條件過濾</button>
+<button class="code-tab-btn" onclick="switchTab(this,'s4')">query / 鏈式</button>
+</div>
+<div class="code-tab-content active" id="s1"><pre>df[<span class="str">"condition"</span>]              <span class="comment"># 一欄 → Series</span>
+df[[<span class="str">"condition"</span>, <span class="str">"n_cells"</span>]]  <span class="comment"># 多欄 → DataFrame (注意雙層方括號)</span>
+
+<span class="comment"># 新增/修改一欄</span>
+df[<span class="str">"qc_status"</span>] = np.where(df[<span class="str">"mt_pct"</span>] &lt; <span class="num">10</span>, <span class="str">"PASS"</span>, <span class="str">"FAIL"</span>)
+df[<span class="str">"log_cells"</span>] = np.log1p(df[<span class="str">"n_cells"</span>])
+
+<span class="comment"># 用 assign 做鏈式風格 / Chainable assign</span>
+df = (df
+      .assign(log_cells=<span class="kw">lambda</span> d: np.log1p(d.n_cells))
+      .assign(passed=<span class="kw">lambda</span> d: d.mt_pct &lt; <span class="num">10</span>))
+
+<span class="comment"># 刪欄 / Drop columns</span>
+df = df.drop(columns=[<span class="str">"qc_status"</span>, <span class="str">"log_cells"</span>])</pre></div>
+<div class="code-tab-content" id="s2"><pre><span class="comment"># .loc[列標籤, 欄標籤]  → 用名字</span>
+df.loc[<span class="str">"S1"</span>]                       <span class="comment"># sample_id == "S1" 那列</span>
+df.loc[<span class="str">"S1"</span>, <span class="str">"condition"</span>]          <span class="comment"># 一格</span>
+df.loc[[<span class="str">"S1"</span>,<span class="str">"S3"</span>], [<span class="str">"condition"</span>,<span class="str">"mt_pct"</span>]]
+df.loc[<span class="str">"S1"</span>:<span class="str">"S3"</span>]                  <span class="comment"># 連續範圍 (含右端！)</span>
+
+<span class="comment"># .iloc[列位置, 欄位置] → 用整數</span>
+df.iloc[<span class="num">0</span>]                <span class="comment"># 第 0 列</span>
+df.iloc[<span class="num">0</span>, <span class="num">1</span>]             <span class="comment"># 第 0 列、第 1 欄</span>
+df.iloc[:<span class="num">3</span>, :<span class="num">2</span>]           <span class="comment"># 前 3 列、前 2 欄 (不含右端)</span>
+df.iloc[-<span class="num">1</span>]               <span class="comment"># 最後一列</span></pre></div>
+<div class="code-tab-content" id="s3"><pre><span class="comment"># 布林過濾 — 跟 NumPy 一樣，用 &amp; | ~</span>
+df[df[<span class="str">"mt_pct"</span>] &lt; <span class="num">10</span>]
+df[(df.condition == <span class="str">"WT"</span>) &amp; (df.n_cells &gt; <span class="num">5000</span>)]
+df[df.condition.isin([<span class="str">"WT"</span>, <span class="str">"KO"</span>])]
+df[~df.condition.isin([<span class="str">"control"</span>])]   <span class="comment"># ~ 表示 NOT</span>
+
+<span class="comment"># 字串條件 / String filtering</span>
+df[df[<span class="str">"sample_id"</span>].str.startswith(<span class="str">"PBMC"</span>)]
+df[df[<span class="str">"sample_id"</span>].str.contains(<span class="str">"_2024"</span>)]
+df[df[<span class="str">"sample_id"</span>].str.match(<span class="str">r"^S\d+$"</span>)]    <span class="comment"># regex</span></pre></div>
+<div class="code-tab-content" id="s4"><pre><span class="comment"># query — 寫起來更乾淨 / Cleaner syntax</span>
+df.query(<span class="str">"mt_pct &lt; 10 and condition == 'WT'"</span>)
+df.query(<span class="str">"n_cells &gt; @threshold"</span>)         <span class="comment"># @ 引用 Python 變數</span>
+
+<span class="comment"># 鏈式 (method chaining) — pandas 風格 / Pandas style</span>
+result = (df
+    .query(<span class="str">"mt_pct &lt; 10"</span>)
+    .assign(rank=<span class="kw">lambda</span> d: d.n_cells.rank())
+    .sort_values(<span class="str">"rank"</span>)
+    .head(<span class="num">10</span>)
+)</pre></div>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="groupby & merge" data-en="GROUPBY & MERGE">groupby & merge</div>
+<h2 data-zh="五、groupby (分組統計) 與 merge (合併資料表)" data-en="V. groupby (grouped stats) and merge (joins)">五、groupby & merge</h2>
+<div class="code-tabs"><div class="code-tab-btns">
+<button class="code-tab-btn active" onclick="switchTab(this,'g1')">groupby</button>
+<button class="code-tab-btn" onclick="switchTab(this,'g2')">merge</button>
+<button class="code-tab-btn" onclick="switchTab(this,'g3')">pivot</button>
+</div>
+<div class="code-tab-content active" id="g1"><pre><span class="comment"># 每組的平均 / Mean per group</span>
+df.groupby(<span class="str">"condition"</span>)[<span class="str">"n_cells"</span>].mean()
+
+<span class="comment"># 多重統計 / Multiple stats</span>
+df.groupby(<span class="str">"condition"</span>).agg(
+    n_samples=(<span class="str">"sample_id"</span>, <span class="str">"count"</span>),
+    mean_cells=(<span class="str">"n_cells"</span>, <span class="str">"mean"</span>),
+    median_mt=(<span class="str">"mt_pct"</span>, <span class="str">"median"</span>),
+)
+
+<span class="comment"># groupby + apply (自訂函式)</span>
+df.groupby(<span class="str">"condition"</span>).apply(<span class="kw">lambda</span> g: g.nlargest(<span class="num">2</span>, <span class="str">"n_cells"</span>))
+
+<span class="comment"># transform：回傳跟原表一樣大小，常用於 z-score 每組</span>
+df[<span class="str">"cells_z"</span>] = df.groupby(<span class="str">"condition"</span>)[<span class="str">"n_cells"</span>].transform(
+    <span class="kw">lambda</span> x: (x - x.mean()) / x.std()
+)</pre></div>
+<div class="code-tab-content" id="g2"><pre>samples = pd.DataFrame({<span class="str">"sample_id"</span>:[<span class="str">"S1"</span>,<span class="str">"S2"</span>,<span class="str">"S3"</span>], <span class="str">"donor"</span>:[<span class="str">"D1"</span>,<span class="str">"D2"</span>,<span class="str">"D1"</span>]})
+counts  = pd.DataFrame({<span class="str">"sample_id"</span>:[<span class="str">"S1"</span>,<span class="str">"S2"</span>,<span class="str">"S4"</span>], <span class="str">"reads"</span>:[<span class="num">1e6</span>,<span class="num">2e6</span>,<span class="num">3e6</span>]})
+
+<span class="comment"># inner: 只留兩邊都有的</span>
+pd.merge(samples, counts, on=<span class="str">"sample_id"</span>, how=<span class="str">"inner"</span>)
+<span class="comment"># left: 保留左邊全部</span>
+pd.merge(samples, counts, on=<span class="str">"sample_id"</span>, how=<span class="str">"left"</span>)
+<span class="comment"># outer: 兩邊全保留</span>
+pd.merge(samples, counts, on=<span class="str">"sample_id"</span>, how=<span class="str">"outer"</span>)
+
+<span class="comment"># 用不同欄名合併 / Merge on differently-named columns</span>
+pd.merge(samples, counts, left_on=<span class="str">"sample_id"</span>, right_on=<span class="str">"id"</span>)
+
+<span class="comment"># 上下堆疊 (concat) / Stack vertically</span>
+pd.concat([df1, df2], axis=<span class="num">0</span>, ignore_index=<span class="kw">True</span>)
+<span class="comment"># 左右並排</span>
+pd.concat([df1, df2], axis=<span class="num">1</span>)</pre></div>
+<div class="code-tab-content" id="g3"><pre><span class="comment"># 長表 → 寬表 / Long → wide (pivot)</span>
+<span class="comment"># 例：DE 結果 (gene, comparison, log2FC) → 矩陣形式</span>
+de_long = pd.DataFrame({
+  <span class="str">"gene"</span>:    [<span class="str">"TP53"</span>,<span class="str">"TP53"</span>,<span class="str">"MYC"</span>,<span class="str">"MYC"</span>],
+  <span class="str">"compare"</span>: [<span class="str">"AvB"</span>,<span class="str">"AvC"</span>,<span class="str">"AvB"</span>,<span class="str">"AvC"</span>],
+  <span class="str">"log2FC"</span>:  [<span class="num">2.1</span>,<span class="num">1.5</span>,-<span class="num">0.8</span>,<span class="num">0.3</span>],
+})
+de_wide = de_long.pivot(index=<span class="str">"gene"</span>, columns=<span class="str">"compare"</span>, values=<span class="str">"log2FC"</span>)
+
+<span class="comment"># 寬表 → 長表 / Wide → long (melt)</span>
+de_long2 = de_wide.reset_index().melt(id_vars=<span class="str">"gene"</span>,
+    var_name=<span class="str">"compare"</span>, value_name=<span class="str">"log2FC"</span>)</pre></div>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="生資範例" data-en="BIO EXAMPLE">生資範例</div>
+<h2 data-zh="六、整合範例：從 DE 結果挑出有意義的基因" data-en="VI. Worked example: extract meaningful genes from DE results">六、整合範例</h2>
+<div class="code-tabs"><div class="code-tab-btns"><button class="code-tab-btn active" onclick="switchTab(this,'b1')">完整流程</button></div>
+<div class="code-tab-content active" id="b1"><pre><span class="kw">import</span> pandas <span class="kw">as</span> pd
+
+<span class="comment"># 讀 DESeq2 / edgeR 輸出的 TSV</span>
+de = pd.read_csv(<span class="str">"results/de_results.tsv"</span>, sep=<span class="str">"\t"</span>)
+
+<span class="comment"># 1. 看一眼結構</span>
+<span class="builtin">print</span>(de.shape, de.dtypes)
+<span class="builtin">print</span>(de.head())
+
+<span class="comment"># 2. 計算 -log10(padj) 用於 volcano plot</span>
+de[<span class="str">"neg_log_padj"</span>] = -np.log10(de[<span class="str">"padj"</span>].replace(<span class="num">0</span>, <span class="num">1e-300</span>))
+
+<span class="comment"># 3. 標記顯著上下調 (用 numpy.select 寫 if/elif)</span>
+conditions = [
+    (de.padj &lt; <span class="num">0.05</span>) &amp; (de.log2FoldChange &gt; <span class="num">1</span>),
+    (de.padj &lt; <span class="num">0.05</span>) &amp; (de.log2FoldChange &lt; -<span class="num">1</span>),
+]
+choices = [<span class="str">"UP"</span>, <span class="str">"DOWN"</span>]
+de[<span class="str">"sig"</span>] = np.select(conditions, choices, default=<span class="str">"NS"</span>)
+
+<span class="comment"># 4. 各組的數量</span>
+<span class="builtin">print</span>(de.sig.value_counts())
+
+<span class="comment"># 5. Top 20 上調基因，依 fold change 排序</span>
+top_up = (de
+    .query(<span class="str">"sig == 'UP'"</span>)
+    .nlargest(<span class="num">20</span>, <span class="str">"log2FoldChange"</span>)
+    .loc[:, [<span class="str">"gene"</span>,<span class="str">"log2FoldChange"</span>,<span class="str">"padj"</span>]])
+
+<span class="comment"># 6. 跟 GTF 註解合併 — 加入 chromosome / biotype</span>
+annot = pd.read_csv(<span class="str">"data/raw/annotation.tsv"</span>, sep=<span class="str">"\t"</span>)
+top_annot = pd.merge(top_up, annot, on=<span class="str">"gene"</span>, how=<span class="str">"left"</span>)
+
+<span class="comment"># 7. 輸出</span>
+top_annot.to_csv(<span class="str">"results/top_up_annotated.tsv"</span>, sep=<span class="str">"\t"</span>, index=<span class="kw">False</span>)</pre></div>
+</div>
+</section>
+
+<!-- Quiz -->
+<section class="quiz-section">
+<h3>📝 <span data-zh="自我檢測" data-en="Self-Check">自我檢測</span></h3>
+<div class="quiz-q" data-answer="2">
+<p data-lang="zh">1. <code>.loc</code> 與 <code>.iloc</code> 的核心差別？</p>
+<p data-lang="en">1. The core difference between <code>.loc</code> and <code>.iloc</code>?</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. 速度差異</span><span data-lang="en">A. Speed</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. 是否能寫入</span><span data-lang="en">B. Whether they're writable</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. <code>.loc</code> 用標籤名、<code>.iloc</code> 用整數位置</span><span data-lang="en">C. <code>.loc</code> uses labels, <code>.iloc</code> uses integer positions</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. 沒有差別，可互換</span><span data-lang="en">D. Interchangeable</span></div>
+</div></div>
+<div class="quiz-q" data-answer="0">
+<p data-lang="zh">2. 想計算每個 condition 的平均 cell 數，最簡潔的寫法？</p>
+<p data-lang="en">2. To get mean cell count per condition, the cleanest way is:</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span><code>df.groupby("condition")["n_cells"].mean()</code></span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. for 迴圈走訪每個 condition</span><span data-lang="en">B. for loop over each condition</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. 寫一個自訂函式</span><span data-lang="en">C. Custom function</span></div>
+<div class="quiz-opt" data-idx="3"><span><code>df.condition.mean()</code></span></div>
+</div></div>
+<div class="quiz-q" data-answer="1">
+<p data-lang="zh">3. 寬表 (gene × condition) 想轉成長表 (gene, condition, value)，用？</p>
+<p data-lang="en">3. To convert wide (gene × condition) to long (gene, condition, value):</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span><code>.pivot()</code></span></div>
+<div class="quiz-opt" data-idx="1"><span><code>.melt()</code></span></div>
+<div class="quiz-opt" data-idx="2"><span><code>.transpose()</code></span></div>
+<div class="quiz-opt" data-idx="3"><span><code>.stack()</code></span></div>
+</div></div>
+</section>
+
+<nav class="page-nav">
+<a href="numpy.html"><span class="nav-dir" data-zh="← 上一章" data-en="← Prev">← 上一章</span><span class="nav-title">Ch 5: NumPy</span></a>
+<a href="visualization.html"><span class="nav-dir" data-zh="下一章 →" data-en="Next →">下一章 →</span><span class="nav-title">Ch 7: Visualization</span></a>
+</nav>
+</main>
+<footer class="site-footer">© Charlene — Python for Bioinformatics Interactive Tutorial</footer>
+<script src="i18n.js"></script>
+<script>
+window.addEventListener('scroll',()=>{const h=document.documentElement;document.getElementById('progressBar').style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight))*100+'%';});
+function switchTab(b,id){const p=b.closest('.code-tabs');p.querySelectorAll('.code-tab-btn').forEach(x=>x.classList.remove('active'));p.querySelectorAll('.code-tab-content').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById(id).classList.add('active');}
+document.querySelectorAll('.quiz-q').forEach(q=>{const ans=+q.dataset.answer;q.querySelectorAll('.quiz-opt').forEach(opt=>{opt.addEventListener('click',()=>{const idx=+opt.dataset.idx;q.querySelectorAll('.quiz-opt').forEach(o=>o.classList.remove('correct','wrong'));if(idx===ans)opt.classList.add('correct');else{opt.classList.add('wrong');q.querySelectorAll('.quiz-opt')[ans].classList.add('correct');}});});});
+</script>
+</body></html>

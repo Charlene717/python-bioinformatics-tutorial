@@ -1,0 +1,317 @@
+<!DOCTYPE html><html lang="zh-Hant"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Ch 7: 視覺化 — Python BioInfo Tutorial</title>
+<link rel="stylesheet" href="styles.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+</head><body>
+<nav class="top-nav"><div class="top-nav-inner">
+  <a href="index.html" class="top-nav-brand"><span>🐍</span> <span data-zh="Python 生資教學" data-en="Python BioInfo Tutorial">Python 生資教學</span></a>
+  <ul class="top-nav-links">
+    <li><a href="setup.html">Setup</a></li><li><a href="syntax.html">Syntax</a></li><li><a href="paths.html">Paths</a></li><li><a href="functions.html">Func</a></li><li><a href="numpy.html">NumPy</a></li><li><a href="pandas.html">Pandas</a></li><li><a href="visualization.html" class="active">Viz</a></li><li><a href="biopython.html">Biopy</a></li><li><a href="fasta-fastq.html">FASTQ</a></li><li><a href="blast.html">BLAST</a></li><li><a href="pysam.html">pysam</a></li><li><a href="variant-calling.html">Variant</a></li><li><a href="scanpy-anndata.html">scanpy</a></li><li><a href="scrna-workflow.html">scRNA</a></li><li><a href="spatial.html">Spatial</a></li><li><a href="multi-omics.html">Multi</a></li><li><a href="scllms.html">scLLMs</a></li><li><a href="ai-bioinformatics.html">AI</a></li>
+  </ul>
+</div></nav>
+<div class="progress-bar-container"><div class="progress-bar" id="progressBar"></div></div>
+<header class="page-hero"><div class="step-badge">CHAPTER 7 / 18</div>
+<h1 data-zh="視覺化 (Matplotlib / Seaborn)" data-en="Visualization (Matplotlib / Seaborn)">視覺化</h1>
+<p class="subtitle" data-lang="zh">從一張小提琴圖到 publication-ready 論文圖 — 把資料轉成洞見的最後一哩。</p>
+<p class="subtitle" data-lang="en">From a single violin plot to publication-ready figures — the last mile turning data into insight.</p>
+</header>
+<main class="content-wrap">
+
+<section class="section">
+<div class="section-label" data-zh="生態系" data-en="ECOSYSTEM">生態系</div>
+<h2 data-zh="一、Python 視覺化套件全景" data-en="I. Python visualization landscape">一、視覺化套件全景</h2>
+<table class="comp-table">
+<thead><tr><th data-zh="套件" data-en="Library">套件</th><th data-zh="特色" data-en="Strengths">特色</th><th data-zh="適合場景" data-en="When to use">適合</th></tr></thead>
+<tbody>
+<tr><td><strong>Matplotlib</strong></td><td data-lang="zh">底層、最彈性、能畫所有圖</td><td data-lang="zh">論文出版圖、客製化每一個元素</td>
+<td data-lang="en">Low-level, max flexibility, draws anything</td><td data-lang="en">Publication figures, custom every detail</td></tr>
+<tr><td><strong>Seaborn</strong></td><td data-lang="zh">建在 matplotlib 上、語法簡潔、預設好看、整合 pandas</td><td data-lang="zh">統計圖（小提琴、boxplot、heatmap、相關矩陣）</td>
+<td data-lang="en">Built on matplotlib, concise, beautiful defaults, pandas-aware</td><td data-lang="en">Stats plots (violin, box, heatmap, correlations)</td></tr>
+<tr><td><strong>Plotly</strong></td><td data-lang="zh">互動式、可滑鼠 hover、可放網頁</td><td data-lang="zh">分享給合作者探索、Dashboard</td>
+<td data-lang="en">Interactive, hover, embeddable</td><td data-lang="en">Sharing with collaborators, dashboards</td></tr>
+<tr><td><strong>scanpy.pl</strong></td><td data-lang="zh">scanpy 內建，專為 AnnData 設計（UMAP, dotplot, heatmap）</td><td data-lang="zh">scRNA-seq 分析所有圖</td>
+<td data-lang="en">Built into scanpy for AnnData (UMAP, dotplot, heatmap)</td><td data-lang="en">All scRNA-seq plots</td></tr>
+<tr><td><strong>plotnine</strong></td><td data-lang="zh">Python 版 ggplot2 — R 用戶最熟悉</td><td data-lang="zh">熟悉 ggplot 語法的人</td>
+<td data-lang="en">ggplot2 in Python</td><td data-lang="en">If you're an R + ggplot user</td></tr>
+</tbody></table>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="Matplotlib 基礎" data-en="MATPLOTLIB BASICS">Matplotlib 基礎</div>
+<h2 data-zh="二、Matplotlib：Figure 與 Axes 的關係" data-en="II. Matplotlib: Figure vs Axes">二、Figure vs Axes</h2>
+<div class="callout info"><span class="callout-icon">📌</span><div>
+<span data-lang="zh"><strong>核心觀念：</strong>Matplotlib 中 <code>Figure</code> = 整張畫布，<code>Axes</code> = 一個子圖。一個 Figure 可以有 1 個或多個 Axes。<br>新手常見混淆：<code>plt.plot(...)</code>（隱式狀態，不推薦） vs <code>ax.plot(...)</code>（推薦，可控、可組合）。</span>
+<span data-lang="en"><strong>Core concept:</strong> in Matplotlib, <code>Figure</code> = the whole canvas, <code>Axes</code> = one subplot. A Figure can hold one or many Axes.<br>Common confusion: <code>plt.plot(...)</code> (implicit state, not recommended) vs <code>ax.plot(...)</code> (recommended, controllable, composable).</span>
+</div></div>
+<div class="code-tabs"><div class="code-tab-btns">
+<button class="code-tab-btn active" onclick="switchTab(this,'m1')">基本</button>
+<button class="code-tab-btn" onclick="switchTab(this,'m2')">多子圖</button>
+<button class="code-tab-btn" onclick="switchTab(this,'m3')">儲存高解析</button>
+</div>
+<div class="code-tab-content active" id="m1"><pre><span class="kw">import</span> matplotlib.pyplot <span class="kw">as</span> plt
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+
+<span class="comment"># 建立 figure 和 axes</span>
+fig, ax = plt.subplots(figsize=(<span class="num">6</span>, <span class="num">4</span>))   <span class="comment"># 寬 6 高 4 inch</span>
+
+<span class="comment"># 在 ax 上繪圖 (推薦的 OO 風格)</span>
+x = np.linspace(<span class="num">0</span>, <span class="num">10</span>, <span class="num">100</span>)
+ax.plot(x, np.<span class="builtin">sin</span>(x), label=<span class="str">"sin"</span>, color=<span class="str">"#2563a6"</span>, lw=<span class="num">2</span>)
+ax.plot(x, np.<span class="builtin">cos</span>(x), label=<span class="str">"cos"</span>, color=<span class="str">"#f59e0b"</span>, lw=<span class="num">2</span>, ls=<span class="str">"--"</span>)
+
+<span class="comment"># 元素</span>
+ax.set_xlabel(<span class="str">"Time"</span>, fontsize=<span class="num">12</span>)
+ax.set_ylabel(<span class="str">"Amplitude"</span>, fontsize=<span class="num">12</span>)
+ax.set_title(<span class="str">"Trig functions"</span>, fontsize=<span class="num">14</span>, fontweight=<span class="str">"bold"</span>)
+ax.legend(loc=<span class="str">"upper right"</span>, frameon=<span class="kw">False</span>)
+ax.spines[<span class="str">"top"</span>].set_visible(<span class="kw">False</span>)       <span class="comment"># 移除上邊框</span>
+ax.spines[<span class="str">"right"</span>].set_visible(<span class="kw">False</span>)
+ax.grid(alpha=<span class="num">0.3</span>)
+
+plt.tight_layout()
+plt.show()</pre></div>
+<div class="code-tab-content" id="m2"><pre><span class="comment"># 2 列 3 欄 = 6 個子圖</span>
+fig, axes = plt.subplots(<span class="num">2</span>, <span class="num">3</span>, figsize=(<span class="num">12</span>, <span class="num">7</span>))
+
+<span class="comment"># axes 是一個 2x3 的 ndarray，可以用 axes[0,1] 取</span>
+axes[<span class="num">0</span>, <span class="num">0</span>].hist(np.random.normal(size=<span class="num">1000</span>), bins=<span class="num">30</span>)
+axes[<span class="num">0</span>, <span class="num">0</span>].set_title(<span class="str">"Histogram"</span>)
+
+axes[<span class="num">0</span>, <span class="num">1</span>].scatter(np.random.rand(<span class="num">100</span>), np.random.rand(<span class="num">100</span>))
+axes[<span class="num">0</span>, <span class="num">1</span>].set_title(<span class="str">"Scatter"</span>)
+
+axes[<span class="num">0</span>, <span class="num">2</span>].boxplot([np.random.normal(<span class="num">0</span>,<span class="num">1</span>,<span class="num">100</span>), np.random.normal(<span class="num">2</span>,<span class="num">1</span>,<span class="num">100</span>)])
+axes[<span class="num">0</span>, <span class="num">2</span>].set_title(<span class="str">"Boxplot"</span>)
+
+<span class="comment"># 攤平成 1D，迴圈走訪 / Flatten and iterate</span>
+<span class="kw">for</span> ax <span class="kw">in</span> axes.flat:
+    ax.spines[<span class="str">"top"</span>].set_visible(<span class="kw">False</span>)
+    ax.spines[<span class="str">"right"</span>].set_visible(<span class="kw">False</span>)
+
+plt.tight_layout()</pre></div>
+<div class="code-tab-content" id="m3"><pre><span class="comment"># 投稿論文必備設定</span>
+<span class="comment"># Settings for journal submission</span>
+fig.savefig(<span class="str">"results/figures/fig1.png"</span>, dpi=<span class="num">300</span>, bbox_inches=<span class="str">"tight"</span>)
+fig.savefig(<span class="str">"results/figures/fig1.pdf"</span>, bbox_inches=<span class="str">"tight"</span>)   <span class="comment"># 向量圖最棒</span>
+fig.savefig(<span class="str">"results/figures/fig1.svg"</span>, bbox_inches=<span class="str">"tight"</span>)   <span class="comment"># Illustrator 可編輯</span>
+
+<span class="comment"># 全域字型 / Global font (放在腳本最開頭)</span>
+plt.rcParams.update({
+    <span class="str">"font.family"</span>: <span class="str">"sans-serif"</span>,
+    <span class="str">"font.sans-serif"</span>: [<span class="str">"Arial"</span>],
+    <span class="str">"font.size"</span>: <span class="num">11</span>,
+    <span class="str">"axes.spines.top"</span>: <span class="kw">False</span>,
+    <span class="str">"axes.spines.right"</span>: <span class="kw">False</span>,
+    <span class="str">"figure.dpi"</span>: <span class="num">100</span>,
+    <span class="str">"savefig.dpi"</span>: <span class="num">300</span>,
+})</pre></div>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="Seaborn 統計圖" data-en="SEABORN STATS PLOTS">Seaborn</div>
+<h2 data-zh="三、Seaborn：生資最常用 6 種統計圖" data-en="III. Seaborn: 6 most common stat plots">三、Seaborn 6 大圖</h2>
+<div class="code-tabs"><div class="code-tab-btns">
+<button class="code-tab-btn active" onclick="switchTab(this,'sb1')">violin / box</button>
+<button class="code-tab-btn" onclick="switchTab(this,'sb2')">scatter</button>
+<button class="code-tab-btn" onclick="switchTab(this,'sb3')">heatmap</button>
+<button class="code-tab-btn" onclick="switchTab(this,'sb4')">volcano</button>
+</div>
+<div class="code-tab-content active" id="sb1"><pre><span class="kw">import</span> seaborn <span class="kw">as</span> sns
+<span class="kw">import</span> matplotlib.pyplot <span class="kw">as</span> plt
+
+<span class="comment"># df 是一個含 sample_id, condition, expression 的長表</span>
+fig, ax = plt.subplots(figsize=(<span class="num">6</span>,<span class="num">4</span>))
+
+sns.violinplot(data=df, x=<span class="str">"condition"</span>, y=<span class="str">"expression"</span>,
+               inner=<span class="str">"quartile"</span>, palette=<span class="str">"Set2"</span>, ax=ax)
+<span class="comment"># 疊上散點 / Overlay points</span>
+sns.stripplot(data=df, x=<span class="str">"condition"</span>, y=<span class="str">"expression"</span>,
+              color=<span class="str">"black"</span>, alpha=<span class="num">0.3</span>, size=<span class="num">2</span>, ax=ax)
+
+<span class="comment"># Box plot — 較精簡</span>
+sns.boxplot(data=df, x=<span class="str">"condition"</span>, y=<span class="str">"expression"</span>,
+            hue=<span class="str">"timepoint"</span>, palette=<span class="str">"viridis"</span>)</pre></div>
+<div class="code-tab-content" id="sb2"><pre><span class="comment"># QC 散佈圖：nCount vs nFeature，依 MT% 上色</span>
+fig, ax = plt.subplots(figsize=(<span class="num">6</span>,<span class="num">5</span>))
+sns.scatterplot(data=qc_df, x=<span class="str">"total_counts"</span>, y=<span class="str">"n_genes_by_counts"</span>,
+                hue=<span class="str">"pct_counts_mt"</span>, palette=<span class="str">"viridis"</span>,
+                size=<span class="str">"pct_counts_mt"</span>, sizes=(<span class="num">5</span>, <span class="num">50</span>),
+                alpha=<span class="num">0.6</span>, ax=ax)
+ax.set_xscale(<span class="str">"log"</span>); ax.set_yscale(<span class="str">"log"</span>)
+ax.set_xlabel(<span class="str">"Total UMI counts (log)"</span>)
+ax.set_ylabel(<span class="str">"# genes detected"</span>)
+
+<span class="comment"># 加迴歸線 / With regression line</span>
+sns.regplot(data=df, x=<span class="str">"x"</span>, y=<span class="str">"y"</span>, scatter_kws={<span class="str">"alpha"</span>:<span class="num">0.3</span>})
+sns.lmplot(data=df, x=<span class="str">"x"</span>, y=<span class="str">"y"</span>, hue=<span class="str">"group"</span>, col=<span class="str">"timepoint"</span>)</pre></div>
+<div class="code-tab-content" id="sb3"><pre><span class="comment"># Marker gene heatmap — 給 cluster × gene 表</span>
+<span class="kw">import</span> seaborn <span class="kw">as</span> sns
+
+<span class="comment"># 假設 expr_df 是 cluster × marker 的 z-scored 表達矩陣</span>
+fig, ax = plt.subplots(figsize=(<span class="num">8</span>,<span class="num">6</span>))
+sns.heatmap(expr_df, cmap=<span class="str">"RdBu_r"</span>, center=<span class="num">0</span>, vmin=-<span class="num">2</span>, vmax=<span class="num">2</span>,
+            cbar_kws={<span class="str">"label"</span>: <span class="str">"z-score"</span>},
+            linewidths=<span class="num">0.3</span>, ax=ax)
+
+<span class="comment"># 階層式聚類 heatmap (含樹狀圖) / Clustermap</span>
+sns.clustermap(corr_matrix, cmap=<span class="str">"vlag"</span>, center=<span class="num">0</span>,
+               row_colors=row_anno, col_colors=col_anno,
+               figsize=(<span class="num">10</span>,<span class="num">10</span>))
+
+<span class="comment"># 相關矩陣 / Correlation matrix</span>
+sns.heatmap(df.corr(), annot=<span class="kw">True</span>, fmt=<span class="str">".2f"</span>, cmap=<span class="str">"coolwarm"</span>)</pre></div>
+<div class="code-tab-content" id="sb4"><pre><span class="comment"># Volcano plot — DE 分析必備 / Volcano plot for DE analysis</span>
+<span class="kw">import</span> matplotlib.pyplot <span class="kw">as</span> plt
+
+de = pd.read_csv(<span class="str">"de.tsv"</span>, sep=<span class="str">"\t"</span>)
+de[<span class="str">"sig"</span>] = np.where((de.padj &lt; <span class="num">0.05</span>) &amp; (de.log2FoldChange.<span class="builtin">abs</span>() &gt; <span class="num">1</span>),
+                     np.where(de.log2FoldChange &gt; <span class="num">0</span>, <span class="str">"UP"</span>, <span class="str">"DOWN"</span>), <span class="str">"NS"</span>)
+
+fig, ax = plt.subplots(figsize=(<span class="num">6</span>,<span class="num">6</span>))
+colors = {<span class="str">"UP"</span>:<span class="str">"#c0392b"</span>, <span class="str">"DOWN"</span>:<span class="str">"#2563a6"</span>, <span class="str">"NS"</span>:<span class="str">"#bbb"</span>}
+<span class="kw">for</span> g, sub <span class="kw">in</span> de.groupby(<span class="str">"sig"</span>):
+    ax.scatter(sub.log2FoldChange, -np.log10(sub.padj),
+               c=colors[g], s=<span class="num">8</span>, alpha=<span class="num">0.6</span>, label=g)
+
+<span class="comment"># 標 top hits</span>
+top = de.nsmallest(<span class="num">10</span>, <span class="str">"padj"</span>)
+<span class="kw">for</span> _, r <span class="kw">in</span> top.iterrows():
+    ax.annotate(r.gene, (r.log2FoldChange, -np.log10(r.padj)),
+                fontsize=<span class="num">8</span>, ha=<span class="str">"left"</span>)
+
+ax.axhline(-np.log10(<span class="num">0.05</span>), color=<span class="str">"gray"</span>, ls=<span class="str">"--"</span>, alpha=<span class="num">.5</span>)
+ax.axvline(-<span class="num">1</span>, color=<span class="str">"gray"</span>, ls=<span class="str">"--"</span>, alpha=<span class="num">.5</span>)
+ax.axvline(<span class="num">1</span>, color=<span class="str">"gray"</span>, ls=<span class="str">"--"</span>, alpha=<span class="num">.5</span>)
+ax.set_xlabel(<span class="str">"log$_2$ fold change"</span>); ax.set_ylabel(<span class="str">"-log$_{10}$(padj)"</span>)
+ax.legend(frameon=<span class="kw">False</span>)</pre></div>
+</div>
+</section>
+
+<!-- Section: Color choices -->
+<section class="section">
+<div class="section-label" data-zh="顏色學" data-en="COLOR THEORY">顏色學</div>
+<h2 data-zh="四、顏色選擇 (常被忽略的關鍵)" data-en="IV. Color choices (often overlooked)">四、顏色選擇</h2>
+<div class="card-grid cols-3">
+<div class="card"><h4>📊 <span data-zh="連續資料 (Sequential)" data-en="Sequential">連續</span></h4>
+<div data-lang="zh"><p>單向漸層：表達量、深度、p-value。<br>推薦：<code>viridis</code>、<code>magma</code>、<code>plasma</code> — 對色盲友善、印灰階仍可辨。</p></div>
+<div data-lang="en"><p>Single-direction gradient: expression, depth, p-value.<br>Recommended: <code>viridis</code>, <code>magma</code>, <code>plasma</code> — colorblind-friendly, readable in greyscale.</p></div>
+</div>
+<div class="card"><h4>↔️ <span data-zh="發散 (Diverging)" data-en="Diverging">發散</span></h4>
+<div data-lang="zh"><p>有「中心」的資料：log2FC、相關係數、z-score。<br>推薦：<code>RdBu_r</code>、<code>coolwarm</code>、<code>vlag</code>。<br>務必設 <code>center=0</code>。</p></div>
+<div data-lang="en"><p>Data with a meaningful center: log2FC, correlations, z-scores.<br>Recommended: <code>RdBu_r</code>, <code>coolwarm</code>, <code>vlag</code>. Always set <code>center=0</code>.</p></div>
+</div>
+<div class="card"><h4>🎨 <span data-zh="類別 (Categorical)" data-en="Categorical">類別</span></h4>
+<div data-lang="zh"><p>cluster ID、cell type。<br>推薦：&lt;10 類用 <code>tab10</code>；10–20 類用 <code>tab20</code>；&gt;20 類請考慮合併或用 <code>scanpy.pl.palettes.default_102</code>。</p></div>
+<div data-lang="en"><p>Cluster IDs, cell types.<br>Recommended: <code>tab10</code> for &lt;10 classes; <code>tab20</code> for 10–20; for &gt;20 consider merging or use <code>scanpy.pl.palettes.default_102</code>.</p></div>
+</div>
+</div>
+<div class="callout danger"><span class="callout-icon">🚫</span><div>
+<span data-lang="zh"><strong>不要再用 jet/rainbow！</strong>它對色盲不友善、視覺不均勻、印灰階就毀了。Nature Methods 已正式建議改用 viridis 系列。</span>
+<span data-lang="en"><strong>Stop using jet/rainbow!</strong> It's colorblind-hostile, perceptually non-uniform, and unreadable in greyscale. Nature Methods explicitly recommends viridis instead.</span>
+</div></div>
+</section>
+
+<!-- Interactive: Volcano plot demo -->
+<section class="section">
+<div class="section-label" data-zh="互動模擬" data-en="INTERACTIVE">互動模擬</div>
+<h2 data-zh="Volcano Plot 閾值模擬器" data-en="Volcano Plot Threshold Simulator">Volcano Plot 模擬</h2>
+<div data-lang="zh"><p>調整 log2FC 與 padj 閾值，看 UP/DOWN/NS 三類基因的數量如何變化。</p></div>
+<div data-lang="en"><p>Adjust log2FC and padj thresholds; see how the UP/DOWN/NS counts change.</p></div>
+<div class="interactive-panel">
+<div class="slider-group"><label><span data-zh="|log2FC| 閾值" data-en="|log2FC| threshold">|log2FC| 閾值</span> <span id="fcVal">1.0</span></label>
+<input type="range" id="sliderFC" min="0.0" max="3.0" value="1.0" step="0.1"></div>
+<div class="slider-group"><label><span data-zh="padj 閾值" data-en="padj threshold">padj 閾值</span> <span id="pVal">0.05</span></label>
+<input type="range" id="sliderP" min="-5" max="-1" value="-1.3" step="0.1"></div>
+<div class="sim-stats">
+<span class="sim-stat" id="upStat" style="background:#fde8e5;color:#c0392b;">UP: —</span>
+<span class="sim-stat" id="downStat" style="background:var(--c-accent-light);color:var(--c-accent-dark);">DOWN: —</span>
+<span class="sim-stat" id="nsStat" style="background:#eee;color:#555;">NS: —</span>
+</div>
+<div class="chart-container"><canvas id="volcChart"></canvas></div>
+</div>
+</section>
+
+<!-- Quiz -->
+<section class="quiz-section">
+<h3>📝 <span data-zh="自我檢測" data-en="Self-Check">自我檢測</span></h3>
+<div class="quiz-q" data-answer="2">
+<p data-lang="zh">1. 寫論文圖建議用哪種輸出格式？</p>
+<p data-lang="en">1. Best output format for journal figures?</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. 100 dpi PNG</span><span data-lang="en">A. 100 dpi PNG</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. JPG（檔小）</span><span data-lang="en">B. JPG (small)</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. PDF / SVG（向量、可放大、可在 Illustrator 編輯）</span><span data-lang="en">C. PDF / SVG (vector, zoomable, editable in Illustrator)</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. BMP</span><span data-lang="en">D. BMP</span></div>
+</div></div>
+<div class="quiz-q" data-answer="1">
+<p data-lang="zh">2. 表達量 z-score 熱圖適合用什麼 colormap？</p>
+<p data-lang="en">2. Best colormap for z-scored expression heatmap?</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. <code>viridis</code></span><span data-lang="en">A. <code>viridis</code></span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. <code>RdBu_r</code> 並設 <code>center=0</code>（發散型，能看出正負）</span><span data-lang="en">B. <code>RdBu_r</code> with <code>center=0</code> (diverging, shows sign)</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. <code>jet</code></span><span data-lang="en">C. <code>jet</code></span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. <code>tab10</code></span><span data-lang="en">D. <code>tab10</code></span></div>
+</div></div>
+<div class="quiz-q" data-answer="0">
+<p data-lang="zh">3. 推薦的 Matplotlib 寫法是？</p>
+<p data-lang="en">3. The recommended Matplotlib style is:</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span><code>fig, ax = plt.subplots(); ax.plot(...)</code></span></div>
+<div class="quiz-opt" data-idx="1"><span><code>plt.plot(...); plt.xlabel(...)</code></span></div>
+<div class="quiz-opt" data-idx="2"><span><code>plt.figure().plot(...)</code></span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. 兩者完全等價</span><span data-lang="en">D. They're identical</span></div>
+</div></div>
+</section>
+
+<nav class="page-nav">
+<a href="pandas.html"><span class="nav-dir" data-zh="← 上一章" data-en="← Prev">← 上一章</span><span class="nav-title">Ch 6: Pandas</span></a>
+<a href="biopython.html"><span class="nav-dir" data-zh="下一章 →" data-en="Next →">下一章 →</span><span class="nav-title">Ch 8: Biopython</span></a>
+</nav>
+</main>
+<footer class="site-footer">© Charlene — Python for Bioinformatics Interactive Tutorial</footer>
+<script src="i18n.js"></script>
+<script>
+window.addEventListener('scroll',()=>{const h=document.documentElement;document.getElementById('progressBar').style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight))*100+'%';});
+function switchTab(b,id){const p=b.closest('.code-tabs');p.querySelectorAll('.code-tab-btn').forEach(x=>x.classList.remove('active'));p.querySelectorAll('.code-tab-content').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById(id).classList.add('active');}
+document.querySelectorAll('.quiz-q').forEach(q=>{const ans=+q.dataset.answer;q.querySelectorAll('.quiz-opt').forEach(opt=>{opt.addEventListener('click',()=>{const idx=+opt.dataset.idx;q.querySelectorAll('.quiz-opt').forEach(o=>o.classList.remove('correct','wrong'));if(idx===ans)opt.classList.add('correct');else{opt.classList.add('wrong');q.querySelectorAll('.quiz-opt')[ans].classList.add('correct');}});});});
+
+// Volcano simulator
+function randn(){let u=0,v=0;while(u===0)u=Math.random();while(v===0)v=Math.random();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
+const genes=[];
+for(let i=0;i<800;i++){
+  const p=Math.random();let fc,padj;
+  if(p<0.05){fc=2.5+randn()*0.8;padj=Math.pow(10,-(8+Math.random()*4));}
+  else if(p<0.1){fc=-2.5+randn()*0.8;padj=Math.pow(10,-(8+Math.random()*4));}
+  else{fc=randn()*0.5;padj=Math.pow(10,-(0.5+Math.random()*2));}
+  genes.push({fc,padj});
+}
+const volcChart=new Chart(document.getElementById('volcChart'),{type:'scatter',data:{datasets:[
+  {label:'UP',data:[],backgroundColor:'rgba(192,57,43,0.6)',pointRadius:3},
+  {label:'DOWN',data:[],backgroundColor:'rgba(37,99,166,0.6)',pointRadius:3},
+  {label:'NS',data:[],backgroundColor:'rgba(180,180,180,0.5)',pointRadius:2.5},
+]},options:{responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{position:'top'}},scales:{x:{title:{display:true,text:'log2 Fold Change'},min:-4,max:4},y:{title:{display:true,text:'-log10(padj)'},min:0,max:12}}}});
+function update(){
+  const fc=+document.getElementById('sliderFC').value;
+  const padj=Math.pow(10,+document.getElementById('sliderP').value);
+  document.getElementById('fcVal').textContent=fc.toFixed(1);
+  document.getElementById('pVal').textContent=padj.toExponential(1);
+  const up=[],down=[],ns=[];
+  genes.forEach(g=>{
+    const sig=g.padj<padj;
+    if(sig && g.fc>fc) up.push({x:g.fc,y:-Math.log10(g.padj)});
+    else if(sig && g.fc<-fc) down.push({x:g.fc,y:-Math.log10(g.padj)});
+    else ns.push({x:g.fc,y:-Math.log10(g.padj)});
+  });
+  document.getElementById('upStat').textContent='UP: '+up.length;
+  document.getElementById('downStat').textContent='DOWN: '+down.length;
+  document.getElementById('nsStat').textContent='NS: '+ns.length;
+  volcChart.data.datasets[0].data=up;
+  volcChart.data.datasets[1].data=down;
+  volcChart.data.datasets[2].data=ns;
+  volcChart.update('none');
+}
+['sliderFC','sliderP'].forEach(id=>document.getElementById(id).addEventListener('input',update));
+update();
+</script>
+</body></html>

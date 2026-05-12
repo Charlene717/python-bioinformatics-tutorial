@@ -1,0 +1,369 @@
+<!DOCTYPE html><html lang="zh-Hant"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Ch 4: 函式、類別、模組 — Python BioInfo Tutorial</title>
+<link rel="stylesheet" href="styles.css">
+</head><body>
+<nav class="top-nav"><div class="top-nav-inner">
+  <a href="index.html" class="top-nav-brand"><span>🐍</span> <span data-zh="Python 生資教學" data-en="Python BioInfo Tutorial">Python 生資教學</span></a>
+  <ul class="top-nav-links">
+    <li><a href="setup.html">Setup</a></li><li><a href="syntax.html">Syntax</a></li><li><a href="paths.html">Paths</a></li><li><a href="functions.html" class="active">Func</a></li><li><a href="numpy.html">NumPy</a></li><li><a href="pandas.html">Pandas</a></li><li><a href="visualization.html">Viz</a></li><li><a href="biopython.html">Biopy</a></li><li><a href="fasta-fastq.html">FASTQ</a></li><li><a href="blast.html">BLAST</a></li><li><a href="pysam.html">pysam</a></li><li><a href="variant-calling.html">Variant</a></li><li><a href="scanpy-anndata.html">scanpy</a></li><li><a href="scrna-workflow.html">scRNA</a></li><li><a href="spatial.html">Spatial</a></li><li><a href="multi-omics.html">Multi</a></li><li><a href="scllms.html">scLLMs</a></li><li><a href="ai-bioinformatics.html">AI</a></li>
+  </ul>
+</div></nav>
+<div class="progress-bar-container"><div class="progress-bar" id="progressBar"></div></div>
+<header class="page-hero"><div class="step-badge">CHAPTER 4 / 18</div>
+<h1 data-zh="函式、類別、模組" data-en="Functions, Classes, Modules">函式、類別、模組</h1>
+<p class="subtitle" data-lang="zh">把分散的程式碼包成可重用的單位 — 寫得乾淨、改起來不哭。</p>
+<p class="subtitle" data-lang="en">Package scattered code into reusable units — write clean, refactor without tears.</p>
+</header>
+<main class="content-wrap">
+
+<!-- Section 1: Functions -->
+<section class="section">
+<div class="section-label" data-zh="函式" data-en="FUNCTIONS">函式</div>
+<h2 data-zh="一、函式 (def) — 重用程式碼的基本單位" data-en="I. Functions (def) — the basic unit of reuse">一、函式 (def)</h2>
+<div data-lang="zh"><p>函式 = 一個有名字的程式碼區塊，可以被重複呼叫。<strong>原則</strong>：「同一段邏輯出現第三次，就抽成函式」。</p></div>
+<div data-lang="en"><p>A function = a named block of code you can call repeatedly. <strong>Rule of thumb</strong>: "If the same logic appears a third time, extract it into a function."</p></div>
+
+<div class="code-tabs"><div class="code-tab-btns">
+<button class="code-tab-btn active" onclick="switchTab(this,'f1')">基礎 / Basic</button>
+<button class="code-tab-btn" onclick="switchTab(this,'f2')">參數 / Args</button>
+<button class="code-tab-btn" onclick="switchTab(this,'f3')">type hints + docstring</button>
+<button class="code-tab-btn" onclick="switchTab(this,'f4')">lambda</button>
+</div>
+<div class="code-tab-content active" id="f1"><pre><span class="kw">def</span> gc_content(seq):
+    <span class="str">"""一行說明 / One-line description"""</span>
+    seq = seq.upper()
+    gc = seq.count(<span class="str">"G"</span>) + seq.count(<span class="str">"C"</span>)
+    <span class="kw">return</span> gc / <span class="builtin">len</span>(seq) * <span class="num">100</span>
+
+<span class="comment"># 呼叫 / Call</span>
+gc = gc_content(<span class="str">"ATGCGT"</span>)         <span class="comment"># 50.0</span>
+
+<span class="comment"># 一個函式可以回傳多個值 (其實是 tuple)</span>
+<span class="comment"># Multiple return values (it's actually a tuple)</span>
+<span class="kw">def</span> seq_stats(seq):
+    <span class="kw">return</span> <span class="builtin">len</span>(seq), gc_content(seq)
+
+length, gc = seq_stats(<span class="str">"ATGCGT"</span>)    <span class="comment"># tuple unpacking</span></pre></div>
+<div class="code-tab-content" id="f2"><pre><span class="comment"># 預設值 / Default values</span>
+<span class="kw">def</span> qc_filter(adata, min_genes=<span class="num">200</span>, max_mt=<span class="num">10</span>):
+    <span class="kw">return</span> adata[(adata.obs.n_genes_by_counts &gt; min_genes) &amp;
+                 (adata.obs.pct_counts_mt &lt; max_mt)]
+
+qc_filter(adata)                      <span class="comment"># 用預設</span>
+qc_filter(adata, max_mt=<span class="num">20</span>)            <span class="comment"># 關鍵字參數，順序不重要</span>
+qc_filter(adata, min_genes=<span class="num">500</span>, max_mt=<span class="num">5</span>)
+
+<span class="comment"># *args 任意多個位置參數 / Variable positional args</span>
+<span class="kw">def</span> merge_lists(*lists):
+    out = []
+    <span class="kw">for</span> l <span class="kw">in</span> lists: out.extend(l)
+    <span class="kw">return</span> out
+merge_lists([<span class="str">"A"</span>], [<span class="str">"B"</span>,<span class="str">"C"</span>], [<span class="str">"D"</span>])
+
+<span class="comment"># **kwargs 任意多個關鍵字參數 / Variable keyword args</span>
+<span class="kw">def</span> sample_meta(**kwargs):
+    <span class="kw">for</span> k, v <span class="kw">in</span> kwargs.items():
+        <span class="builtin">print</span>(<span class="str">f"{k} = {v}"</span>)
+sample_meta(donor=<span class="str">"D1"</span>, age=<span class="num">35</span>, condition=<span class="str">"WT"</span>)
+
+<span class="comment"># 危險：可變預設值！ / Mutable default trap</span>
+<span class="kw">def</span> bad(x, hits=[]):     <span class="comment"># ❌ list 在函式定義時建立一次</span>
+    hits.append(x); <span class="kw">return</span> hits
+<span class="kw">def</span> good(x, hits=<span class="kw">None</span>):   <span class="comment"># ✅ 用 None 當哨兵</span>
+    <span class="kw">if</span> hits <span class="kw">is</span> <span class="kw">None</span>: hits=[]
+    hits.append(x); <span class="kw">return</span> hits</pre></div>
+<div class="code-tab-content" id="f3"><pre><span class="kw">from</span> typing <span class="kw">import</span> <span class="builtin">list</span>, <span class="builtin">tuple</span>, Optional
+
+<span class="kw">def</span> gc_content(seq: <span class="builtin">str</span>) -&gt; <span class="builtin">float</span>:
+    <span class="str">"""Calculate GC content of a DNA sequence.
+
+    Parameters
+    ----------
+    seq : str
+        DNA sequence (case-insensitive). May contain N.
+
+    Returns
+    -------
+    float
+        GC percentage in 0–100. Returns 0.0 if seq is empty.
+
+    Examples
+    --------
+    &gt;&gt;&gt; gc_content("ATGC")
+    50.0
+    """</span>
+    <span class="kw">if</span> <span class="kw">not</span> seq: <span class="kw">return</span> <span class="num">0.0</span>
+    seq = seq.upper()
+    <span class="kw">return</span> (seq.count(<span class="str">"G"</span>) + seq.count(<span class="str">"C"</span>)) / <span class="builtin">len</span>(seq) * <span class="num">100</span>
+
+<span class="comment"># type hint (3.10+) 可以用內建型別 list[str] 而不用 List[str]</span>
+<span class="kw">def</span> top_genes(scores: <span class="builtin">dict</span>[<span class="builtin">str</span>, <span class="builtin">float</span>], k: <span class="builtin">int</span> = <span class="num">10</span>) -&gt; <span class="builtin">list</span>[<span class="builtin">str</span>]:
+    <span class="kw">return</span> <span class="builtin">sorted</span>(scores, key=scores.get, reverse=<span class="kw">True</span>)[:k]
+
+<span class="comment"># type hint 純粹是給 IDE/讀者的提示，不影響執行</span>
+<span class="comment"># Type hints are documentation; they don't affect runtime</span></pre></div>
+<div class="code-tab-content" id="f4"><pre><span class="comment"># lambda = 一行小函式 / lambda = one-line function</span>
+square = <span class="kw">lambda</span> x: x ** <span class="num">2</span>
+square(<span class="num">5</span>)         <span class="comment"># 25</span>
+
+<span class="comment"># 常配 sorted/map/filter 用</span>
+genes = [(<span class="str">"TP53"</span>,<span class="num">5.2</span>),(<span class="str">"MYC"</span>,<span class="num">3.1</span>),(<span class="str">"BRCA1"</span>,<span class="num">7.8</span>)]
+
+<span class="comment"># 按表達量排序 / Sort by expression</span>
+<span class="builtin">sorted</span>(genes, key=<span class="kw">lambda</span> x: x[<span class="num">1</span>], reverse=<span class="kw">True</span>)
+
+<span class="comment"># 過濾 / Filter</span>
+<span class="builtin">list</span>(<span class="builtin">filter</span>(<span class="kw">lambda</span> x: x[<span class="num">1</span>] &gt; <span class="num">5</span>, genes))
+
+<span class="comment"># 但 list comprehension 通常更 Pythonic / Comprehensions are usually preferred</span>
+[g <span class="kw">for</span> g <span class="kw">in</span> genes <span class="kw">if</span> g[<span class="num">1</span>] &gt; <span class="num">5</span>]</pre></div>
+</div>
+</section>
+
+<!-- Section 2: Scope -->
+<section class="section">
+<div class="section-label" data-zh="變數作用域" data-en="SCOPE">變數作用域</div>
+<h2 data-zh="二、變數的作用域 (LEGB)" data-en="II. Variable scope (LEGB)">二、變數作用域 (LEGB)</h2>
+<div data-lang="zh"><p>Python 找變數時依序看：<strong>L</strong>ocal → <strong>E</strong>nclosing → <strong>G</strong>lobal → <strong>B</strong>uilt-in。理解這個能避免「為什麼我的變數突然不見了」這類詭異 bug。</p></div>
+<div data-lang="en"><p>Python looks up names in order: <strong>L</strong>ocal → <strong>E</strong>nclosing → <strong>G</strong>lobal → <strong>B</strong>uilt-in. Knowing this avoids "where did my variable go?" bugs.</p></div>
+<div class="code-tabs"><div class="code-tab-btns"><button class="code-tab-btn active" onclick="switchTab(this,'sc1')">範例 / Example</button></div>
+<div class="code-tab-content active" id="sc1"><pre>x = <span class="num">10</span>                    <span class="comment"># global</span>
+
+<span class="kw">def</span> outer():
+    x = <span class="num">20</span>                <span class="comment"># enclosing (對 inner 而言)</span>
+    <span class="kw">def</span> inner():
+        x = <span class="num">30</span>            <span class="comment"># local</span>
+        <span class="builtin">print</span>(x)         <span class="comment"># 30 (Local first)</span>
+    inner()
+    <span class="builtin">print</span>(x)             <span class="comment"># 20</span>
+
+outer()
+<span class="builtin">print</span>(x)                 <span class="comment"># 10 (global 沒被改)</span>
+
+<span class="comment"># 想在函式裡修改 global，要用 global 關鍵字</span>
+<span class="comment"># To modify a global from inside, use 'global'</span>
+counter = <span class="num">0</span>
+<span class="kw">def</span> increment():
+    <span class="kw">global</span> counter
+    counter += <span class="num">1</span>           <span class="comment"># 沒寫 global 會出 UnboundLocalError</span>
+
+<span class="comment"># 但通常更好的做法是：用回傳值，不要改 global</span>
+<span class="comment"># Better: return values, avoid modifying globals</span></pre></div>
+</div>
+</section>
+
+<!-- Section 3: Modules and Imports -->
+<section class="section">
+<div class="section-label" data-zh="模組與匯入" data-en="MODULES & IMPORTS">模組與匯入</div>
+<h2 data-zh="三、模組、套件與 import" data-en="III. Modules, packages, import">三、模組與 import</h2>
+<div data-lang="zh">
+<p>每個 <code>.py</code> 檔就是一個模組 (module)；一個資料夾裡放多個 <code>.py</code> + <code>__init__.py</code> 就是一個套件 (package)。</p>
+</div>
+<div data-lang="en">
+<p>Each <code>.py</code> file is a module; a folder of <code>.py</code> files plus <code>__init__.py</code> is a package.</p>
+</div>
+
+<div class="code-tabs"><div class="code-tab-btns">
+<button class="code-tab-btn active" onclick="switchTab(this,'m1')">import 寫法</button>
+<button class="code-tab-btn" onclick="switchTab(this,'m2')">自製模組</button>
+<button class="code-tab-btn" onclick="switchTab(this,'m3')">__name__ == "__main__"</button>
+</div>
+<div class="code-tab-content active" id="m1"><pre><span class="comment"># 整個模組 / Entire module</span>
+<span class="kw">import</span> numpy
+arr = numpy.array([<span class="num">1</span>,<span class="num">2</span>,<span class="num">3</span>])
+
+<span class="comment"># 別名 (生資界慣例) / Alias (community conventions)</span>
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+<span class="kw">import</span> pandas <span class="kw">as</span> pd
+<span class="kw">import</span> matplotlib.pyplot <span class="kw">as</span> plt
+<span class="kw">import</span> scanpy <span class="kw">as</span> sc
+<span class="kw">import</span> anndata <span class="kw">as</span> ad
+
+<span class="comment"># 從模組匯入特定東西 / Import specific names</span>
+<span class="kw">from</span> pathlib <span class="kw">import</span> Path
+<span class="kw">from</span> collections <span class="kw">import</span> Counter, defaultdict
+
+<span class="comment"># ❌ 不要用 from xxx import * (污染命名空間)</span>
+<span class="comment"># ❌ Avoid `from xxx import *` (pollutes namespace)</span></pre></div>
+<div class="code-tab-content" id="m2"><pre><span class="comment"># 專案結構 / Project layout</span>
+<span class="comment"># myproj/
+<span class="comment">#   ├── scripts/run_qc.py
+<span class="comment">#   └── mybio/
+<span class="comment">#       ├── __init__.py     ← 空檔即可，標記這是 package
+<span class="comment">#       ├── seq_utils.py    ← 模組 1
+<span class="comment">#       └── qc.py           ← 模組 2
+
+<span class="comment"># mybio/seq_utils.py</span>
+<span class="kw">def</span> gc_content(seq: <span class="builtin">str</span>) -&gt; <span class="builtin">float</span>:
+    seq = seq.upper()
+    <span class="kw">return</span> (seq.count(<span class="str">"G"</span>) + seq.count(<span class="str">"C"</span>)) / <span class="builtin">len</span>(seq) * <span class="num">100</span>
+
+<span class="comment"># scripts/run_qc.py — 從 mybio 套件 import</span>
+<span class="kw">import</span> sys
+<span class="kw">from</span> pathlib <span class="kw">import</span> Path
+sys.path.insert(<span class="num">0</span>, <span class="builtin">str</span>(Path(__file__).resolve().parent.parent))
+
+<span class="kw">from</span> mybio.seq_utils <span class="kw">import</span> gc_content
+<span class="builtin">print</span>(gc_content(<span class="str">"ATGC"</span>))
+
+<span class="comment"># 更專業：寫個 setup.py / pyproject.toml 後 pip install -e .</span>
+<span class="comment"># 之後就能直接 from mybio import ... 不用調 sys.path</span></pre></div>
+<div class="code-tab-content" id="m3"><pre><span class="comment"># scripts/run_qc.py</span>
+
+<span class="kw">def</span> qc_filter(adata): ...
+<span class="kw">def</span> save_results(...): ...
+
+<span class="kw">def</span> main():
+    adata = sc.read_10x_mtx(<span class="str">"data/raw/"</span>)
+    adata = qc_filter(adata)
+    save_results(adata)
+
+<span class="kw">if</span> __name__ == <span class="str">"__main__"</span>:
+    main()
+
+<span class="comment"># 為什麼這樣寫？</span>
+<span class="comment"># Why this idiom?</span>
+<span class="comment"># 直接執行 `python run_qc.py` → __name__ == "__main__" 為 True，main() 會跑</span>
+<span class="comment"># 但若被別的檔案 `import run_qc` → __name__ == "run_qc"，main() 不會執行</span>
+<span class="comment"># 讓你的腳本既可獨立跑、也能被 import 重用</span>
+
+<span class="comment"># Run as `python run_qc.py` → __name__ == "__main__" → main() runs</span>
+<span class="comment"># Imported as `import run_qc` → __name__ == "run_qc" → main() doesn't run</span>
+<span class="comment"># So the file works both as standalone script and reusable module</span></pre></div>
+</div>
+</section>
+
+<!-- Section 4: Classes -->
+<section class="section">
+<div class="section-label" data-zh="類別" data-en="CLASSES">類別</div>
+<h2 data-zh="四、類別 (class) — 把資料和方法綁在一起" data-en="IV. Classes — bind data and methods together">四、類別 (class)</h2>
+<div data-lang="zh">
+<p>類別是「自訂型別」。在生資領域，pandas DataFrame、AnnData、Seq 都是類別。你大部分時間是<strong>使用</strong>別人寫好的 class，但偶爾自己寫個簡單的也很有用。</p>
+</div>
+<div data-lang="en">
+<p>A class defines a custom type. In bioinformatics, DataFrame, AnnData, and Seq are all classes. You'll spend most time <strong>using</strong> classes others wrote, but writing simple ones yourself can be very useful.</p>
+</div>
+<div class="code-tabs"><div class="code-tab-btns">
+<button class="code-tab-btn active" onclick="switchTab(this,'cl1')">基本 class</button>
+<button class="code-tab-btn" onclick="switchTab(this,'cl2')">dataclass (推薦)</button>
+</div>
+<div class="code-tab-content active" id="cl1"><pre><span class="kw">class</span> Sample:
+    <span class="kw">def</span> __init__(<span class="kw">self</span>, sample_id, condition, n_cells=<span class="num">0</span>):
+        <span class="comment"># self = 這個物件本身 / self = the instance</span>
+        <span class="kw">self</span>.sample_id = sample_id
+        <span class="kw">self</span>.condition = condition
+        <span class="kw">self</span>.n_cells = n_cells
+
+    <span class="kw">def</span> summary(<span class="kw">self</span>):
+        <span class="kw">return</span> <span class="str">f"{self.sample_id} ({self.condition}): {self.n_cells} cells"</span>
+
+    <span class="kw">def</span> __repr__(<span class="kw">self</span>):
+        <span class="comment"># 控制 print() 的輸出 / Controls how print() displays the obj</span>
+        <span class="kw">return</span> <span class="str">f"&lt;Sample {self.sample_id}&gt;"</span>
+
+s = Sample(<span class="str">"PBMC1"</span>, <span class="str">"WT"</span>, n_cells=<span class="num">5000</span>)
+<span class="builtin">print</span>(s.summary())     <span class="comment"># PBMC1 (WT): 5000 cells</span>
+<span class="builtin">print</span>(s)               <span class="comment"># &lt;Sample PBMC1&gt;</span></pre></div>
+<div class="code-tab-content" id="cl2"><pre><span class="kw">from</span> dataclasses <span class="kw">import</span> dataclass, field
+<span class="kw">from</span> typing <span class="kw">import</span> Optional
+
+<span class="kw">@dataclass</span>
+<span class="kw">class</span> QCParams:
+    min_genes: <span class="builtin">int</span> = <span class="num">200</span>
+    max_genes: <span class="builtin">int</span> = <span class="num">4000</span>
+    max_mt_pct: <span class="builtin">float</span> = <span class="num">10.0</span>
+    sample_id: Optional[<span class="builtin">str</span>] = <span class="kw">None</span>
+    markers: <span class="builtin">list</span>[<span class="builtin">str</span>] = field(default_factory=<span class="builtin">list</span>)
+
+<span class="comment"># dataclass 自動幫你生 __init__、__repr__、__eq__</span>
+<span class="comment"># dataclass auto-generates __init__, __repr__, __eq__</span>
+p = QCParams(min_genes=<span class="num">500</span>, sample_id=<span class="str">"PBMC1"</span>)
+<span class="builtin">print</span>(p)
+<span class="comment"># QCParams(min_genes=500, max_genes=4000, max_mt_pct=10.0, sample_id='PBMC1', markers=[])</span>
+
+<span class="comment"># 適合：把一堆設定參數打包，比 dict 安全（有型別檢查、IDE 自動補全）</span>
+<span class="comment"># Good for: bundling config params; safer than dict (typed, IDE autocomplete)</span></pre></div>
+</div>
+</section>
+
+<!-- Section 5: Project Layout -->
+<section class="section">
+<div class="section-label" data-zh="專案結構" data-en="PROJECT LAYOUT">專案結構</div>
+<h2 data-zh="五、把它們組合成一個正規生資專案" data-en="V. Combine into a real bioinformatics project">五、組合成正規生資專案</h2>
+<div class="path-box">
+my_scrna_proj/
+├── data/
+│   ├── raw/            <span class="comment"># read-only</span>
+│   └── processed/
+├── results/
+│   ├── figures/
+│   └── tables/
+├── notebooks/
+│   ├── 01_explore.ipynb
+│   └── 02_de_analysis.ipynb
+├── mybio/                       <span class="comment"># 自製套件 / your own package</span>
+│   ├── __init__.py
+│   ├── seq_utils.py
+│   ├── qc.py
+│   └── plot.py
+├── scripts/                     <span class="comment"># 正式可重複腳本 / official scripts</span>
+│   ├── run_qc.py
+│   └── run_de.py
+├── tests/                       <span class="comment"># 單元測試 / unit tests</span>
+│   └── test_seq_utils.py
+├── env.yml                      <span class="comment"># conda env 檔</span>
+├── pyproject.toml               <span class="comment"># 套件設定 (pip install -e .)</span>
+├── .gitignore                   <span class="comment"># 忽略 data/ + results/</span>
+└── README.md
+</div>
+<div class="callout tip"><span class="callout-icon">💡</span><div>
+<span data-lang="zh"><strong>分工原則：</strong>探索性、看圖 → notebooks/；穩定可重用 → mybio/；正式 pipeline → scripts/。Notebook 裡發現好用的程式碼，要記得搬到 mybio/。</span>
+<span data-lang="en"><strong>Division of labour:</strong> exploration & figures → notebooks/; stable, reusable code → mybio/; official pipelines → scripts/. When a notebook cell becomes valuable, promote it into mybio/.</span>
+</div></div>
+</section>
+
+<!-- Quiz -->
+<section class="quiz-section">
+<h3>📝 <span data-zh="自我檢測" data-en="Self-Check">自我檢測</span></h3>
+<div class="quiz-q" data-answer="2">
+<p data-lang="zh">1. <code>def f(x, hits=[]):  hits.append(x); return hits</code> 為什麼有問題？</p>
+<p data-lang="en">1. Why is <code>def f(x, hits=[]): hits.append(x); return hits</code> problematic?</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. list 不能當預設值</span><span data-lang="en">A. Lists can't be default values</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. 必須加 type hint</span><span data-lang="en">B. Type hint required</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. 預設值是函式定義時建立一次，會被多次呼叫共用 → 累積</span><span data-lang="en">C. Defaults are created once at definition; calls share the same list</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. hits 應該叫 results</span><span data-lang="en">D. Should be named results</span></div>
+</div></div>
+<div class="quiz-q" data-answer="0">
+<p data-lang="zh">2. 為什麼大家在 <code>.py</code> 結尾寫 <code>if __name__ == "__main__":</code>？</p>
+<p data-lang="en">2. Why end a <code>.py</code> file with <code>if __name__ == "__main__":</code>?</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. 讓檔案既可獨立執行也可被 import 而不執行</span><span data-lang="en">A. So the file runs standalone but does nothing when imported</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. Python 規定每個檔都要寫</span><span data-lang="en">B. Python requires every file to have it</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. 加速執行</span><span data-lang="en">C. Speeds up execution</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. 防止記憶體洩漏</span><span data-lang="en">D. Prevents memory leaks</span></div>
+</div></div>
+<div class="quiz-q" data-answer="1">
+<p data-lang="zh">3. <code>@dataclass</code> 主要好處是？</p>
+<p data-lang="en">3. The main benefit of <code>@dataclass</code> is:</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. 自動加密資料</span><span data-lang="en">A. Auto-encrypts data</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. 自動生成 __init__、__repr__、__eq__，少寫樣板碼</span><span data-lang="en">B. Auto-generates __init__, __repr__, __eq__ — less boilerplate</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. 比一般 class 跑得快 10 倍</span><span data-lang="en">C. 10× faster than regular classes</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. 取代 pandas DataFrame</span><span data-lang="en">D. Replaces pandas DataFrame</span></div>
+</div></div>
+</section>
+
+<nav class="page-nav">
+<a href="paths.html"><span class="nav-dir" data-zh="← 上一章" data-en="← Prev">← 上一章</span><span class="nav-title">Ch 3: Paths & I/O</span></a>
+<a href="numpy.html"><span class="nav-dir" data-zh="下一章 →" data-en="Next →">下一章 →</span><span class="nav-title">Ch 5: NumPy</span></a>
+</nav>
+</main>
+<footer class="site-footer">© Charlene — Python for Bioinformatics Interactive Tutorial</footer>
+<script src="i18n.js"></script>
+<script>
+window.addEventListener('scroll',()=>{const h=document.documentElement;document.getElementById('progressBar').style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight))*100+'%';});
+function switchTab(b,id){const p=b.closest('.code-tabs');p.querySelectorAll('.code-tab-btn').forEach(x=>x.classList.remove('active'));p.querySelectorAll('.code-tab-content').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById(id).classList.add('active');}
+document.querySelectorAll('.quiz-q').forEach(q=>{const ans=+q.dataset.answer;q.querySelectorAll('.quiz-opt').forEach(opt=>{opt.addEventListener('click',()=>{const idx=+opt.dataset.idx;q.querySelectorAll('.quiz-opt').forEach(o=>o.classList.remove('correct','wrong'));if(idx===ans)opt.classList.add('correct');else{opt.classList.add('wrong');q.querySelectorAll('.quiz-opt')[ans].classList.add('correct');}});});});
+</script>
+</body></html>

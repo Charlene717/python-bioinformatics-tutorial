@@ -1,0 +1,333 @@
+<!DOCTYPE html><html lang="zh-Hant"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Ch 1: 環境設定 — Python BioInfo Tutorial</title>
+<link rel="stylesheet" href="styles.css">
+</head><body>
+<nav class="top-nav"><div class="top-nav-inner">
+  <a href="index.html" class="top-nav-brand"><span>🐍</span> <span data-zh="Python 生資教學" data-en="Python BioInfo Tutorial">Python 生資教學</span></a>
+  <ul class="top-nav-links">
+    <li><a href="setup.html" class="active">Setup</a></li><li><a href="syntax.html">Syntax</a></li><li><a href="paths.html">Paths</a></li><li><a href="functions.html">Func</a></li><li><a href="numpy.html">NumPy</a></li><li><a href="pandas.html">Pandas</a></li><li><a href="visualization.html">Viz</a></li><li><a href="biopython.html">Biopy</a></li><li><a href="fasta-fastq.html">FASTQ</a></li><li><a href="blast.html">BLAST</a></li><li><a href="pysam.html">pysam</a></li><li><a href="variant-calling.html">Variant</a></li><li><a href="scanpy-anndata.html">scanpy</a></li><li><a href="scrna-workflow.html">scRNA</a></li><li><a href="spatial.html">Spatial</a></li><li><a href="multi-omics.html">Multi</a></li><li><a href="scllms.html">scLLMs</a></li><li><a href="ai-bioinformatics.html">AI</a></li>
+  </ul>
+</div></nav>
+<div class="progress-bar-container"><div class="progress-bar" id="progressBar"></div></div>
+<header class="page-hero"><div class="step-badge">CHAPTER 1 / 18</div>
+<h1 data-zh="環境設定與安裝" data-en="Environment Setup & Installation">環境設定與安裝</h1>
+<p class="subtitle" data-lang="zh">在動手寫一行 Python 之前，先把工作環境、資料夾、虛擬環境一次搞定 — 這是日後不踩坑的第一步。</p>
+<p class="subtitle" data-lang="en">Before writing a single line of Python, lock down your environment, folders, and virtual envs — the foundation that keeps you out of trouble later.</p>
+</header>
+<main class="content-wrap">
+
+<!-- ===== Section 1: Why Setup Matters ===== -->
+<section class="section">
+<div class="section-label" data-zh="概覽" data-en="OVERVIEW">概覽</div>
+<h2 data-zh="為什麼第一步是「環境」而不是程式？" data-en="Why is environment the first step, not code?">為什麼第一步是「環境」而不是程式？</h2>
+<div data-lang="zh">
+<p>很多生資新手第一次學 Python 卡關，<strong>不是因為程式邏輯太難，而是「跑不起來」</strong>：找不到檔案、套件版本衝突、Jupyter 開不起來、conda 跟 pip 打架……這些都是環境問題。</p>
+<p>本章會花時間把這些細節說清楚：你會學到 <strong>Python 解譯器、套件管理器、虛擬環境、IDE</strong> 的角色分工，並且實際裝好一個能跑生資分析的乾淨環境。</p>
+<p><strong>核心概念：</strong>「Python 環境 = Python 版本 + 一堆套件 + 它們互相相容」。一台電腦上可以同時有很多個環境，每個專案用一個專屬環境是最佳實務。</p>
+</div>
+<div data-lang="en">
+<p>Many bioinformatics newcomers get stuck on their first Python attempt — <strong>not because the logic is hard, but because nothing runs</strong>: file not found, package version clash, Jupyter won't start, conda fighting pip. All of these are environment issues.</p>
+<p>This chapter takes the time to spell out the details. You'll learn the roles of <strong>the Python interpreter, package manager, virtual environment, and IDE</strong>, and you'll set up a clean environment ready for bioinformatics work.</p>
+<p><strong>Core concept:</strong> "A Python environment = a Python version + a set of packages + their mutual compatibility." A single machine can host many environments, and giving each project its own is best practice.</p>
+</div>
+<div class="callout tip"><span class="callout-icon">💡</span><div>
+<span data-lang="zh"><strong>一句話原則：</strong>「每個專案開一個 conda env，永遠別碰 system Python。」記住這句話，可以省下未來 90% 的痛苦。</span>
+<span data-lang="en"><strong>Single-rule principle:</strong> "One conda env per project, never touch system Python." This single habit saves 90% of future pain.</span>
+</div></div>
+</section>
+
+<!-- ===== Section 2: Components ===== -->
+<section class="section">
+<div class="section-label" data-zh="核心元件" data-en="CORE COMPONENTS">核心元件</div>
+<h2 data-zh="一、你需要安裝哪些東西？" data-en="I. What you actually need to install">一、你需要安裝哪些東西？</h2>
+<div class="card-grid cols-2">
+<div class="card"><div class="card-icon">🐍</div><h4>Python 解譯器 (Interpreter)</h4>
+<div data-lang="zh"><p>把你寫的 <code>.py</code> 程式碼翻譯成電腦能執行的指令。生資分析建議使用 <strong>Python 3.10–3.12</strong>。<br>不要直接用 Python 官網的安裝包 — 改用 <strong>Miniconda</strong> 一次解決「Python + 套件管理」。</p></div>
+<div data-lang="en"><p>Translates your <code>.py</code> code into instructions the computer can run. For bioinformatics use <strong>Python 3.10–3.12</strong>.<br>Don't install Python from python.org directly — use <strong>Miniconda</strong> instead, which handles "Python + package manager" together.</p></div>
+</div>
+<div class="card"><div class="card-icon">📦</div><h4><span data-zh="套件管理器" data-en="Package Manager">套件管理器</span> (conda / pip)</h4>
+<div data-lang="zh"><p>安裝、升級、移除套件 (numpy, pandas, scanpy…) 的工具。<br>• <code>conda</code> 也能管 Python 版本與非 Python 工具 (samtools, R)。<br>• <code>pip</code> 只管 Python 套件，但種類最齊全。<br>兩者可混用（先 conda 後 pip）。</p></div>
+<div data-lang="en"><p>Tool for installing, upgrading, removing packages (numpy, pandas, scanpy…).<br>• <code>conda</code> also manages Python versions and non-Python tools (samtools, R).<br>• <code>pip</code> handles Python-only packages but has the broadest catalog.<br>You can mix them (conda first, pip second).</p></div>
+</div>
+<div class="card"><div class="card-icon">🧪</div><h4><span data-zh="虛擬環境" data-en="Virtual Environment">虛擬環境</span> (env)</h4>
+<div data-lang="zh"><p>把不同專案的套件「隔離」開來，避免 A 專案的 numpy 1.20 和 B 專案的 numpy 1.26 互相打架。<br>常見方案：<code>conda env</code>（推薦）、<code>venv</code>、<code>uv</code>。</p></div>
+<div data-lang="en"><p>Isolates each project's packages so project A's numpy 1.20 doesn't clash with project B's numpy 1.26.<br>Common options: <code>conda env</code> (recommended), <code>venv</code>, <code>uv</code>.</p></div>
+</div>
+<div class="card"><div class="card-icon">💻</div><h4>IDE / <span data-zh="編輯器" data-en="Editor">編輯器</span></h4>
+<div data-lang="zh"><p>寫 Python 的環境。<br>• <strong>VSCode</strong>：最通用、外掛多、適合所有人。<br>• <strong>PyCharm</strong>：功能最強、適合大專案。<br>• <strong>JupyterLab</strong>：適合互動分析、看圖、生資論文。<br>新手建議：VSCode + Jupyter 外掛。</p></div>
+<div data-lang="en"><p>Where you write Python.<br>• <strong>VSCode</strong> — most versatile, huge extension ecosystem, fits everyone.<br>• <strong>PyCharm</strong> — most powerful, ideal for large projects.<br>• <strong>JupyterLab</strong> — best for interactive analysis, plots, papers.<br>Beginner pick: VSCode + Jupyter extension.</p></div>
+</div>
+</div>
+</section>
+
+<!-- ===== Section 3: Step-by-Step Install ===== -->
+<section class="section">
+<div class="section-label" data-zh="實作步驟" data-en="STEP-BY-STEP">實作步驟</div>
+<h2 data-zh="二、從零開始的完整安裝流程" data-en="II. Full installation walkthrough from scratch">二、從零開始的完整安裝流程</h2>
+<div class="workflow">
+  <div class="workflow-step" data-step="1">
+    <h4 data-zh="下載並安裝 Miniconda" data-en="Download and install Miniconda">下載並安裝 Miniconda</h4>
+    <div data-lang="zh"><p>到 <code>https://docs.conda.io/en/latest/miniconda.html</code> 下載對應作業系統的 64-bit 版本。安裝時：</p>
+    <ul><li><strong>Windows：</strong>「Install for Just Me」、勾選「Add Miniconda3 to my PATH environment variable」（注意：會有警告，但對個人開發機建議勾）。</li>
+    <li><strong>Mac/Linux：</strong>用 <code>.sh</code> 安裝檔，安裝時選 <code>yes</code> 來執行 <code>conda init</code>。</li></ul>
+    <p>安裝完成後關閉所有終端機，重新開啟。</p></div>
+    <div data-lang="en"><p>Download the 64-bit installer for your OS at <code>https://docs.conda.io/en/latest/miniconda.html</code>. During install:</p>
+    <ul><li><strong>Windows:</strong> "Install for Just Me", check "Add Miniconda3 to my PATH environment variable" (yes there's a warning, but for personal dev machines it's fine).</li>
+    <li><strong>Mac/Linux:</strong> use the <code>.sh</code> script, answer <code>yes</code> to running <code>conda init</code>.</li></ul>
+    <p>Close all terminals after install, then open a new one.</p></div>
+  </div>
+  <div class="workflow-step" data-step="2">
+    <h4 data-zh="驗證安裝" data-en="Verify installation">驗證安裝</h4>
+    <div data-lang="zh"><p>打開終端機 (Windows: <span class="kbd">Win</span>+<span class="kbd">R</span> → <code>cmd</code>；Mac: Spotlight → Terminal)，輸入：</p></div>
+    <div data-lang="en"><p>Open a terminal (Windows: <span class="kbd">Win</span>+<span class="kbd">R</span> → <code>cmd</code>; Mac: Spotlight → Terminal) and run:</p></div>
+<div class="path-box">
+<span class="label">$</span> conda --version
+<span class="ok">conda 24.1.2</span>
+<span class="label">$</span> python --version
+<span class="ok">Python 3.12.2</span>
+</div>
+    <div data-lang="zh"><p>有看到版本號就 OK。如果出現「'conda' is not recognized」，表示 PATH 沒設好 — Windows 可改用「Anaconda Prompt」開始程式集裡的捷徑。</p></div>
+    <div data-lang="en"><p>If you see version numbers, you're good. If you get "'conda' is not recognized", PATH isn't set — on Windows, use the "Anaconda Prompt" shortcut from the Start Menu instead.</p></div>
+  </div>
+  <div class="workflow-step" data-step="3">
+    <h4 data-zh="建立第一個生資專用環境" data-en="Create your first bioinformatics env">建立第一個生資專用環境</h4>
+    <div data-lang="zh"><p>幫這個課程建立一個叫 <code>pybio</code>、Python 3.11 的環境：</p></div>
+    <div data-lang="en"><p>Create an env called <code>pybio</code> with Python 3.11 for this course:</p></div>
+<div class="path-box">
+<span class="label">$</span> conda create -n pybio python=3.11 -y
+<span class="label">$</span> conda activate pybio
+<span class="ok">(pybio) $</span>      <span class="comment"># prompt 前出現 (pybio) 表示已啟用</span>
+</div>
+  </div>
+  <div class="workflow-step" data-step="4">
+    <h4 data-zh="安裝核心套件" data-en="Install core packages">安裝核心套件</h4>
+    <div data-lang="zh"><p>分批安裝，避免 dependency resolver 卡住：</p></div>
+    <div data-lang="en"><p>Install in stages so the dependency resolver doesn't choke:</p></div>
+<div class="path-box">
+<span class="comment"># 1. 數值與資料 / numerics & data</span>
+<span class="label">$</span> conda install -c conda-forge numpy pandas matplotlib seaborn scipy scikit-learn jupyterlab -y
+<span class="comment"># 2. 生資基礎 / bioinformatics core</span>
+<span class="label">$</span> conda install -c bioconda biopython pysam -y
+<span class="comment"># 3. 單細胞 (用 pip 較新) / single-cell (pip is fresher)</span>
+<span class="label">$</span> pip install scanpy anndata leidenalg python-igraph
+</div>
+  </div>
+  <div class="workflow-step" data-step="5">
+    <h4 data-zh="安裝 VSCode 與 Python 外掛" data-en="Install VSCode and Python extensions">安裝 VSCode 與 Python 外掛</h4>
+    <div data-lang="zh"><p>到 <code>https://code.visualstudio.com</code> 下載安裝。打開後到 Extensions（左側方塊圖示）搜尋並安裝：</p>
+    <ul><li><strong>Python</strong>（Microsoft 官方）— 必裝</li><li><strong>Pylance</strong>— 智慧型提示</li><li><strong>Jupyter</strong> — 在 VSCode 內跑 notebook</li><li><strong>Rainbow CSV</strong>— 看 CSV 顏色更清楚</li></ul></div>
+    <div data-lang="en"><p>Install VSCode from <code>https://code.visualstudio.com</code>. Open it and from Extensions (the squares icon) search and install:</p>
+    <ul><li><strong>Python</strong> (official Microsoft) — required</li><li><strong>Pylance</strong> — smart IntelliSense</li><li><strong>Jupyter</strong> — run notebooks inside VSCode</li><li><strong>Rainbow CSV</strong> — colorize CSV files</li></ul></div>
+  </div>
+  <div class="workflow-step" data-step="6">
+    <h4 data-zh="在 VSCode 中選用 pybio 環境" data-en="Select the pybio env in VSCode">在 VSCode 中選用 pybio 環境</h4>
+    <div data-lang="zh"><p>開啟一個 <code>.py</code> 檔案後，按 <span class="kbd">Ctrl</span>+<span class="kbd">Shift</span>+<span class="kbd">P</span> → 輸入 <code>Python: Select Interpreter</code> → 選 <code>pybio</code>。畫面右下角應顯示 <code>3.11.x ('pybio')</code>。</p></div>
+    <div data-lang="en"><p>Open any <code>.py</code> file, press <span class="kbd">Ctrl</span>+<span class="kbd">Shift</span>+<span class="kbd">P</span> → type <code>Python: Select Interpreter</code> → choose <code>pybio</code>. The bottom-right of the window should now show <code>3.11.x ('pybio')</code>.</p></div>
+  </div>
+</div>
+</section>
+
+<!-- ===== Section 4: Folder Conventions ===== -->
+<section class="section">
+<div class="section-label" data-zh="資料夾規劃" data-en="FOLDER LAYOUT">資料夾規劃</div>
+<h2 data-zh="三、生資專案的資料夾規劃 (極重要)" data-en="III. Project folder layout (very important)">三、生資專案的資料夾規劃 (極重要)</h2>
+<div data-lang="zh">
+<p>新手最常犯的錯：把所有 <code>.py</code>、<code>.csv</code>、<code>.fastq</code>、圖片全堆在桌面。三天後就找不到自己昨天分析了什麼。</p>
+<p>建議結構（任何規模都適用）：</p>
+</div>
+<div data-lang="en">
+<p>Most common newbie mistake: dumping all <code>.py</code>, <code>.csv</code>, <code>.fastq</code> and figures onto the Desktop. Three days later you can't tell what you analyzed yesterday.</p>
+<p>Recommended layout (works at any scale):</p>
+</div>
+<div class="path-box">
+my_project/
+├── data/                  <span class="comment"># 原始資料 — 絕對不修改！read-only</span>
+│   ├── raw/               <span class="comment"># 從定序儀/GEO 下載的原始檔</span>
+│   └── processed/         <span class="comment"># 你跑出來的中間檔 (可重建)</span>
+├── results/               <span class="comment"># 圖、表、最終輸出</span>
+│   ├── figures/
+│   └── tables/
+├── notebooks/             <span class="comment"># Jupyter notebooks (探索性分析)</span>
+│   └── 01_qc.ipynb
+├── scripts/               <span class="comment"># 正式 .py 腳本 (可重複執行)</span>
+│   └── run_qc.py
+├── env.yml                <span class="comment"># conda 環境定義 (給別人重現你的環境)</span>
+└── README.md              <span class="comment"># 專案說明</span>
+</div>
+<div class="callout warn"><span class="callout-icon">⚠️</span><div>
+<span data-lang="zh"><strong>三大鐵則：</strong><br>① <code>data/raw/</code> 一旦放進去就<strong>絕不修改、絕不刪除</strong>。所有清洗都產出到 <code>processed/</code>。<br>② 路徑用<strong>相對路徑</strong>（從專案根目錄開始），別寫 <code>C:\Users\charlene\Desktop\...</code>，否則換電腦就壞掉。<br>③ <code>data/</code> 通常很大 — 用 <code>.gitignore</code> 排除，不要傳 git。</span>
+<span data-lang="en"><strong>Three iron rules:</strong><br>① Once a file lands in <code>data/raw/</code>, <strong>never modify or delete</strong> it. All cleaning produces output in <code>processed/</code>.<br>② Use <strong>relative paths</strong> (from project root). Never hardcode <code>C:\Users\charlene\Desktop\...</code> — it breaks on any other machine.<br>③ <code>data/</code> is usually huge — exclude it with <code>.gitignore</code>, don't commit to git.</span>
+</div></div>
+</section>
+
+<!-- ===== Section 5: Reproducibility ===== -->
+<section class="section">
+<div class="section-label" data-zh="可重現性" data-en="REPRODUCIBILITY">可重現性</div>
+<h2 data-zh="四、保存環境與分享給協作者" data-en="IV. Saving and sharing your environment">四、保存環境與分享給協作者</h2>
+<div data-lang="zh">
+<p>生資論文一個重要要求：「別人能否在他的電腦上重現你的結果？」這就靠匯出環境定義檔。</p>
+</div>
+<div data-lang="en">
+<p>A critical requirement in bioinformatics papers: "Can someone else reproduce your results on their machine?" This is what env files are for.</p>
+</div>
+<div class="code-tabs"><div class="code-tab-btns">
+<button class="code-tab-btn active" onclick="switchTab(this,'export')">Export</button>
+<button class="code-tab-btn" onclick="switchTab(this,'recreate')">Recreate</button>
+<button class="code-tab-btn" onclick="switchTab(this,'pipfreeze')">pip freeze</button>
+</div>
+<div class="code-tab-content active" id="export"><pre><span class="comment"># 1. 在你的環境裡匯出 / Export your env spec</span>
+(pybio) $ conda env export --no-builds &gt; env.yml
+
+<span class="comment"># env.yml 內容大概長這樣 / env.yml looks like:</span>
+name: pybio
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - python=3.11
+  - numpy=1.26.*
+  - pandas=2.2.*
+  - scanpy
+  - pip:
+    - leidenalg==0.10.2</pre></div>
+<div class="code-tab-content" id="recreate"><pre><span class="comment"># 2. 別人在他電腦重建環境 / Someone else recreates the env</span>
+$ conda env create -f env.yml
+$ conda activate pybio
+<span class="comment"># 完全相同的套件版本！ / identical package versions!</span></pre></div>
+<div class="code-tab-content" id="pipfreeze"><pre><span class="comment"># 純 pip 專案 / Pure pip projects</span>
+(pybio) $ pip freeze &gt; requirements.txt
+$ pip install -r requirements.txt</pre></div>
+</div>
+</section>
+
+<!-- ===== Section 6: Common Pitfalls ===== -->
+<section class="section">
+<div class="section-label" data-zh="常見坑" data-en="COMMON PITFALLS">常見坑</div>
+<h2 data-zh="五、新手最常踩的 5 個坑" data-en="V. Top 5 newbie mistakes">五、新手最常踩的 5 個坑</h2>
+<table class="comp-table">
+<thead><tr><th data-zh="症狀" data-en="Symptom">症狀</th><th data-zh="原因" data-en="Cause">原因</th><th data-zh="解法" data-en="Fix">解法</th></tr></thead>
+<tbody>
+<tr><td data-lang="zh"><strong>ModuleNotFoundError: No module named 'scanpy'</strong></td><td data-lang="zh">忘了 <code>conda activate</code>，或裝在錯誤的 env</td><td data-lang="zh">先 <code>conda activate pybio</code> 再執行；用 <code>which python</code> 確認</td>
+<td data-lang="en"><strong>ModuleNotFoundError: No module named 'scanpy'</strong></td><td data-lang="en">Forgot <code>conda activate</code>, or installed into wrong env</td><td data-lang="en">Run <code>conda activate pybio</code> first; verify with <code>which python</code></td></tr>
+<tr><td data-lang="zh"><strong>FileNotFoundError</strong></td><td data-lang="zh">當前工作目錄 (CWD) 不是你以為的位置</td><td data-lang="zh">Ch3 會教 — 用 <code>os.getcwd()</code> 檢查；改用 <code>pathlib.Path(__file__).parent</code></td>
+<td data-lang="en"><strong>FileNotFoundError</strong></td><td data-lang="en">Current working dir (CWD) isn't what you assumed</td><td data-lang="en">Ch3 covers this — check with <code>os.getcwd()</code>; switch to <code>pathlib.Path(__file__).parent</code></td></tr>
+<tr><td data-lang="zh"><strong>conda 安裝卡在「Solving environment...」幾十分鐘</strong></td><td data-lang="zh">channel 衝突，dependency 樹太大</td><td data-lang="zh">改用 <code>mamba</code>（10 倍快）：<code>conda install -n base mamba -c conda-forge</code></td>
+<td data-lang="en"><strong>conda stuck on "Solving environment..." for ages</strong></td><td data-lang="en">Channel conflicts, dep tree too large</td><td data-lang="en">Switch to <code>mamba</code> (10× faster): <code>conda install -n base mamba -c conda-forge</code></td></tr>
+<tr><td data-lang="zh"><strong>pip 跟 conda 混裝後環境壞掉</strong></td><td data-lang="zh">先 pip 後 conda 會覆蓋 pip 安裝的東西</td><td data-lang="zh">記住順序：<strong>conda 先、pip 後</strong>。pip 安裝完不要再執行 conda install</td>
+<td data-lang="en"><strong>Env breaks after mixing pip and conda</strong></td><td data-lang="en">Conda after pip overwrites pip installs</td><td data-lang="en">Remember the order: <strong>conda first, pip last</strong>. Don't run conda install after pip</td></tr>
+<tr><td data-lang="zh"><strong>Windows 上中文路徑/空格出錯</strong></td><td data-lang="zh">某些套件不支援含空格、中文的路徑</td><td data-lang="zh">把專案放在 <code>C:\Users\<英文ID>\projects\</code> 或 <code>D:\projects\</code>，全英文路徑</td>
+<td data-lang="en"><strong>Windows path with spaces/Chinese fails</strong></td><td data-lang="en">Some packages can't handle spaces or non-ASCII paths</td><td data-lang="en">Put projects under <code>C:\Users\<englishID>\projects\</code> or <code>D:\projects\</code> — pure-ASCII paths</td></tr>
+</tbody></table>
+</section>
+
+<!-- ===== Section 7: Interactive Env Builder ===== -->
+<section class="section">
+<div class="section-label" data-zh="互動模擬" data-en="INTERACTIVE">互動模擬</div>
+<h2 data-zh="conda 指令產生器" data-en="conda Command Builder">conda 指令產生器</h2>
+<div data-lang="zh"><p>勾選你需要的套件群組，自動生成可貼到終端機的指令。</p></div>
+<div data-lang="en"><p>Pick the package groups you need; the tool generates a copy-pasteable shell command.</p></div>
+<div class="interactive-panel">
+<div class="slider-group"><label><span data-zh="環境名稱 (env name)" data-en="env name">環境名稱</span> <span id="envNameVal">pybio</span></label>
+<input type="text" id="envName" value="pybio" style="width:100%;padding:8px 12px;border:1px solid var(--c-border);border-radius:6px;font-family:var(--font-mono);"></div>
+<div class="slider-group"><label><span data-zh="Python 版本" data-en="Python version">Python 版本</span> <span id="pyVer">3.11</span></label>
+<input type="range" id="sliderPy" min="0" max="3" value="2" step="1">
+<div style="font-size:.75rem;color:var(--c-ink-muted);text-align:center;">3.9 — 3.10 — 3.11 — 3.12</div></div>
+<div class="toggle-row" id="pkgToggles">
+<button class="toggle-btn active" data-pkg="datasci">數值/資料</button>
+<button class="toggle-btn" data-pkg="bio">生資基礎</button>
+<button class="toggle-btn" data-pkg="sc">單細胞 (scanpy)</button>
+<button class="toggle-btn" data-pkg="ml">機器學習 (PyTorch)</button>
+<button class="toggle-btn" data-pkg="viz">進階視覺化 (plotly)</button>
+</div>
+<div class="console-out" id="cmdOut"></div>
+<button class="try-btn" onclick="copyCmd()" data-zh="📋 複製指令" data-en="📋 Copy command">📋 複製指令</button>
+</div>
+</section>
+
+<!-- ===== Section 8: Quiz ===== -->
+<section class="quiz-section">
+<h3>📝 <span data-zh="自我檢測" data-en="Self-Check">自我檢測</span></h3>
+<div class="quiz-q" data-answer="2">
+<p data-lang="zh">1. 為什麼建議用 conda 環境而不是直接用系統 Python？</p>
+<p data-lang="en">1. Why use a conda env instead of the system Python directly?</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. conda 跑得比較快</span><span data-lang="en">A. conda runs faster</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. 系統 Python 不能跑生資套件</span><span data-lang="en">B. System Python can't run bioinformatics packages</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. 隔離不同專案的套件版本，避免衝突，且不會弄壞作業系統</span><span data-lang="en">C. Isolates package versions per project, avoids conflicts, and doesn't risk breaking the OS</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. conda 是免費的，Python 要付費</span><span data-lang="en">D. conda is free; Python is paid</span></div>
+</div><div class="quiz-feedback" id="fb1"></div></div>
+
+<div class="quiz-q" data-answer="1">
+<p data-lang="zh">2. 你執行 <code>python script.py</code> 時跳 <code>ModuleNotFoundError: No module named 'scanpy'</code>，最可能的原因是？</p>
+<p data-lang="en">2. <code>python script.py</code> throws <code>ModuleNotFoundError: No module named 'scanpy'</code>. Most likely cause?</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. scanpy 套件已經停止維護</span><span data-lang="en">A. scanpy is no longer maintained</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. 沒先 <code>conda activate</code> 對的環境，目前用的 Python 不是裝了 scanpy 的那個</span><span data-lang="en">B. Forgot <code>conda activate</code>; current Python isn't the one with scanpy</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. script.py 程式有 bug</span><span data-lang="en">C. script.py has a bug</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. 必須重新安裝 Windows</span><span data-lang="en">D. Must reinstall Windows</span></div>
+</div><div class="quiz-feedback" id="fb2"></div></div>
+
+<div class="quiz-q" data-answer="0">
+<p data-lang="zh">3. 關於 <code>data/raw/</code> 資料夾，下列何者正確？</p>
+<p data-lang="en">3. Which is correct about the <code>data/raw/</code> folder?</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. 應視為「唯讀」，不修改、不覆蓋；所有清洗結果寫到 processed/</span><span data-lang="en">A. Treat as read-only — don't modify; write cleaned outputs to processed/</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. 直接在原檔案上覆蓋修改最省空間</span><span data-lang="en">B. Overwriting in place saves disk space</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. 一定要傳上 git，方便協作者抓</span><span data-lang="en">C. Must commit to git so collaborators can fetch it</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. 跟 results/ 放同一層才正確</span><span data-lang="en">D. Must sit in the same layer as results/</span></div>
+</div><div class="quiz-feedback" id="fb3"></div></div>
+</section>
+
+<nav class="page-nav">
+<a href="index.html"><span class="nav-dir" data-zh="← 回首頁" data-en="← Home">← 回首頁</span><span class="nav-title" data-zh="課程目錄" data-en="Course Index">課程目錄</span></a>
+<a href="syntax.html"><span class="nav-dir" data-zh="下一章 →" data-en="Next →">下一章 →</span><span class="nav-title">Ch 2: Python Syntax</span></a>
+</nav>
+</main>
+<footer class="site-footer">© Charlene — Python for Bioinformatics Interactive Tutorial</footer>
+<script src="i18n.js"></script>
+<script>
+window.addEventListener('scroll',()=>{const h=document.documentElement;document.getElementById('progressBar').style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight))*100+'%';});
+function switchTab(b,id){const p=b.closest('.code-tabs');p.querySelectorAll('.code-tab-btn').forEach(x=>x.classList.remove('active'));p.querySelectorAll('.code-tab-content').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById(id).classList.add('active');}
+
+// Quiz logic
+document.querySelectorAll('.quiz-q').forEach((q,qi)=>{
+  const ans=+q.dataset.answer;
+  q.querySelectorAll('.quiz-opt').forEach(opt=>{
+    opt.addEventListener('click',()=>{
+      const idx=+opt.dataset.idx;
+      q.querySelectorAll('.quiz-opt').forEach(o=>{o.classList.remove('correct','wrong');});
+      if(idx===ans){opt.classList.add('correct');}
+      else{opt.classList.add('wrong');q.querySelectorAll('.quiz-opt')[ans].classList.add('correct');}
+    });
+  });
+});
+
+// conda command builder
+const PKG_MAP={
+  datasci:{conda:'numpy pandas matplotlib seaborn scipy scikit-learn jupyterlab',pip:''},
+  bio:{conda:'-c bioconda biopython pysam',pip:''},
+  sc:{conda:'',pip:'scanpy anndata leidenalg python-igraph'},
+  ml:{conda:'pytorch torchvision -c pytorch',pip:''},
+  viz:{conda:'',pip:'plotly bokeh'}
+};
+const PY_VERS=['3.9','3.10','3.11','3.12'];
+function buildCmd(){
+  const env=document.getElementById('envName').value||'pybio';
+  const py=PY_VERS[+document.getElementById('sliderPy').value];
+  const sel=Array.from(document.querySelectorAll('#pkgToggles .toggle-btn.active')).map(b=>b.dataset.pkg);
+  const condaParts=sel.map(s=>PKG_MAP[s].conda).filter(x=>x).join(' ');
+  const pipParts=sel.map(s=>PKG_MAP[s].pip).filter(x=>x).join(' ');
+  let lines=[`conda create -n ${env} python=${py} -y`,`conda activate ${env}`];
+  if(condaParts) lines.push(`conda install -c conda-forge ${condaParts} -y`);
+  if(pipParts) lines.push(`pip install ${pipParts}`);
+  document.getElementById('cmdOut').textContent=lines.map(l=>'$ '+l).join('\n');
+  document.getElementById('envNameVal').textContent=env;
+  document.getElementById('pyVer').textContent=py;
+}
+document.getElementById('envName').addEventListener('input',buildCmd);
+document.getElementById('sliderPy').addEventListener('input',buildCmd);
+document.querySelectorAll('#pkgToggles .toggle-btn').forEach(b=>{b.addEventListener('click',()=>{b.classList.toggle('active');buildCmd();});});
+function copyCmd(){navigator.clipboard.writeText(document.getElementById('cmdOut').textContent);}
+buildCmd();
+</script>
+</body></html>

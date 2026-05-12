@@ -1,0 +1,308 @@
+<!DOCTYPE html><html lang="zh-Hant"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Ch 9: FASTA / FASTQ — Python BioInfo Tutorial</title>
+<link rel="stylesheet" href="styles.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+</head><body>
+<nav class="top-nav"><div class="top-nav-inner">
+  <a href="index.html" class="top-nav-brand"><span>🐍</span> <span data-zh="Python 生資教學" data-en="Python BioInfo Tutorial">Python 生資教學</span></a>
+  <ul class="top-nav-links">
+    <li><a href="setup.html">Setup</a></li><li><a href="syntax.html">Syntax</a></li><li><a href="paths.html">Paths</a></li><li><a href="functions.html">Func</a></li><li><a href="numpy.html">NumPy</a></li><li><a href="pandas.html">Pandas</a></li><li><a href="visualization.html">Viz</a></li><li><a href="biopython.html">Biopy</a></li><li><a href="fasta-fastq.html" class="active">FASTQ</a></li><li><a href="blast.html">BLAST</a></li><li><a href="pysam.html">pysam</a></li><li><a href="variant-calling.html">Variant</a></li><li><a href="scanpy-anndata.html">scanpy</a></li><li><a href="scrna-workflow.html">scRNA</a></li><li><a href="spatial.html">Spatial</a></li><li><a href="multi-omics.html">Multi</a></li><li><a href="scllms.html">scLLMs</a></li><li><a href="ai-bioinformatics.html">AI</a></li>
+  </ul>
+</div></nav>
+<div class="progress-bar-container"><div class="progress-bar" id="progressBar"></div></div>
+<header class="page-hero"><div class="step-badge">CHAPTER 9 / 18</div>
+<h1 data-zh="FASTA / FASTQ 處理" data-en="FASTA / FASTQ Processing">FASTA / FASTQ 處理</h1>
+<p class="subtitle" data-lang="zh">基因序列、定序 reads — 兩種你天天會碰的格式，從讀寫到 QC 一次學完。</p>
+<p class="subtitle" data-lang="en">Reference sequences and sequencing reads — the two formats you'll touch daily, from I/O to QC.</p>
+</header>
+<main class="content-wrap">
+
+<section class="section">
+<div class="section-label" data-zh="格式" data-en="FORMATS">格式</div>
+<h2 data-zh="一、FASTA vs FASTQ：兩兄弟的區別" data-en="I. FASTA vs FASTQ: the two brothers">一、FASTA vs FASTQ</h2>
+<table class="comp-table">
+<thead><tr><th>&nbsp;</th><th>FASTA (.fa, .fasta)</th><th>FASTQ (.fq, .fastq)</th></tr></thead>
+<tbody>
+<tr><td data-lang="zh"><strong>用途</strong></td><td data-lang="zh">儲存「成品」序列：基因組、轉錄本、蛋白質</td><td data-lang="zh">儲存「原始」定序 reads (附品質分數)</td>
+<td data-lang="en"><strong>Use</strong></td><td data-lang="en">Stores assembled sequences: genome, transcripts, proteins</td><td data-lang="en">Stores raw sequencing reads (with quality scores)</td></tr>
+<tr><td data-lang="zh"><strong>每筆紀錄</strong></td><td data-lang="zh">2 行：&gt;ID + 序列</td><td data-lang="zh">4 行：@ID + 序列 + + + 品質字串</td>
+<td data-lang="en"><strong>Per record</strong></td><td data-lang="en">2 lines: &gt;ID + sequence</td><td data-lang="en">4 lines: @ID + seq + + + quality</td></tr>
+<tr><td data-lang="zh"><strong>檔案大小</strong></td><td data-lang="zh">小 (人類基因組 ~3 GB)</td><td data-lang="zh">大 (一個樣本可能 50–100 GB，常壓 .gz)</td>
+<td data-lang="en"><strong>File size</strong></td><td data-lang="en">Small (human genome ~3 GB)</td><td data-lang="en">Huge (one sample 50–100 GB, usually gzipped)</td></tr>
+</tbody></table>
+
+<div class="code-tabs"><div class="code-tab-btns">
+<button class="code-tab-btn active" onclick="switchTab(this,'fmt1')">FASTA 範例</button>
+<button class="code-tab-btn" onclick="switchTab(this,'fmt2')">FASTQ 範例</button>
+</div>
+<div class="code-tab-content active" id="fmt1"><pre>&gt;ENST00000269305 TP53 transcript variant 1
+ATGGAGGAGCCGCAGTCAGATCCTAGCGTCGAGCCCCCTCTGAGTCAGG
+AAACATTTTCAGACCTATGGAAACTACTTCCTGAAAACAACGTTCTGTC
+&gt;ENST00000269307 TP53 transcript variant 2
+ATGGAGGAGCCGCAGTCAGATCCTAGCGTCGAGTCCCAACTGAATCCTC
+...
+<span class="comment"># 規則：
+<span class="comment">#  • 標頭行以 &gt; 開始；&gt; 後第一個空白前是 ID，之後是 description
+<span class="comment">#  • 後面的非 &gt; 行都是序列，可以斷行也可以全部一行
+<span class="comment">#  • 一個 FASTA 檔可以含多筆紀錄</span></pre></div>
+<div class="code-tab-content" id="fmt2"><pre>@SRR000001.1 length=36
+TATTGGGAATTGCAACTTGGCAGTGTGTGGAATTTC
++
+IIIIIIIIIIIIIIIIIIIIIIIIIIIIIB1@?B?-
+@SRR000001.2 length=36
+GTAGAGTGCAGAGTACGCATGCATCAATCAGGTACG
++
+IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIDDDDD
+<span class="comment"># 4 行為一筆：
+<span class="comment">#  Line 1: @ + read ID
+<span class="comment">#  Line 2: 序列 (DNA)
+<span class="comment">#  Line 3: + (可重複 ID 也可空)
+<span class="comment">#  Line 4: 品質分數 — 每個字元對應序列上一個 base 的品質
+<span class="comment">#
+<span class="comment"># 品質字元 → Phred score：ord(char) - 33  (Sanger / Illumina 1.8+)
+<span class="comment">#   'I' (73) - 33 = 40   → 99.99% 準確 (極好)
+<span class="comment">#   '!' (33) - 33 = 0    → 100% 機率錯 (最差)</span></pre></div>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="讀寫" data-en="I/O">讀寫</div>
+<h2 data-zh="二、用 SeqIO 讀寫 (Biopython 標準)" data-en="II. Read/write with SeqIO (Biopython standard)">二、SeqIO 讀寫</h2>
+<div class="code-tabs"><div class="code-tab-btns">
+<button class="code-tab-btn active" onclick="switchTab(this,'rw1')">FASTA 讀</button>
+<button class="code-tab-btn" onclick="switchTab(this,'rw2')">FASTA 寫</button>
+<button class="code-tab-btn" onclick="switchTab(this,'rw3')">FASTQ + 品質</button>
+<button class="code-tab-btn" onclick="switchTab(this,'rw4')">壓縮 .gz</button>
+</div>
+<div class="code-tab-content active" id="rw1"><pre><span class="kw">from</span> Bio <span class="kw">import</span> SeqIO
+
+<span class="comment"># 一條紀錄 / Single record (檔案只有 1 條才用)</span>
+record = SeqIO.read(<span class="str">"data/raw/genome.fa"</span>, <span class="str">"fasta"</span>)
+
+<span class="comment"># 多條紀錄 — 用 parse 一次一條 (節省記憶體！)</span>
+<span class="comment"># Multiple records — use parse() (memory-friendly streaming)</span>
+<span class="kw">for</span> record <span class="kw">in</span> SeqIO.parse(<span class="str">"data/raw/transcripts.fa"</span>, <span class="str">"fasta"</span>):
+    <span class="builtin">print</span>(record.id, <span class="builtin">len</span>(record.seq))
+
+<span class="comment"># 全部讀進記憶體 (小檔可用)</span>
+records = <span class="builtin">list</span>(SeqIO.parse(<span class="str">"transcripts.fa"</span>, <span class="str">"fasta"</span>))
+
+<span class="comment"># 索引存取 — 大檔抽特定基因 / Index for random access</span>
+idx = SeqIO.index(<span class="str">"transcripts.fa"</span>, <span class="str">"fasta"</span>)
+tp53 = idx[<span class="str">"ENST00000269305"</span>]
+<span class="builtin">print</span>(tp53.seq)
+idx.close()
+
+<span class="comment"># 變成 dict</span>
+seq_dict = SeqIO.to_dict(SeqIO.parse(<span class="str">"transcripts.fa"</span>, <span class="str">"fasta"</span>))</pre></div>
+<div class="code-tab-content" id="rw2"><pre><span class="kw">from</span> Bio <span class="kw">import</span> SeqIO
+<span class="kw">from</span> Bio.Seq <span class="kw">import</span> Seq
+<span class="kw">from</span> Bio.SeqRecord <span class="kw">import</span> SeqRecord
+
+<span class="comment"># 建立紀錄並寫出 / Create records and write</span>
+records = [
+    SeqRecord(Seq(<span class="str">"ATGGCC..."</span>), id=<span class="str">"gene1"</span>, description=<span class="str">"my gene 1"</span>),
+    SeqRecord(Seq(<span class="str">"ATGTAT..."</span>), id=<span class="str">"gene2"</span>, description=<span class="str">""</span>),
+]
+SeqIO.write(records, <span class="str">"results/my_genes.fa"</span>, <span class="str">"fasta"</span>)
+
+<span class="comment"># 過濾、改名後再寫出 / Filter and rewrite</span>
+<span class="kw">def</span> long_only(records, min_len=<span class="num">200</span>):
+    <span class="kw">for</span> r <span class="kw">in</span> records:
+        <span class="kw">if</span> <span class="builtin">len</span>(r.seq) &gt;= min_len:
+            r.description = <span class="str">""</span>
+            <span class="kw">yield</span> r
+
+records = SeqIO.parse(<span class="str">"in.fa"</span>, <span class="str">"fasta"</span>)
+SeqIO.write(long_only(records), <span class="str">"out.fa"</span>, <span class="str">"fasta"</span>)
+<span class="comment"># 用 generator 不會把所有東西讀進記憶體</span></pre></div>
+<div class="code-tab-content" id="rw3"><pre><span class="kw">from</span> Bio <span class="kw">import</span> SeqIO
+
+<span class="comment"># FASTQ 比 FASTA 多了 letter_annotations["phred_quality"]</span>
+<span class="kw">for</span> rec <span class="kw">in</span> SeqIO.parse(<span class="str">"reads.fastq"</span>, <span class="str">"fastq"</span>):
+    seq = rec.seq
+    quals = rec.letter_annotations[<span class="str">"phred_quality"</span>]   <span class="comment"># list of int</span>
+    avg = <span class="builtin">sum</span>(quals) / <span class="builtin">len</span>(quals)
+    <span class="builtin">print</span>(rec.id, avg)
+
+<span class="comment"># 過濾低品質 reads（前 50bp 平均 &gt; 30）/ Filter low-Q reads</span>
+<span class="kw">def</span> good(records, min_avg=<span class="num">30</span>, head=<span class="num">50</span>):
+    <span class="kw">for</span> r <span class="kw">in</span> records:
+        q = r.letter_annotations[<span class="str">"phred_quality"</span>][:head]
+        <span class="kw">if</span> q <span class="kw">and</span> <span class="builtin">sum</span>(q) / <span class="builtin">len</span>(q) &gt;= min_avg:
+            <span class="kw">yield</span> r
+
+SeqIO.write(good(SeqIO.parse(<span class="str">"in.fq"</span>, <span class="str">"fastq"</span>)),
+            <span class="str">"clean.fq"</span>, <span class="str">"fastq"</span>)
+
+<span class="comment"># 截斷 / Trim reads to first 100 bp</span>
+<span class="kw">def</span> trim(records, length=<span class="num">100</span>):
+    <span class="kw">for</span> r <span class="kw">in</span> records:
+        <span class="kw">yield</span> r[:length]   <span class="comment"># 切片會帶著 quality 一起切！</span></pre></div>
+<div class="code-tab-content" id="rw4"><pre><span class="kw">import</span> gzip
+<span class="kw">from</span> Bio <span class="kw">import</span> SeqIO
+
+<span class="comment"># 讀 .gz 壓縮 FASTQ (生資 90% 都是這種)</span>
+<span class="comment"># Read gzipped FASTQ (90% of bioinformatics files)</span>
+<span class="kw">with</span> gzip.open(<span class="str">"reads.fastq.gz"</span>, <span class="str">"rt"</span>, encoding=<span class="str">"ascii"</span>) <span class="kw">as</span> f:
+    <span class="kw">for</span> rec <span class="kw">in</span> SeqIO.parse(f, <span class="str">"fastq"</span>):
+        <span class="builtin">print</span>(rec.id)
+<span class="comment"># 注意 "rt" = read text；不指定就是 bytes 模式</span>
+
+<span class="comment"># 寫入 .gz</span>
+<span class="kw">with</span> gzip.open(<span class="str">"out.fastq.gz"</span>, <span class="str">"wt"</span>, encoding=<span class="str">"ascii"</span>) <span class="kw">as</span> f:
+    SeqIO.write(records, f, <span class="str">"fastq"</span>)</pre></div>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="效能" data-en="PERFORMANCE">效能</div>
+<h2 data-zh="三、處理大型 FASTQ 的速度技巧" data-en="III. Speed tricks for large FASTQ files">三、效能技巧</h2>
+<div class="callout warn"><span class="callout-icon">⚡</span><div>
+<span data-lang="zh">一個 RNA-seq 樣本 20 GB FASTQ 用 SeqIO.parse 會慢到哭。換用底層 <code>FastqGeneralIterator</code> 或專門套件 <code>pyfastx</code>。</span>
+<span data-lang="en">A 20 GB RNA-seq FASTQ via SeqIO.parse is painfully slow. Use the lower-level <code>FastqGeneralIterator</code> or the dedicated <code>pyfastx</code> package.</span>
+</div></div>
+<div class="code-tabs"><div class="code-tab-btns">
+<button class="code-tab-btn active" onclick="switchTab(this,'sp1')">FastqGeneralIterator</button>
+<button class="code-tab-btn" onclick="switchTab(this,'sp2')">pyfastx (推薦)</button>
+</div>
+<div class="code-tab-content active" id="sp1"><pre><span class="comment"># 純字串、不建 SeqRecord 物件 → 快 5–10 倍</span>
+<span class="comment"># Strings only, no SeqRecord allocation → 5–10× faster</span>
+<span class="kw">from</span> Bio.SeqIO.QualityIO <span class="kw">import</span> FastqGeneralIterator
+<span class="kw">import</span> gzip
+
+count = <span class="num">0</span>
+<span class="kw">with</span> gzip.open(<span class="str">"big.fastq.gz"</span>, <span class="str">"rt"</span>) <span class="kw">as</span> f:
+    <span class="kw">for</span> title, seq, qual <span class="kw">in</span> FastqGeneralIterator(f):
+        count += <span class="num">1</span>
+        <span class="kw">if</span> <span class="builtin">len</span>(seq) &gt;= <span class="num">100</span>:
+            ...   <span class="comment"># 處理</span>
+<span class="builtin">print</span>(<span class="str">f"Total: {count:,} reads"</span>)</pre></div>
+<div class="code-tab-content" id="sp2"><pre><span class="comment"># pyfastx: 純 C++ 寫的，比 Biopython 快 30–100 倍</span>
+<span class="comment"># pyfastx: written in C++, 30–100× faster than Biopython</span>
+<span class="comment"># pip install pyfastx</span>
+
+<span class="kw">import</span> pyfastx
+
+fq = pyfastx.Fastq(<span class="str">"reads.fastq.gz"</span>, build_index=<span class="kw">True</span>)
+<span class="builtin">print</span>(<span class="builtin">len</span>(fq))            <span class="comment"># 總 read 數</span>
+<span class="builtin">print</span>(fq.size)           <span class="comment"># 總 base 數</span>
+<span class="builtin">print</span>(fq.gc_content)     <span class="comment"># 整體 GC%</span>
+<span class="builtin">print</span>(fq.composition)    <span class="comment"># 各 base 比例</span>
+
+<span class="comment"># 隨機存取 / Random access</span>
+<span class="builtin">print</span>(fq[<span class="num">100</span>])
+<span class="builtin">print</span>(fq[<span class="str">"SRR000001.5"</span>])
+
+<span class="comment"># FASTA 同樣有 pyfastx.Fasta</span>
+fa = pyfastx.Fasta(<span class="str">"genome.fa"</span>)
+<span class="builtin">print</span>(fa[<span class="str">"chr1"</span>][<span class="num">1000</span>:<span class="num">1100</span>])     <span class="comment"># 只讀基因組的一段，不載入整條染色體</span></pre></div>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="QC 概念" data-en="QC CONCEPT">QC 概念</div>
+<h2 data-zh="四、定序資料 QC 該看什麼？" data-en="IV. What to check in sequencing QC">四、QC 該看什麼？</h2>
+<div class="card-grid cols-2">
+<div class="card"><h4>📊 <span data-zh="每位置品質" data-en="Per-base Quality">每位置品質</span></h4>
+<div data-lang="zh"><p>Illumina reads 的品質通常 <strong>5' 端 (read 開頭) 高、3' 端逐漸下降</strong>。如果中段就崩，表示 run 有問題。<br>工具：<code>FastQC</code>。</p></div>
+<div data-lang="en"><p>Illumina reads typically have <strong>high quality at 5', degrading toward 3'</strong>. If quality crashes mid-read, the run had issues.<br>Tool: <code>FastQC</code>.</p></div>
+</div>
+<div class="card"><h4>🧬 <span data-zh="adapter 污染" data-en="Adapter Contamination">adapter 污染</span></h4>
+<div data-lang="zh"><p>當 insert 太短，定序儀會讀進 adapter。要用 <code>cutadapt</code> / <code>trim_galore</code> / <code>fastp</code> 修剪。</p></div>
+<div data-lang="en"><p>Short inserts cause read-through into adapter. Trim with <code>cutadapt</code> / <code>trim_galore</code> / <code>fastp</code>.</p></div>
+</div>
+<div class="card"><h4>📈 <span data-zh="GC 分佈" data-en="GC Distribution">GC 分佈</span></h4>
+<div data-lang="zh"><p>正常物種 GC% 應該呈鐘型分佈。出現雙峰 → 可能有汙染（細菌、其他物種）。</p></div>
+<div data-lang="en"><p>Should be roughly bell-shaped. Bimodal → possible contamination (bacteria, other species).</p></div>
+</div>
+<div class="card"><h4>🔁 <span data-zh="重複序列" data-en="Duplication">重複序列</span></h4>
+<div data-lang="zh"><p>過高表示 PCR 過度放大。RNA-seq 通常 30–50% 重複是正常的；DNA-seq 應 &lt;20%。</p></div>
+<div data-lang="en"><p>High = PCR over-amplification. RNA-seq normally 30–50%; DNA-seq should be &lt;20%.</p></div>
+</div>
+</div>
+</section>
+
+<!-- Interactive Phred score -->
+<section class="section">
+<div class="section-label" data-zh="互動模擬" data-en="INTERACTIVE">互動模擬</div>
+<h2 data-zh="Phred 品質分數轉換器" data-en="Phred Quality Score Converter">Phred 分數轉換器</h2>
+<div data-lang="zh"><p>輸入 FASTQ 第 4 行的品質字串，立即看到每個位置的 Phred score 與機率錯誤率。</p></div>
+<div data-lang="en"><p>Type the 4th line of a FASTQ record (quality string) — see Phred score and error probability per base.</p></div>
+<div class="interactive-panel">
+<input type="text" id="qualIn" value="IIIIIIHHHHGGFFEDC@@53310!!!" style="width:100%;padding:10px 14px;border:1px solid var(--c-border);border-radius:6px;font-family:var(--font-mono);font-size:.95rem;letter-spacing:2px;">
+<div class="chart-container" style="height:240px;"><canvas id="qChart"></canvas></div>
+<div class="sim-stats">
+<span class="sim-stat pass" id="meanQ">Mean Q: —</span>
+<span class="sim-stat" id="errPct" style="background:var(--c-highlight-light);color:#7c4a03;">Avg error: —</span>
+</div>
+</div>
+</section>
+
+<!-- Quiz -->
+<section class="quiz-section">
+<h3>📝 <span data-zh="自我檢測" data-en="Self-Check">自我檢測</span></h3>
+<div class="quiz-q" data-answer="2">
+<p data-lang="zh">1. FASTQ 品質字元 <code>'I'</code> 對應的 Phred 分數 (Sanger) 是？</p>
+<p data-lang="en">1. The Phred score (Sanger) for character <code>'I'</code> in FASTQ is?</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span>0</span></div>
+<div class="quiz-opt" data-idx="1"><span>20</span></div>
+<div class="quiz-opt" data-idx="2"><span>40 (因為 ord('I')=73, 73-33=40)</span></div>
+<div class="quiz-opt" data-idx="3"><span>73</span></div>
+</div></div>
+<div class="quiz-q" data-answer="1">
+<p data-lang="zh">2. 處理 20 GB FASTQ.gz 想統計 reads 數，最快的選擇是？</p>
+<p data-lang="en">2. Counting reads in a 20 GB FASTQ.gz — the fastest option is?</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span><code>SeqIO.parse(...)</code> 走訪</span></div>
+<div class="quiz-opt" data-idx="1"><span><code>pyfastx.Fastq(...)</code> + <code>len()</code> (有 index 後 O(1))</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. 把整個檔解壓再 wc -l</span><span data-lang="en">C. Decompress fully then wc -l</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. 用 pandas 讀</span><span data-lang="en">D. Use pandas</span></div>
+</div></div>
+<div class="quiz-q" data-answer="0">
+<p data-lang="zh">3. SeqIO.parse() 與 SeqIO.read() 的差別？</p>
+<p data-lang="en">3. Difference between SeqIO.parse() and SeqIO.read()?</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. parse 回傳 generator (多筆)，read 回傳單一 record (檔案只有 1 條)</span><span data-lang="en">A. parse returns a generator (many records); read returns one record (file must have one)</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. read 比 parse 快</span><span data-lang="en">B. read is faster than parse</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. parse 只能讀 FASTA、read 只能讀 FASTQ</span><span data-lang="en">C. parse only reads FASTA; read only reads FASTQ</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. 兩個完全相同</span><span data-lang="en">D. They're identical</span></div>
+</div></div>
+</section>
+
+<nav class="page-nav">
+<a href="biopython.html"><span class="nav-dir" data-zh="← 上一章" data-en="← Prev">← 上一章</span><span class="nav-title">Ch 8: Biopython</span></a>
+<a href="blast.html"><span class="nav-dir" data-zh="下一章 →" data-en="Next →">下一章 →</span><span class="nav-title">Ch 10: BLAST</span></a>
+</nav>
+</main>
+<footer class="site-footer">© Charlene — Python for Bioinformatics Interactive Tutorial</footer>
+<script src="i18n.js"></script>
+<script>
+window.addEventListener('scroll',()=>{const h=document.documentElement;document.getElementById('progressBar').style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight))*100+'%';});
+function switchTab(b,id){const p=b.closest('.code-tabs');p.querySelectorAll('.code-tab-btn').forEach(x=>x.classList.remove('active'));p.querySelectorAll('.code-tab-content').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById(id).classList.add('active');}
+document.querySelectorAll('.quiz-q').forEach(q=>{const ans=+q.dataset.answer;q.querySelectorAll('.quiz-opt').forEach(opt=>{opt.addEventListener('click',()=>{const idx=+opt.dataset.idx;q.querySelectorAll('.quiz-opt').forEach(o=>o.classList.remove('correct','wrong'));if(idx===ans)opt.classList.add('correct');else{opt.classList.add('wrong');q.querySelectorAll('.quiz-opt')[ans].classList.add('correct');}});});});
+
+const qChart=new Chart(document.getElementById('qChart'),{type:'bar',data:{labels:[],datasets:[{label:'Phred Q',data:[],backgroundColor:[]}]},options:{responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{display:false}},scales:{y:{min:0,max:42,title:{display:true,text:'Phred Q'}}}}});
+function colorFor(q){if(q>=30)return 'rgba(26,107,90,0.7)';if(q>=20)return 'rgba(245,158,11,0.7)';return 'rgba(192,57,43,0.7)';}
+function updateQ(){
+  const s=document.getElementById('qualIn').value;
+  const labels=[],data=[],colors=[];
+  let totQ=0,totErr=0;
+  for(let i=0;i<s.length;i++){
+    const q=s.charCodeAt(i)-33;
+    labels.push((i+1).toString());
+    data.push(q);
+    colors.push(colorFor(q));
+    totQ+=q; totErr+=Math.pow(10,-q/10);
+  }
+  qChart.data.labels=labels;qChart.data.datasets[0].data=data;qChart.data.datasets[0].backgroundColor=colors;qChart.update('none');
+  if(s.length){
+    document.getElementById('meanQ').textContent='Mean Q: '+(totQ/s.length).toFixed(1);
+    document.getElementById('errPct').textContent='Avg error: '+((totErr/s.length)*100).toFixed(2)+'%';
+  }
+}
+document.getElementById('qualIn').addEventListener('input',updateQ);
+updateQ();
+</script>
+</body></html>
