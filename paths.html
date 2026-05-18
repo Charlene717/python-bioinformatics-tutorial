@@ -6,6 +6,7 @@
   <a href="index.html" class="top-nav-brand"><span>🐍</span> <span data-zh="Python 生資教學" data-en="Python BioInfo Tutorial">Python 生資教學</span></a>
   <ul class="top-nav-links">
     <li><a href="setup.html">Setup</a></li><li><a href="syntax.html">Syntax</a></li><li><a href="paths.html" class="active">Paths</a></li><li><a href="functions.html">Func</a></li><li><a href="numpy.html">NumPy</a></li><li><a href="pandas.html">Pandas</a></li><li><a href="visualization.html">Viz</a></li><li><a href="biopython.html">Biopy</a></li><li><a href="fasta-fastq.html">FASTQ</a></li><li><a href="blast.html">BLAST</a></li><li><a href="pysam.html">pysam</a></li><li><a href="variant-calling.html">Variant</a></li><li><a href="scanpy-anndata.html">scanpy</a></li><li><a href="scrna-workflow.html">scRNA</a></li><li><a href="spatial.html">Spatial</a></li><li><a href="multi-omics.html">Multi</a></li><li><a href="scllms.html">scLLMs</a></li><li><a href="ai-bioinformatics.html">AI</a></li>
+    <li><a href="references/index.html" data-zh="📚 參考資料" data-en="📚 References">📚 參考資料</a></li>
   </ul>
 </div></nav>
 <div class="progress-bar-container"><div class="progress-bar" id="progressBar"></div></div>
@@ -403,8 +404,8 @@ f = <span class="builtin">open</span>(<span class="str">"big.fastq"</span>)
 </section>
 
 <nav class="page-nav">
-<a href="syntax.html"><span class="nav-dir" data-zh="← 上一章" data-en="← Prev">← 上一章</span><span class="nav-title">Ch 2: Syntax</span></a>
-<a href="functions.html"><span class="nav-dir" data-zh="下一章 →" data-en="Next →">下一章 →</span><span class="nav-title">Ch 4: Functions & Modules</span></a>
+<a href="syntax.html"><span class="nav-dir" data-zh="← 上一章" data-en="← Prev">← 上一章</span><span class="nav-title" data-zh="Ch 2: Python 語法基礎" data-en="Ch 2: Python Syntax Basics">Ch 2: Python 語法基礎</span></a>
+<a href="functions.html"><span class="nav-dir" data-zh="下一章 →" data-en="Next →">下一章 →</span><span class="nav-title" data-zh="Ch 4: 函式、類別、模組" data-en="Ch 4: Functions, Classes, Modules">Ch 4: 函式、類別、模組</span></a>
 </nav>
 </main>
 <footer class="site-footer">© Charlene — Python for Bioinformatics Interactive Tutorial</footer>
@@ -432,7 +433,7 @@ function resolvePath(){
   document.getElementById('resolvedOut').textContent=resolved;
   // Heuristic: assume /home/charlene/proj/data/raw/sample.fastq exists
   const exists=resolved==='/home/charlene/proj/data/raw/sample.fastq';
-  const lang=I18n?I18n.get():'zh';
+  const lang=I18n?I18n.get():'en';
   const stat=document.getElementById('resStat');
   if(exists){stat.textContent=lang==='zh'?'✅ 找到檔案':'✅ File found';stat.style.background='var(--c-accent-light)';stat.style.color='var(--c-accent-dark)';}
   else{stat.textContent=lang==='zh'?'❌ FileNotFoundError':'❌ FileNotFoundError';stat.style.background='var(--c-danger-light)';stat.style.color='var(--c-danger)';}

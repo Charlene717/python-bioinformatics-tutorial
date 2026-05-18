@@ -1,0 +1,1077 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Python BioInfo · References</title>
+<meta name="description" content="Python for Bioinformatics 互動式教程的學術論文、官方文件、Best Practices 綜述與資料庫來源整理。">
+<link rel="stylesheet" href="../styles.css">
+<style>
+.ref-list{list-style:none;padding:0;margin:14px 0 0}
+.ref-list li{padding:14px 16px;background:var(--c-surface-alt);border:1px solid var(--c-border-light);border-radius:var(--radius);margin-bottom:10px;font-size:.92rem;line-height:1.65}
+.ref-list li:hover{background:var(--c-surface);border-color:var(--c-border)}
+.ref-tag{display:inline-block;font-family:var(--font-mono);font-size:.72rem;font-weight:600;padding:2px 8px;border-radius:6px;margin-right:8px;letter-spacing:.5px}
+.ref-tag.paper{background:var(--c-accent-light);color:var(--c-accent-dark)}
+.ref-tag.doc{background:#e3f2fd;color:#1565c0}
+.ref-tag.bench{background:#fff3e0;color:#e65100}
+.ref-tag.db{background:#fce4ec;color:#ad1457}
+.ref-tag.book{background:#f3e5f5;color:#6a1b9a}
+.ref-tag.bestp{background:var(--c-highlight-light);color:#7c4a03;border:1px solid var(--c-highlight)}
+.ref-tag.tool{background:#dcfce7;color:#166534}
+.ref-author{color:var(--c-ink);font-weight:600}
+.ref-title{color:var(--c-ink);font-weight:500}
+.ref-meta{color:var(--c-ink-muted);font-size:.85rem;margin-top:4px;display:block}
+.ref-list a{color:var(--c-accent);text-decoration:none;border-bottom:1px dotted var(--c-accent)}
+.ref-list a:hover{color:var(--c-accent-dark);border-bottom-style:solid}
+.errata{background:#fef3c7;border-left:4px solid #d97706;border-radius:0 var(--radius-lg) var(--radius-lg) 0;padding:18px 22px;margin:18px 0;font-size:.9rem}
+.errata h4{margin:0 0 8px;color:#92400e;font-family:var(--font-display);font-size:1.05rem}
+.errata p{color:#78350f;margin-bottom:8px}
+.errata p:last-child{margin-bottom:0}
+.toc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin:18px 0}
+.toc-grid a{padding:10px 14px;background:var(--c-surface);border:1px solid var(--c-border-light);border-radius:var(--radius);text-decoration:none;color:var(--c-ink);font-size:.88rem;transition:var(--transition);display:flex;align-items:center;gap:8px}
+.toc-grid a:hover{border-color:var(--c-accent);background:var(--c-accent-light);color:var(--c-accent-dark)}
+.toc-grid a .step-tag{font-family:var(--font-mono);font-size:.72rem;color:var(--c-accent);font-weight:600}
+.section-anchor{scroll-margin-top:80px}
+</style>
+</head>
+<body>
+
+<nav class="top-nav">
+<div class="top-nav-inner">
+  <a href="../index.html" class="top-nav-brand"><span>🐍</span> Python 生資教學</a>
+  <ul class="top-nav-links">
+    <li><a href="../setup.html">Setup</a></li>
+    <li><a href="../syntax.html">Syntax</a></li>
+    <li><a href="../paths.html">Paths</a></li>
+    <li><a href="../functions.html">Func</a></li>
+    <li><a href="../numpy.html">NumPy</a></li>
+    <li><a href="../pandas.html">Pandas</a></li>
+    <li><a href="../visualization.html">Viz</a></li>
+    <li><a href="../biopython.html">Biopy</a></li>
+    <li><a href="../fasta-fastq.html">FASTQ</a></li>
+    <li><a href="../blast.html">BLAST</a></li>
+    <li><a href="../pysam.html">pysam</a></li>
+    <li><a href="../variant-calling.html">Variant</a></li>
+    <li><a href="../scanpy-anndata.html">scanpy</a></li>
+    <li><a href="../scrna-workflow.html">scRNA</a></li>
+    <li><a href="../spatial.html">Spatial</a></li>
+    <li><a href="../multi-omics.html">Multi</a></li>
+    <li><a href="../scllms.html">scLLMs</a></li>
+    <li><a href="../ai-bioinformatics.html">AI</a></li>
+    <li><a href="index.html" class="active" style="font-weight:700" data-zh="📚 參考資料" data-en="📚 References">📚 參考資料</a></li>
+  </ul>
+</div>
+</nav>
+
+<header class="page-hero">
+<div class="step-badge" data-zh="參考資料 · REFERENCES" data-en="REFERENCES">REFERENCES</div>
+<h1 data-zh="Python 生資 · 學術論文、官方文件與資料庫來源" data-en="Python for Bioinformatics References Index">Python for Bioinformatics References Index</h1>
+<p class="subtitle" data-lang="zh">為 Python for Bioinformatics 18 章教程提供原始論文、官方文件、Best Practices 綜述與工具庫的完整佐證。</p>
+<p class="subtitle" data-lang="en">References, citations, and sources for the Python for Bioinformatics Interactive Tutorial — papers, official documents, and benchmarks with DOI / URL links.</p>
+</header>
+
+<main class="content-wrap">
+
+<!-- Overview -->
+<section class="section">
+<div class="section-label" data-zh="概覽" data-en="OVERVIEW">概覽</div>
+<h2 data-zh="如何使用這份資料？" data-en="How to use this page">如何使用這份資料？</h2>
+<p data-lang="zh">本頁針對教學中提到的每個 Python 套件、演算法與生物學概念，整理學術出處與官方資源。引用標籤含義：</p>
+<p data-lang="en">For every Python package, algorithm, and biological concept mentioned in the tutorial, this page collects scholarly sources and official resources. Citation tag meanings:</p>
+<div class="card-grid cols-3">
+  <div class="card"><div class="card-icon" style="background:var(--c-accent-light)">📄</div><h4>Paper</h4><p data-lang="zh">原始論文 · 含 DOI / PubMed</p><p data-lang="en">Original papers with DOI / PubMed links</p></div>
+  <div class="card"><div class="card-icon" style="background:#e3f2fd">📘</div><h4>Doc</h4><p data-lang="zh">官方文件、tutorial、API reference</p><p data-lang="en">Official documentation, tutorials, API references</p></div>
+  <div class="card"><div class="card-icon" style="background:var(--c-highlight-light)">⭐</div><h4>Best Practice</h4><p data-lang="zh">系統性綜述或社群推薦</p><p data-lang="en">Systematic reviews and community recommendations</p></div>
+  <div class="card"><div class="card-icon" style="background:#fff3e0">📊</div><h4>Benchmark</h4><p data-lang="zh">方法評比 / 獨立 benchmarking</p><p data-lang="en">Method comparisons and independent benchmarking</p></div>
+  <div class="card"><div class="card-icon" style="background:#dcfce7">🛠️</div><h4>Tool</h4><p data-lang="zh">命令列工具、套件 GitHub</p><p data-lang="en">Command-line tools and package GitHub repos</p></div>
+  <div class="card"><div class="card-icon" style="background:#f3e5f5">📚</div><h4>Book</h4><p data-lang="zh">線上免費書籍與綜合教材</p><p data-lang="en">Free online books and comprehensive textbooks</p></div>
+</div>
+
+<h3 data-zh="本頁目錄" data-en="Table of contents">本頁目錄</h3>
+<div class="toc-grid">
+  <a href="#bestpractices"><span class="step-tag">★</span><span data-zh="Best Practices 與書籍" data-en="Best Practices & Books">Best Practices 與書籍</span></a>
+  <a href="#python-core"><span class="step-tag">Ch 1-4</span><span data-zh="Python 核心 / 環境" data-en="Python Core / Environment">Python 核心 / 環境</span></a>
+  <a href="#numpy"><span class="step-tag">Ch 5</span><span>NumPy</span></a>
+  <a href="#pandas"><span class="step-tag">Ch 6</span><span>Pandas</span></a>
+  <a href="#viz"><span class="step-tag">Ch 7</span><span>Matplotlib / Seaborn</span></a>
+  <a href="#biopython"><span class="step-tag">Ch 8</span><span>Biopython</span></a>
+  <a href="#fastq"><span class="step-tag">Ch 9</span><span>FASTA / FASTQ</span></a>
+  <a href="#blast"><span class="step-tag">Ch 10</span><span>BLAST / Alignment</span></a>
+  <a href="#pysam"><span class="step-tag">Ch 11</span><span>pysam / SAM·BAM</span></a>
+  <a href="#variant"><span class="step-tag">Ch 12</span><span>Variant Calling / VCF</span></a>
+  <a href="#scanpy"><span class="step-tag">Ch 13-14</span><span>scanpy / AnnData</span></a>
+  <a href="#spatial"><span class="step-tag">Ch 15</span><span>Squidpy / SpatialData</span></a>
+  <a href="#multiomics"><span class="step-tag">Ch 16</span><span>Multi-omics</span></a>
+  <a href="#scllms"><span class="step-tag">Ch 17</span><span>scLLMs</span></a>
+  <a href="#ai"><span class="step-tag">Ch 18</span><span data-zh="AI 在生資" data-en="AI in Bioinformatics">AI 在生資</span></a>
+  <a href="#pipelines"><span class="step-tag">Pipe</span><span data-zh="Pipeline 框架" data-en="Pipeline Frameworks">Pipeline 框架</span></a>
+  <a href="#dbs"><span class="step-tag">DB</span><span data-zh="公共資料庫" data-en="Public Databases">公共資料庫</span></a>
+  <a href="#errata"><span class="step-tag">!</span><span data-zh="教學註記與細節" data-en="Tutorial Notes & Details">教學註記與細節</span></a>
+</div>
+</section>
+
+<!-- ===================== Best Practices ===================== -->
+<section class="section section-anchor" id="bestpractices">
+<div class="section-label" data-zh="綜論" data-en="OVERVIEW">綜論</div>
+<h2 data-zh="⭐ Best Practices 綜述與線上免費書籍" data-en="⭐ Best Practices Reviews & Free Online Books">⭐ Best Practices 綜述與線上免費書籍</h2>
+<p data-lang="zh">整體 Python 與單細胞生資的權威性綜述。建議從這幾本開始閱讀，能對全流程的設計取捨建立全景觀。</p>
+<p data-lang="en">Authoritative reviews of Python and single-cell bioinformatics. Start with these to build a panoramic view of the design trade-offs across the entire workflow.</p>
+<ul class="ref-list">
+  <li>
+    <span class="ref-tag bestp">★ BEST</span>
+    <span class="ref-author">Heumos L, Schaar AC, Lance C, et al.</span>
+    <span class="ref-title"> Best practices for single-cell analysis across modalities. </span>
+    <em>Nature Reviews Genetics</em> 24, 550–572 (2023).
+    <span class="ref-meta"><span data-lang="zh">DOI: <a href="https://doi.org/10.1038/s41576-023-00586-w" target="_blank" rel="noopener">10.1038/s41576-023-00586-w</a> · 線上免費書 <a href="https://www.sc-best-practices.org/" target="_blank" rel="noopener">sc-best-practices.org</a></span><span data-lang="en">DOI: <a href="https://doi.org/10.1038/s41576-023-00586-w" target="_blank" rel="noopener">10.1038/s41576-023-00586-w</a> · Free online companion book at <a href="https://www.sc-best-practices.org/" target="_blank" rel="noopener">sc-best-practices.org</a>.</span></span>
+  </li>
+  <li>
+    <span class="ref-tag book">📚 BOOK</span>
+    <span class="ref-author">Wes McKinney.</span>
+    <span class="ref-title"> Python for Data Analysis (3rd ed., 2022).</span>
+    <em>O'Reilly</em>. <span data-lang="zh">NumPy / pandas 創作者親寫的權威教科書。</span><span data-lang="en">The authoritative textbook written by the creator of NumPy / pandas.</span>
+    <span class="ref-meta"><span data-lang="zh">線上免費版：<a href="https://wesmckinney.com/book/" target="_blank" rel="noopener">wesmckinney.com/book</a></span><span data-lang="en">Free online edition: <a href="https://wesmckinney.com/book/" target="_blank" rel="noopener">wesmckinney.com/book</a></span></span>
+  </li>
+  <li>
+    <span class="ref-tag book">📚 BOOK</span>
+    <span class="ref-author">Jake VanderPlas.</span>
+    <span class="ref-title"> Python Data Science Handbook (2nd ed., 2023).</span>
+    <em>O'Reilly</em>. <span data-lang="zh">從 NumPy / pandas / Matplotlib 一路到 scikit-learn 的入門寶典。</span><span data-lang="en">A go-to primer that walks from NumPy / pandas / Matplotlib all the way to scikit-learn.</span>
+    <span class="ref-meta"><span data-lang="zh">線上免費版：<a href="https://jakevdp.github.io/PythonDataScienceHandbook/" target="_blank" rel="noopener">jakevdp.github.io</a></span><span data-lang="en">Free online edition: <a href="https://jakevdp.github.io/PythonDataScienceHandbook/" target="_blank" rel="noopener">jakevdp.github.io</a></span></span>
+  </li>
+  <li>
+    <span class="ref-tag book">📚 BOOK</span>
+    <span class="ref-author">Compeau P, Pevzner P.</span>
+    <span class="ref-title"> Bioinformatics Algorithms: An Active Learning Approach.</span>
+    Cold Spring Harbor (3rd ed., 2018). <span data-lang="zh">線上互動課程：<a href="https://www.bioinformaticsalgorithms.org/" target="_blank" rel="noopener">bioinformaticsalgorithms.org</a> · Rosalind 練習。</span><span data-lang="en">Online interactive course at <a href="https://www.bioinformaticsalgorithms.org/" target="_blank" rel="noopener">bioinformaticsalgorithms.org</a> · paired with Rosalind exercises.</span>
+  </li>
+  <li>
+    <span class="ref-tag book">📚 BOOK</span>
+    <span class="ref-author">Sebastian Raschka, Yuxi Liu, Vahid Mirjalili.</span>
+    <span class="ref-title"> Machine Learning with PyTorch and Scikit-Learn (2022).</span>
+    <em>Packt Publishing</em>. <span data-lang="zh">PyTorch 與 ML 入門全方位教材。</span><span data-lang="en">A comprehensive introductory textbook covering PyTorch and machine learning.</span>
+  </li>
+  <li>
+    <span class="ref-tag book">📚 BOOK</span>
+    <span class="ref-author">Amezquita RA, Lun ATL, Becht E, et al.</span>
+    <span class="ref-title"> Orchestrating Single-Cell Analysis with Bioconductor (OSCA). </span>
+    <em>Nat Methods</em> 17, 137–145 (2020). <span data-lang="zh">R/Bioconductor 視角的姊妹資源，但概念與 Python 完全相通。</span><span data-lang="en">A sister resource from the R / Bioconductor perspective; the concepts apply identically in Python.</span>
+    <span class="ref-meta"><span data-lang="zh">DOI: <a href="https://doi.org/10.1038/s41592-019-0654-x" target="_blank" rel="noopener">10.1038/s41592-019-0654-x</a> · 線上免費書 <a href="https://bioconductor.org/books/release/OSCA/" target="_blank" rel="noopener">bioconductor.org/books/OSCA</a></span><span data-lang="en">DOI: <a href="https://doi.org/10.1038/s41592-019-0654-x" target="_blank" rel="noopener">10.1038/s41592-019-0654-x</a> · Free online book at <a href="https://bioconductor.org/books/release/OSCA/" target="_blank" rel="noopener">bioconductor.org/books/OSCA</a>.</span></span>
+  </li>
+</ul>
+</section>
+
+<!-- ===================== Python Core ===================== -->
+<section class="section section-anchor" id="python-core">
+<div class="section-label" data-zh="Ch 1–4" data-en="Ch 1–4">Ch 1–4</div>
+<h2 data-zh="🛠️ Python 核心、環境管理與專案結構" data-en="🛠️ Python Core, Environment Management & Project Structure">🛠️ Python 核心、環境管理與專案結構</h2>
+<p data-lang="zh">Python 解譯器、套件管理、編輯器與專案佈局相關的官方文件。</p>
+<p data-lang="en">Official documentation on the Python interpreter, package management, editors, and project layout.</p>
+<ul class="ref-list">
+  <li>
+    <span class="ref-tag doc">DOC</span>
+    <span class="ref-title" data-zh="Python 官方教學（Python Software Foundation）。" data-en="Official Python Tutorial (Python Software Foundation).">Python 官方教學（Python Software Foundation）。</span>
+    <span class="ref-meta"><span data-lang="zh"><a href="https://docs.python.org/3/tutorial/" target="_blank" rel="noopener">docs.python.org/3/tutorial</a> · 標準函式庫：<a href="https://docs.python.org/3/library/" target="_blank" rel="noopener">docs.python.org/3/library</a></span><span data-lang="en"><a href="https://docs.python.org/3/tutorial/" target="_blank" rel="noopener">docs.python.org/3/tutorial</a> · Standard library: <a href="https://docs.python.org/3/library/" target="_blank" rel="noopener">docs.python.org/3/library</a></span></span>
+  </li>
+  <li>
+    <span class="ref-tag doc">DOC</span>
+    <span class="ref-title">PEP 8 — Style Guide for Python Code.</span>
+    <span data-lang="zh">Python 程式碼風格的官方規範（縮排、命名、注釋）。</span><span data-lang="en">The official Python code style guide (indentation, naming, comments).</span>
+    <span class="ref-meta"><span data-lang="zh"><a href="https://peps.python.org/pep-0008/" target="_blank" rel="noopener">peps.python.org/pep-0008</a></span><span data-lang="en"><a href="https://peps.python.org/pep-0008/" target="_blank" rel="noopener">peps.python.org/pep-0008</a></span></span>
+  </li>
+  <li>
+    <span class="ref-tag tool">TOOL</span>
+    <span class="ref-title" data-zh="Miniconda / Anaconda（Anaconda Inc.）。" data-en="Miniconda / Anaconda (Anaconda Inc.).">Miniconda / Anaconda（Anaconda Inc.）。</span>
+    <span data-lang="zh">最廣泛使用的 Python + 套件管理器。</span><span data-lang="en">The most widely used Python and package manager.</span>
+    <span class="ref-meta"><span data-lang="zh"><a href="https://docs.conda.io/projects/miniconda/en/latest/" target="_blank" rel="noopener">docs.conda.io/miniconda</a></span><span data-lang="en"><a href="https://docs.conda.io/projects/miniconda/en/latest/" target="_blank" rel="noopener">docs.conda.io/miniconda</a></span></span>
+  </li>
+  <li>
+    <span class="ref-tag tool">TOOL</span>
+    <span class="ref-title">Mamba — fast drop-in replacement for conda.</span>
+    <span data-lang="zh">用 C++ 重寫 conda solver，速度 5–10× 提升。</span><span data-lang="en">A C++ rewrite of the conda solver, 5–10× faster.</span>
+    <span class="ref-meta"><span data-lang="zh"><a href="https://mamba.readthedocs.io/" target="_blank" rel="noopener">mamba.readthedocs.io</a> · GitHub <a href="https://github.com/mamba-org/mamba" target="_blank" rel="noopener">mamba-org/mamba</a></span><span data-lang="en"><a href="https://mamba.readthedocs.io/" target="_blank" rel="noopener">mamba.readthedocs.io</a> · GitHub <a href="https://github.com/mamba-org/mamba" target="_blank" rel="noopener">mamba-org/mamba</a></span></span>
+  </li>
+  <li>
+    <span class="ref-tag tool">TOOL</span>
+    <span class="ref-title">uv — An extremely fast Python package and project manager (Astral, 2024+).</span>
+    <span data-lang="zh">比 pip / poetry 快 10–100× 的新世代工具。</span><span data-lang="en">A next-generation tool 10–100× faster than pip / poetry.</span>
+    <span class="ref-meta"><span data-lang="zh"><a href="https://docs.astral.sh/uv/" target="_blank" rel="noopener">docs.astral.sh/uv</a> · GitHub <a href="https://github.com/astral-sh/uv" target="_blank" rel="noopener">astral-sh/uv</a></span><span data-lang="en"><a href="https://docs.astral.sh/uv/" target="_blank" rel="noopener">docs.astral.sh/uv</a> · GitHub <a href="https://github.com/astral-sh/uv" target="_blank" rel="noopener">astral-sh/uv</a></span></span>
+  </li>
+  <li>
+    <span class="ref-tag doc">DOC</span>
+    <span class="ref-title">Bioconda — Bioinformatics distribution channel for conda.</span>
+    Grüning B, Dale R, Sjödin A, et al. The Bioconda channel for bioinformatics software. <em>Nat Methods</em> 15, 475–476 (2018).
+    <span class="ref-meta"><span data-lang="zh">DOI: <a href="https://doi.org/10.1038/s41592-018-0046-7" target="_blank" rel="noopener">10.1038/s41592-018-0046-7</a> · <a href="https://bioconda.github.io/" target="_blank" rel="noopener">bioconda.github.io</a></span><span data-lang="en">DOI: <a href="https://doi.org/10.1038/s41592-018-0046-7" target="_blank" rel="noopener">10.1038/s41592-018-0046-7</a> · <a href="https://bioconda.github.io/" target="_blank" rel="noopener">bioconda.github.io</a></span></span>
+  </li>
+  <li>
+    <span class="ref-tag tool">TOOL</span>
+    <span class="ref-title" data-zh="Visual Studio Code（Microsoft）— 跨平台編輯器，最佳 Python 整合。" data-en="Visual Studio Code (Microsoft) — cross-platform editor with best-in-class Python integration.">Visual Studio Code（Microsoft）— 跨平台編輯器，最佳 Python 整合。</span>
+    <span class="ref-meta"><span data-lang="zh"><a href="https://code.visualstudio.com/" target="_blank" rel="noopener">code.visualstudio.com</a></span><span data-lang="en"><a href="https://code.visualstudio.com/" target="_blank" rel="noopener">code.visualstudio.com</a></span></span>
+  </li>
+  <li>
+    <span class="ref-tag paper">PAPER</span>
+    <span class="ref-author">Kluyver T, Ragan-Kelley B, Pérez F, et al.</span>
+    <span class="ref-title"> Jupyter Notebooks – a publishing format for reproducible computational workflows.</span>
+    Positioning and Power in Academic Publishing (2016). <span data-lang="zh">Jupyter 互動式分析的奠基論文。</span><span data-lang="en">The foundational paper for Jupyter interactive analysis.</span>
+    <span class="ref-meta"><span data-lang="zh"><a href="https://jupyter.org/" target="_blank" rel="noopener">jupyter.org</a></span><span data-lang="en"><a href="https://jupyter.org/" target="_blank" rel="noopener">jupyter.org</a></span></span>
+  </li>
+  <li>
+    <span class="ref-tag bestp">⭐ STYLE</span>
+    <span class="ref-author">Wilson G, Bryan J, Cranston K, et al.</span>
+    <span class="ref-title"> Good enough practices in scientific computing.</span>
+    <em>PLOS Computational Biology</em> 13, e1005510 (2017). <span data-lang="zh">學術專案的目錄結構、版本控制與資料管理建議。</span><span data-lang="en">Recommendations on directory structure, version control, and data management for academic projects.</span>
+    <span class="ref-meta"><span data-lang="zh">DOI: <a href="https://doi.org/10.1371/journal.pcbi.1005510" target="_blank" rel="noopener">10.1371/journal.pcbi.1005510</a></span><span data-lang="en">DOI: <a href="https://doi.org/10.1371/journal.pcbi.1005510" target="_blank" rel="noopener">10.1371/journal.pcbi.1005510</a></span></span>
+  </li>
+  <li>
+    <span class="ref-tag bestp">⭐ STYLE</span>
+    <span class="ref-author">Wilson G, Aruliah DA, Brown CT, et al.</span>
+    <span class="ref-title"> Best practices for scientific computing.</span>
+    <em>PLOS Biology</em> 12, e1001745 (2014).
+    <span class="ref-meta"><span data-lang="zh">DOI: <a href="https://doi.org/10.1371/journal.pbio.1001745" target="_blank" rel="noopener">10.1371/journal.pbio.1001745</a></span><span data-lang="en">DOI: <a href="https://doi.org/10.1371/journal.pbio.1001745" target="_blank" rel="noopener">10.1371/journal.pbio.1001745</a></span></span>
+  </li>
+</ul>
+
+</section>
+
+<!-- ===================== NumPy ===================== -->
+<section class="section section-anchor" id="numpy">
+<div class="section-label" data-zh="Ch 5" data-en="Ch 5">Ch 5</div>
+<h2 data-zh="🔢 NumPy 數值運算" data-en="🔢 NumPy Numerical Computing">🔢 NumPy 數值運算</h2>
+<ul class="ref-list">
+  <li>
+    <span class="ref-tag paper">PAPER</span>
+    <span class="ref-author">Harris CR, Millman KJ, van der Walt SJ, et al.</span>
+    <span class="ref-title"> Array programming with NumPy.</span>
+    <em>Nature</em> 585, 357–362 (2020). <span data-lang="zh">NumPy 官方論文。</span><span data-lang="en">The official NumPy paper.</span>
+    <span class="ref-meta"><span data-lang="zh">DOI: <a href="https://doi.org/10.1038/s41586-020-2649-2" target="_blank" rel="noopener">10.1038/s41586-020-2649-2</a></span><span data-lang="en">DOI: <a href="https://doi.org/10.1038/s41586-020-2649-2" target="_blank" rel="noopener">10.1038/s41586-020-2649-2</a></span></span>
+  </li>
+  <li>
+    <span class="ref-tag doc">DOC</span>
+    <span class="ref-title" data-zh="NumPy 使用者指南。" data-en="NumPy User Guide.">NumPy 使用者指南。</span>
+    <span class="ref-meta"><span data-lang="zh"><a href="https://numpy.org/doc/stable/user/" target="_blank" rel="noopener">numpy.org/doc/stable/user</a> · API：<a href="https://numpy.org/doc/stable/reference/" target="_blank" rel="noopener">numpy.org/doc/stable/reference</a></span><span data-lang="en"><a href="https://numpy.org/doc/stable/user/" target="_blank" rel="noopener">numpy.org/doc/stable/user</a> · API: <a href="https://numpy.org/doc/stable/reference/" target="_blank" rel="noopener">numpy.org/doc/stable/reference</a></span></span>
+  </li>
+  <li>
+    <span class="ref-tag paper">PAPER</span>
+    <span class="ref-author">Virtanen P, Gommers R, Oliphant TE, et al.</span>
+    <span class="ref-title"> SciPy 1.0: fundamental algorithms for scientific computing in Python.</span>
+    <em>Nat Methods</em> 17, 261–272 (2020). <span data-lang="zh">與 NumPy 配套的科學計算庫，含稀疏矩陣 (scipy.sparse)。</span><span data-lang="en">The scientific-computing library that complements NumPy, including sparse matrices (scipy.sparse).</span>
+    <span class="ref-meta"><span data-lang="zh">DOI: <a href="https://doi.org/10.1038/s41592-019-0686-2" target="_blank" rel="noopener">10.1038/s41592-019-0686-2</a></span><span data-lang="en">DOI: <a href="https://doi.org/10.1038/s41592-019-0686-2" target="_blank" rel="noopener">10.1038/s41592-019-0686-2</a></span></span>
+  </li>
+  <li>
+    <span class="ref-tag doc">DOC</span>
+    <span class="ref-title" data-zh="scipy.sparse 文件 — 稀疏矩陣（CSR/CSC/COO/LIL/DOK）。" data-en="scipy.sparse documentation — sparse matrices (CSR/CSC/COO/LIL/DOK).">scipy.sparse 文件 — 稀疏矩陣（CSR/CSC/COO/LIL/DOK）。</span>
+    <span class="ref-meta"><span data-lang="zh"><a href="https://docs.scipy.org/doc/scipy/reference/sparse.html" target="_blank" rel="noopener">docs.scipy.org/doc/scipy/reference/sparse</a></span><span data-lang="en"><a href="https://docs.scipy.org/doc/scipy/reference/sparse.html" target="_blank" rel="noopener">docs.scipy.org/doc/scipy/reference/sparse</a></span></span>
+  </li>
+</ul>
+
+</section>
+
+<!-- ===================== Pandas ===================== -->
+<section class="section section-anchor" id="pandas">
+<div class="section-label" data-zh="Ch 6" data-en="Ch 6">Ch 6</div>
+<h2 data-zh="🐼 Pandas 資料框" data-en="🐼 Pandas DataFrames">🐼 Pandas 資料框</h2>
+<ul class="ref-list">
+  <li>
+    <span class="ref-tag paper">PAPER</span>
+    <span class="ref-author">McKinney W.</span>
+    <span class="ref-title"> Data Structures for Statistical Computing in Python.</span>
+    <em>SciPy 2010 Proceedings</em>. <span data-lang="zh">pandas 起源論文。</span><span data-lang="en">The origin paper of pandas.</span>
+    <span class="ref-meta"><span data-lang="zh"><a href="https://conference.scipy.org/proceedings/scipy2010/mckinney.html" target="_blank" rel="noopener">scipy2010 proceedings</a></span><span data-lang="en"><a href="https://conference.scipy.org/proceedings/scipy2010/mckinney.html" target="_blank" rel="noopener">scipy2010 proceedings</a></span></span>
+  </li>
+  <li>
+    <span class="ref-tag doc">DOC</span>
+    <span class="ref-title" data-zh="pandas 使用者指南 — 10 minutes to pandas、Cookbook、Window operations。" data-en="pandas User Guide — 10 minutes to pandas, Cookbook, Window operations.">pandas 使用者指南 — 10 minutes to pandas、Cookbook、Window operations。</span>
+    <span class="ref-meta"><span data-lang="zh"><a href="https://pandas.pydata.org/docs/user_guide/" target="_blank" rel="noopener">pandas.pydata.org/docs/user_guide</a></span><span data-lang="en"><a href="https://pandas.pydata.org/docs/user_guide/" target="_blank" rel="noopener">pandas.pydata.org/docs/user_guide</a></span></span>
+  </li>
+  <li>
+    <span class="ref-tag tool">TOOL</span>
+    <span class="ref-title" data-zh="PyArrow / Apache Arrow — 高速欄式記憶體格式（Parquet/Feather 後盾）。" data-en="PyArrow / Apache Arrow — fast columnar in-memory format (backbone for Parquet/Feather).">PyArrow / Apache Arrow — 高速欄式記憶體格式（Parquet/Feather 後盾）。</span>
+    <span class="ref-meta"><span data-lang="zh"><a href="https://arrow.apache.org/docs/python/" target="_blank" rel="noopener">arrow.apache.org/docs/python</a></span><span data-lang="en"><a href="https://arrow.apache.org/docs/python/" target="_blank" rel="noopener">arrow.apache.org/docs/python</a></span></span>
+  </li>
+  <li>
+    <span class="ref-tag tool">TOOL</span>
+    <span class="ref-title">Polars — Rust-based DataFrame, 10–100× faster than pandas for large data.</span>
+    <span class="ref-meta"><span data-lang="zh"><a href="https://pola.rs/" target="_blank" rel="noopener">pola.rs</a> · GitHub <a href="https://github.com/pola-rs/polars" target="_blank" rel="noopener">pola-rs/polars</a></span><span data-lang="en"><a href="https://pola.rs/" target="_blank" rel="noopener">pola.rs</a> · GitHub <a href="https://github.com/pola-rs/polars" target="_blank" rel="noopener">pola-rs/polars</a></span></span>
+  </li>
+</ul>
+
+</section>
+
+<!-- ===================== Visualization ===================== -->
+<section class="section section-anchor" id="viz">
+<div class="section-label" data-zh="Ch 7" data-en="Ch 7">Ch 7</div>
+<h2 data-zh="📊 Matplotlib / Seaborn / Plotly" data-en="📊 Matplotlib / Seaborn / Plotly">📊 Matplotlib / Seaborn / Plotly</h2>
+<ul class="ref-list">
+  <li>
+    <span class="ref-tag paper">PAPER</span>
+    <span class="ref-author">Hunter JD.</span>
+    <span class="ref-title"> Matplotlib: A 2D graphics environment.</span>
+    <em>Computing in Science & Engineering</em> 9(3):90–95 (2007).
+    <span class="ref-meta"><span data-lang="zh">DOI: <a href="https://doi.org/10.1109/MCSE.2007.55" target="_blank" rel="noopener">10.1109/MCSE.2007.55</a> · 文件 <a href="https://matplotlib.org/stable/users/index" target="_blank" rel="noopener">matplotlib.org/stable</a></span><span data-lang="en">DOI: <a href="https://doi.org/10.1109/MCSE.2007.55" target="_blank" rel="noopener">10.1109/MCSE.2007.55</a> · Docs at <a href="https://matplotlib.org/stable/users/index" target="_blank" rel="noopener">matplotlib.org/stable</a>.</span></span>
+  </li>
+  <li>
+    <span class="ref-tag paper">PAPER</span>
+    <span class="ref-author">Waskom ML.</span>
+    <span class="ref-title"> seaborn: statistical data visualization.</span>
+    <em>Journal of Open Source Software</em> 6(60), 3021 (2021).
+    <span class="ref-meta"><span data-lang="zh">DOI: <a href="https://doi.org/10.21105/joss.03021" target="_blank" rel="noopener">10.21105/joss.03021</a> · 文件 <a href="https://seaborn.pydata.org/" target="_blank" rel="noopener">seaborn.pydata.org</a></span><span data-lang="en">DOI: <a href="https://doi.org/10.21105/joss.03021" target="_blank" rel="noopener">10.21105/joss.03021</a> · Docs at <a href="https://seaborn.pydata.org/" target="_blank" rel="noopener">seaborn.pydata.org</a>.</span></span>
+  </li>
+  <li>
+    <span class="ref-tag paper">PAPER</span>
+    <span class="ref-author">Crameri F, Shephard GE, Heron PJ.</span>
+    <span class="ref-title"> The misuse of colour in science communication.</span>
+    <em>Nat Commun</em> 11, 5444 (2020). <span data-lang="zh">為什麼別再用 jet/rainbow，以及對色盲友善 colormap 的指引。</span><span data-lang="en">Why you should stop using jet/rainbow, with guidance on colour-vision-friendly colormaps.</span>
+    <span class="ref-meta"><span data-lang="zh">DOI: <a href="https://doi.org/10.1038/s41467-020-19160-7" target="_blank" rel="noopener">10.1038/s41467-020-19160-7</a></span><span data-lang="en">DOI: <a href="https://doi.org/10.1038/s41467-020-19160-7" target="_blank" rel="noopener">10.1038/s41467-020-19160-7</a></span></span>
+  </li>
+  <li>
+    <span class="ref-tag bestp">⭐ STYLE</span>
+    <span class="ref-author">Nuñez JR, Anderton CR, Renslow RS.</span>
+    <span class="ref-title"> Optimizing colormaps with consideration for color vision deficiency.</span>
+    <em>PLOS ONE</em> 13, e0199239 (2018).
+    <span class="ref-meta"><span data-lang="zh">DOI: <a href="https://doi.org/10.1371/journal.pone.0199239" target="_blank" rel="noopener">10.1371/journal.pone.0199239</a> · viridis colormap design</span><span data-lang="en">DOI: <a href="https://doi.org/10.1371/journal.pone.0199239" target="_blank" rel="noopener">10.1371/journal.pone.0199239</a> · The viridis colormap design paper.</span></span>
+  </li>
+  <li>
+    <span class="ref-tag tool">TOOL</span>
+    <span class="ref-title" data-zh="Plotly Python — 互動式圖表（適合 dashboard、web）。" data-en="Plotly Python — interactive charts (well suited for dashboards and the web).">Plotly Python — 互動式圖表（適合 dashboard、web）。</span>
+    <span class="ref-meta"><span data-lang="zh"><a href="https://plotly.com/python/" target="_blank" rel="noopener">plotly.com/python</a></span><span data-lang="en"><a href="https://plotly.com/python/" target="_blank" rel="noopener">plotly.com/python</a></span></span>
+  </li>
+</ul>
+
+</section>
+
+<!-- ===================== Biopython ===================== -->
+<section class="section section-anchor" id="biopython">
+<div class="section-label" data-zh="Ch 8" data-en="Ch 8">Ch 8</div>
+<h2 data-zh="🧬 Biopython 基礎" data-en="🧬 Biopython Fundamentals">🧬 Biopython 基礎</h2>
+<ul class="ref-list">
+  <li>
+    <span class="ref-tag paper">PAPER</span>
+    <span class="ref-author">Cock PJA, Antao T, Chang JT, et al.</span>
+    <span class="ref-title"> Biopython: freely available Python tools for computational molecular biology and bioinformatics.</span>
+    <em>Bioinformatics</em> 25(11):1422–1423 (2009).
+    <span class="ref-meta"><span data-lang="zh">DOI: <a href="https://doi.org/10.1093/bioinformatics/btp163" target="_blank" rel="noopener">10.1093/bioinformatics/btp163</a></span><span data-lang="en">DOI: <a href="https://doi.org/10.1093/bioinformatics/btp163" target="_blank" rel="noopener">10.1093/bioinformatics/btp163</a></span></span>
+  </li>
+  <li>
+    <span class="ref-tag doc">DOC</span>
+    <span class="ref-title" data-zh="Biopython Tutorial and Cookbook（官方 PDF）。" data-en="Biopython Tutorial and Cookbook (official PDF).">Biopython Tutorial and Cookbook（官方 PDF）。</span>
+    <span data-lang="zh">含 Seq / SeqRecord / SeqIO / Entrez / pairwise2 / PDB 完整教學。</span><span data-lang="en">A complete tutorial covering Seq / SeqRecord / SeqIO / Entrez / pairwise2 / PDB.</span>
+    <span class="ref-meta"><span data-lang="zh"><a href="https://biopython.org/DIST/docs/tutorial/Tutorial.html" target="_blank" rel="noopener">biopython.org Tutorial</a> · GitHub <a href="https://github.com/biopython/biopython" target="_blank" rel="noopener">biopython/biopython</a></span><span data-lang="en"><a href="https://biopython.org/DIST/docs/tutorial/Tutorial.html" target="_blank" rel="noopener">biopython.org Tutorial</a> · GitHub <a href="https://github.com/biopython/biopython" target="_blank" rel="noopener">biopython/biopython</a></span></span>
+  </li>
+  <li>
+    <span class="ref-tag doc">DOC</span>
+    <span class="ref-title" data-zh="NCBI E-utilities documentation（Entrez API 後台）。" data-en="NCBI E-utilities documentation (the back end of the Entrez API).">NCBI E-utilities documentation（Entrez API 後台）。</span>
+    <span data-lang="zh">使用前必填 email、可申請 API key 提升配額。</span><span data-lang="en">You must supply an email before use; an API key can be requested to raise rate limits.</span>
+    <span class="ref-meta"><span data-lang="zh"><a href="https://www.ncbi.nlm.nih.gov/books/NBK25497/" target="_blank" rel="noopener">ncbi.nlm.nih.gov/books/NBK25497</a></span><span data-lang="en"><a href="https://www.ncbi.nlm.nih.gov/books/NBK25497/" target="_blank" rel="noopener">ncbi.nlm.nih.gov/books/NBK25497</a></span></span>
+  </li>
+</ul>
+
+</section>
+
+<!-- ===================== FASTA / FASTQ ===================== -->
+<section class="section section-anchor" id="fastq">
+<div class="section-label" data-zh="Ch 9" data-en="Ch 9">Ch 9</div>
+<h2 data-zh="📄 FASTA / FASTQ 處理" data-en="📄 FASTA / FASTQ Handling">📄 FASTA / FASTQ 處理</h2>
+<ul class="ref-list">
+  <li>
+    <span class="ref-tag paper">PAPER</span>
+    <span class="ref-author">Cock PJA, Fields CJ, Goto N, et al.</span>
+    <span class="ref-title"> The Sanger FASTQ file format for sequences with quality scores, and the Solexa/Illumina FASTQ variants.</span>
+    <em>Nucleic Acids Research</em> 38(6):1767–1771 (2010). <span data-lang="zh">FASTQ 格式與 Phred 分數的權威定義。</span><span data-lang="en">The authoritative definition of the FASTQ format and Phred quality scores.</span>
+    <span class="ref-meta"><span data-lang="zh">DOI: <a href="https://doi.org/10.1093/nar/gkp1137" target="_blank" rel="noopener">10.1093/nar/gkp1137</a></span><span data-lang="en">DOI: <a href="https://doi.org/10.1093/nar/gkp1137" target="_blank" rel="noopener">10.1093/nar/gkp1137</a></span></span>
+  </li>
+  <li>
+    <span class="ref-tag paper">PAPER</span>
+    <span class="ref-author">Du L, et al.</span>
+    <span class="ref-title"> pyfastx: a robust Python package for fast random access to sequences from plain and gzipped FASTA/Q files.</span>
+    <em>Briefings in Bioinformatics</em> 22(4):bbaa368 (2021).
+    <span class="ref-meta"><span data-lang="zh">DOI: <a href="https://doi.org/10.1093/bib/bbaa368" target="_blank" rel="noopener">10.1093/bib/bbaa368</a> · GitHub <a href="https://github.com/lmdu/pyfastx" target="_blank" rel="noopener">lmdu/pyfastx</a></span><span data-lang="en">DOI: <a href="https://doi.org/10.1093/bib/bbaa368" target="_blank" rel="noopener">10.1093/bib/bbaa368</a> · GitHub <a href="https://github.com/lmdu/pyfastx" target="_blank" rel="noopener">lmdu/pyfastx</a></span></span>
+  </li>
+  <li>
+    <span class="ref-tag paper">PAPER</span>
+    <span class="ref-author">Andrews S.</span>
+    <span class="ref-title"> FastQC: A quality control tool for high throughput sequence data.</span>
+    Babraham Bioinformatics (2010+). <span data-lang="zh">最常用的 read 品質檢查工具。</span><span data-lang="en">The most widely used read quality-control tool.</span>
+    <span class="ref-meta"><span data-lang="zh"><a href="https://www.bioinformatics.babraham.ac.uk/projects/fastqc/" target="_blank" rel="noopener">bioinformatics.babraham.ac.uk/fastqc</a></span><span data-lang="en"><a href="https://www.bioinformatics.babraham.ac.uk/projects/fastqc/" target="_blank" rel="noopener">bioinformatics.babraham.ac.uk/fastqc</a></span></span>
+  </li>
+  <li>
+    <span class="ref-tag paper">PAPER</span>
+    <span class="ref-author">Chen S, Zhou Y, Chen Y, Gu J.</span>
+    <span class="ref-title"> fastp: an ultra-fast all-in-one FASTQ preprocessor.</span>
+    <em>Bioinformatics</em> 34(17):i884–i890 (2018). <span data-lang="zh">adapter 修剪 + QC 一條龍。</span><span data-lang="en">Adapter trimming and QC in a single pass.</span>
+    <span class="ref-meta"><span data-lang="zh">DOI: <a href="https://doi.org/10.1093/bioinformatics/bty560" target="_blank" rel="noopener">10.1093/bioinformatics/bty560</a> · GitHub <a href="https://github.com/OpenGene/fastp" target="_blank" rel="noopener">OpenGene/fastp</a></span><span data-lang="en">DOI: <a href="https://doi.org/10.1093/bioinformatics/bty560" target="_blank" rel="noopener">10.1093/bioinformatics/bty560</a> · GitHub <a href="https://github.com/OpenGene/fastp" target="_blank" rel="noopener">OpenGene/fastp</a></span></span>
+  </li>
+  <li>
+    <span class="ref-tag paper">PAPER</span>
+    <span class="ref-author">Martin M.</span>
+    <span class="ref-title"> Cutadapt removes adapter sequences from high-throughput sequencing reads.</span>
+    <em>EMBnet.journal</em> 17(1):10–12 (2011).
+    <span class="ref-meta"><span data-lang="zh">DOI: <a href="https://doi.org/10.14806/ej.17.1.200" target="_blank" rel="noopener">10.14806/ej.17.1.200</a></span><span data-lang="en">DOI: <a href="https://doi.org/10.14806/ej.17.1.200" target="_blank" rel="noopener">10.14806/ej.17.1.200</a></span></span>
+  </li>
+</ul>
+
+</section>
+
+<!-- ===================== BLAST ===================== -->
+<section class="section section-anchor" id="blast">
+<div class="section-label" data-zh="Ch 10" data-en="Ch 10">Ch 10</div>
+<h2 data-zh="🔍 BLAST 與序列比對" data-en="🔍 BLAST & Sequence Alignment">🔍 BLAST 與序列比對</h2>
+<ul class="ref-list">
+  <li>
+    <span class="ref-tag paper">PAPER</span>
+    <span class="ref-author">Altschul SF, Gish W, Miller W, Myers EW, Lipman DJ.</span>
+    <span class="ref-title"> Basic local alignment search tool.</span>
+    <em>Journal of Molecular Biology</em> 215(3):403–410 (1990). <span data-lang="zh">BLAST 原始論文（被引用 100,000+ 次）。</span><span data-lang="en">The original BLAST paper (cited 100,000+ times).</span>
+    <span class="ref-meta"><span data-lang="zh">DOI: <a href="https://doi.org/10.1016/S0022-2836(05)80360-2" target="_blank" rel="noopener">10.1016/S0022-2836(05)80360-2</a></span><span data-lang="en">DOI: <a href="https://doi.org/10.1016/S0022-2836(05)80360-2" target="_blank" rel="noopener">10.1016/S0022-2836(05)80360-2</a></span></span>
+  </li>
+  <li>
+    <span class="ref-tag paper">PAPER</span>
+    <span class="ref-author">Camacho C, Coulouris G, Avagyan V, et al.</span>
+    <span class="ref-title"> BLAST+: architecture and applications.</span>
+    <em>BMC Bioinformatics</em> 10:421 (2009). <span data-lang="zh">現代 BLAST+ 命令列套件。</span><span data-lang="en">The modern BLAST+ command-line suite.</span>
+    <span class="ref-meta"><span data-lang="zh">DOI: <a href="https://doi.org/10.1186/1471-2105-10-421" target="_blank" rel="noopener">10.1186/1471-2105-10-421</a></span><span data-lang="en">DOI: <a href="https://doi.org/10.1186/1471-2105-10-421" target="_blank" rel="noopener">10.1186/1471-2105-10-421</a></span></span>
+  </li>
+  <li>
+    <span class="ref-tag paper">PAPER</span>
+    <span class="ref-author">Katoh K, Standley DM.</span>
+    <span class="ref-title"> MAFFT multiple sequence alignment software version 7: improvements in performance and usability.</span>
+    <em>Molecular Biology and Evolution</em> 30(4):772–780 (2013).
+    <span class="ref-meta"><span data-lang="zh">DOI: <a href="https://doi.org/10.1093/molbev/mst010" target="_blank" rel="noopener">10.1093/molbev/mst010</a> · <a href="https://mafft.cbrc.jp/alignment/software/" target="_blank" rel="noopener">mafft.cbrc.jp</a></span><span data-lang="en">DOI: <a href="https://doi.org/10.1093/molbev/mst010" target="_blank" rel="noopener">10.1093/molbev/mst010</a> · <a href="https://mafft.cbrc.jp/alignment/software/" target="_blank" rel="noopener">mafft.cbrc.jp</a></span></span>
+  </li>
+  <li>
+    <span class="ref-tag paper">PAPER</span>
+    <span class="ref-author">Edgar RC.</span>
+    <span class="ref-title"> MUSCLE: multiple sequence alignment with high accuracy and high throughput.</span>
+    <em>Nucleic Acids Research</em> 32(5):1792–1797 (2004).
+    <span class="ref-meta"><span data-lang="zh">DOI: <a href="https://doi.org/10.1093/nar/gkh340" target="_blank" rel="noopener">10.1093/nar/gkh340</a></span><span data-lang="en">DOI: <a href="https://doi.org/10.1093/nar/gkh340" target="_blank" rel="noopener">10.1093/nar/gkh340</a></span></span>
+  </li>
+  <li>
+    <span class="ref-tag paper">PAPER</span>
+    <span class="ref-author">Sievers F, Higgins DG.</span>
+    <span class="ref-title"> Clustal Omega for making accurate alignments of many protein sequences.</span>
+    <em>Protein Science</em> 27, 135–145 (2018).
+    <span class="ref-meta"><span data-lang="zh">DOI: <a href="https://doi.org/10.1002/pro.3290" target="_blank" rel="noopener">10.1002/pro.3290</a></span><span data-lang="en">DOI: <a href="https://doi.org/10.1002/pro.3290" target="_blank" rel="noopener">10.1002/pro.3290</a></span></span>
+  </li>
+  <li>
+    <span class="ref-tag paper">PAPER</span>
+    <span class="ref-author">Buchfink B, Reuter K, Drost HG.</span>
+    <span class="ref-title"> Sensitive protein alignments at tree-of-life scale using DIAMOND.</span>
+    <em>Nat Methods</em> 18, 366–368 (2021). <span data-lang="zh">BLAST 的高效替代：百倍加速。</span><span data-lang="en">A high-performance BLAST alternative offering up to 100× speed-up.</span>
+    <span class="ref-meta"><span data-lang="zh">DOI: <a href="https://doi.org/10.1038/s41592-021-01101-x" target="_blank" rel="noopener">10.1038/s41592-021-01101-x</a></span><span data-lang="en">DOI: <a href="https://doi.org/10.1038/s41592-021-01101-x" target="_blank" rel="noopener">10.1038/s41592-021-01101-x</a></span></span>
+  </li>
+  <li>
+    <span class="ref-tag paper">PAPER</span>
+    <span class="ref-author">Minh BQ, Schmidt HA, Chernomor O, et al.</span>
+    <span class="ref-title"> IQ-TREE 2: New Models and Efficient Methods for Phylogenetic Inference.</span>
+    <em>Mol Biol Evol</em> 37(5):1530–1534 (2020). <span data-lang="zh">演化樹構建。</span><span data-lang="en">Phylogenetic tree construction.</span>
+    <span class="ref-meta"><span data-lang="zh">DOI: <a href="https://doi.org/10.1093/molbev/msaa015" target="_blank" rel="noopener">10.1093/molbev/msaa015</a></span><span data-lang="en">DOI: <a href="https://doi.org/10.1093/molbev/msaa015" target="_blank" rel="noopener">10.1093/molbev/msaa015</a></span></span>
+  </li>
+</ul>
+
+</section>
+
+<!-- ===================== pysam / SAM / BAM ===================== -->
+<section class="section section-anchor" id="pysam">
+<div class="section-label" data-zh="Ch 11" data-en="Ch 11">Ch 11</div>
+<h2 data-zh="📦 pysam / SAM / BAM / CRAM" data-en="📦 pysam / SAM / BAM / CRAM">📦 pysam / SAM / BAM / CRAM</h2>
+<ul class="ref-list">
+  <li>
+    <span class="ref-tag paper">PAPER</span>
+    <span class="ref-author">Li H, Handsaker B, Wysoker A, et al.</span>
+    <span class="ref-title"> The Sequence Alignment/Map format and SAMtools.</span>
+    <em>Bioinformatics</em> 25(16):2078–2079 (2009). <span data-lang="zh">SAM/BAM 格式與 samtools 起源。</span><span data-lang="en">The origin paper of the SAM/BAM format and samtools.</span>
+    <span class="ref-meta"><span data-lang="zh">DOI: <a href="https://doi.org/10.1093/bioinformatics/btp352" target="_blank" rel="noopener">10.1093/bioinformatics/btp352</a></span><span data-lang="en">DOI: <a href="https://doi.org/10.1093/bioinformatics/btp352" target="_blank" rel="noopener">10.1093/bioinformatics/btp352</a></span></span>
+  </li>
+  <li>
+    <span class="ref-tag paper">PAPER</span>
+    <span class="ref-author">Danecek P, Bonfield JK, Liddle J, et al.</span>
+    <span class="ref-title"> Twelve years of SAMtools and BCFtools.</span>
+    <em>GigaScience</em> 10(2):giab008 (2021). <span data-lang="zh">htslib / samtools / bcftools 現代版的官方論文。</span><span data-lang="en">The official paper for the modern htslib / samtools / bcftools.</span>
+    <span class="ref-meta"><span data-lang="zh">DOI: <a href="https://doi.org/10.1093/gigascience/giab008" target="_blank" rel="noopener">10.1093/gigascience/giab008</a></span><span data-lang="en">DOI: <a href="https://doi.org/10.1093/gigascience/giab008" target="_blank" rel="noopener">10.1093/gigascience/giab008</a></span></span>
+  </li>
+  <li>
+    <span class="ref-tag doc">DOC</span>
+    <span class="ref-title" data-zh="pysam 官方文件 — Python wrapper for htslib。" data-en="pysam official documentation — Python wrapper for htslib.">pysam 官方文件 — Python wrapper for htslib。</span>
+    <span class="ref-meta"><span data-lang="zh"><a href="https://pysam.readthedocs.io/" target="_blank" rel="noopener">pysam.readthedocs.io</a> · GitHub <a href="https://github.com/pysam-developers/pysam" target="_blank" rel="noopener">pysam-developers/pysam</a></span><span data-lang="en"><a href="https://pysam.readthedocs.io/" target="_blank" rel="noopener">pysam.readthedocs.io</a> · GitHub <a href="https://github.com/pysam-developers/pysam" target="_blank" rel="noopener">pysam-developers/pysam</a></span></span>
+  </li>
+  <li>
+    <span class="ref-tag doc">DOC</span>
+    <span class="ref-title" data-zh="SAM/BAM/CRAM 格式規範（SAM Format Specification）。" data-en="SAM/BAM/CRAM Format Specification.">SAM/BAM/CRAM 格式規範（SAM Format Specification）。</span>
+    <span data-lang="zh">所有 11 個必要欄位、CIGAR 字串符號與 FLAG 位元的官方定義。</span><span data-lang="en">The official definition of all 11 mandatory fields, CIGAR string symbols, and FLAG bits.</span>
+    <span class="ref-meta"><span data-lang="zh"><a href="https://samtools.github.io/hts-specs/SAMv1.pdf" target="_blank" rel="noopener">samtools.github.io/hts-specs</a></span><span data-lang="en"><a href="https://samtools.github.io/hts-specs/SAMv1.pdf" target="_blank" rel="noopener">samtools.github.io/hts-specs</a></span></span>
+  </li>
+  <li>
+    <span class="ref-tag tool">TOOL</span>
+    <span class="ref-title" data-zh="Picard SAM/BAM Flag explainer — 線上 FLAG 解碼工具。" data-en="Picard SAM/BAM Flag explainer — an online FLAG decoder.">Picard SAM/BAM Flag explainer — 線上 FLAG 解碼工具。</span>
+    <span class="ref-meta"><span data-lang="zh"><a href="https://broadinstitute.github.io/picard/explain-flags.html" target="_blank" rel="noopener">broadinstitute.github.io/picard/explain-flags</a></span><span data-lang="en"><a href="https://broadinstitute.github.io/picard/explain-flags.html" target="_blank" rel="noopener">broadinstitute.github.io/picard/explain-flags</a></span></span>
+  </li>
+  <li>
+    <span class="ref-tag paper">PAPER</span>
+    <span class="ref-author">Vasimuddin Md, Misra S, Li H, Aluru S.</span>
+    <span class="ref-title"> Efficient Architecture-Aware Acceleration of BWA-MEM for Multicore Systems (BWA-MEM2).</span>
+    IEEE IPDPS 2019. <span data-lang="zh">短 read alignment 業界標準。</span><span data-lang="en">The industry standard for short-read alignment.</span>
+    <span class="ref-meta"><span data-lang="zh">GitHub <a href="https://github.com/bwa-mem2/bwa-mem2" target="_blank" rel="noopener">bwa-mem2/bwa-mem2</a></span><span data-lang="en">GitHub <a href="https://github.com/bwa-mem2/bwa-mem2" target="_blank" rel="noopener">bwa-mem2/bwa-mem2</a></span></span>
+  </li>
+  <li>
+    <span class="ref-tag paper">PAPER</span>
+    <span class="ref-author">Li H.</span>
+    <span class="ref-title"> Minimap2: pairwise alignment for nucleotide sequences.</span>
+    <em>Bioinformatics</em> 34(18):3094–3100 (2018). <span data-lang="zh">長 reads (PacBio/Nanopore) 標準工具。</span><span data-lang="en">The standard tool for long reads (PacBio / Nanopore).</span>
+    <span class="ref-meta"><span data-lang="zh">DOI: <a href="https://doi.org/10.1093/bioinformatics/bty191" target="_blank" rel="noopener">10.1093/bioinformatics/bty191</a></span><span data-lang="en">DOI: <a href="https://doi.org/10.1093/bioinformatics/bty191" target="_blank" rel="noopener">10.1093/bioinformatics/bty191</a></span></span>
+  </li>
+  <li>
+    <span class="ref-tag paper">PAPER</span>
+    <span class="ref-author">Dobin A, Davis CA, Schlesinger F, et al.</span>
+    <span class="ref-title"> STAR: ultrafast universal RNA-seq aligner.</span>
+    <em>Bioinformatics</em> 29(1):15–21 (2013). <span data-lang="zh">RNA-seq alignment 標準。</span><span data-lang="en">The standard aligner for RNA-seq.</span>
+    <span class="ref-meta"><span data-lang="zh">DOI: <a href="https://doi.org/10.1093/bioinformatics/bts635" target="_blank" rel="noopener">10.1093/bioinformatics/bts635</a></span><span data-lang="en">DOI: <a href="https://doi.org/10.1093/bioinformatics/bts635" target="_blank" rel="noopener">10.1093/bioinformatics/bts635</a></span></span>
+  </li>
+</ul>
+
+</section>
+
+<!-- ===================== Variant Calling / VCF ===================== -->
+<section class="section section-anchor" id="variant">
+<div class="section-label" data-zh="Ch 12" data-en="Ch 12">Ch 12</div>
+<h2 data-zh="🧪 變異呼叫 &amp; VCF" data-en="🧪 Variant Calling & VCF">🧪 變異呼叫 & VCF</h2>
+<ul class="ref-list">
+  <li>
+    <span class="ref-tag paper">PAPER</span>
+    <span class="ref-author">Danecek P, Auton A, Abecasis G, et al.</span>
+    <span class="ref-title"> The variant call format and VCFtools.</span>
+    <em>Bioinformatics</em> 27(15):2156–2158 (2011). <span data-lang="zh">VCF 格式定義。</span><span data-lang="en">The definition of the VCF format.</span>
+    <span class="ref-meta"><span data-lang="zh">DOI: <a href="https://doi.org/10.1093/bioinformatics/btr330" target="_blank" rel="noopener">10.1093/bioinformatics/btr330</a> · 規範 <a href="https://samtools.github.io/hts-specs/VCFv4.2.pdf" target="_blank" rel="noopener">samtools.github.io/hts-specs/VCFv4.2.pdf</a></span><span data-lang="en">DOI: <a href="https://doi.org/10.1093/bioinformatics/btr330" target="_blank" rel="noopener">10.1093/bioinformatics/btr330</a> · Specification at <a href="https://samtools.github.io/hts-specs/VCFv4.2.pdf" target="_blank" rel="noopener">samtools.github.io/hts-specs/VCFv4.2.pdf</a>.</span></span>
+  </li>
+  <li>
+    <span class="ref-tag paper">PAPER</span>
+    <span class="ref-author">McKenna A, Hanna M, Banks E, et al.</span>
+    <span class="ref-title"> The Genome Analysis Toolkit: a MapReduce framework for analyzing next-generation DNA sequencing data.</span>
+    <em>Genome Research</em> 20(9):1297–1303 (2010). <span data-lang="zh">GATK 起源論文。</span><span data-lang="en">The origin paper of GATK.</span>
+    <span class="ref-meta"><span data-lang="zh">DOI: <a href="https://doi.org/10.1101/gr.107524.110" target="_blank" rel="noopener">10.1101/gr.107524.110</a></span><span data-lang="en">DOI: <a href="https://doi.org/10.1101/gr.107524.110" target="_blank" rel="noopener">10.1101/gr.107524.110</a></span></span>
+  </li>
+  <li>
+    <span class="ref-tag bestp">⭐ BEST</span>
+    <span class="ref-author">Van der Auwera GA, O'Connor BD.</span>
+    <span class="ref-title"> Genomics in the Cloud: Using Docker, GATK, and WDL in Terra.</span>
+    O'Reilly (2020). <span data-lang="zh">GATK Best Practices 的官方教材。</span><span data-lang="en">The official textbook for GATK Best Practices.</span>
+    <span class="ref-meta"><span data-lang="zh"><a href="https://gatk.broadinstitute.org/hc/en-us/sections/360007226651-Best-Practices-Workflows" target="_blank" rel="noopener">GATK Best Practices Workflows</a></span><span data-lang="en"><a href="https://gatk.broadinstitute.org/hc/en-us/sections/360007226651-Best-Practices-Workflows" target="_blank" rel="noopener">GATK Best Practices Workflows</a></span></span>
+  </li>
+  <li>
+    <span class="ref-tag paper">PAPER</span>
+    <span class="ref-author">Pedersen BS, Quinlan AR.</span>
+    <span class="ref-title"> cyvcf2: fast, flexible variant analysis with Python.</span>
+    <em>Bioinformatics</em> 33(12):1867–1869 (2017). <span data-lang="zh">比 PyVCF 快 50× 的 C 編譯版本。</span><span data-lang="en">A C-compiled implementation that is 50× faster than PyVCF.</span>
+    <span class="ref-meta"><span data-lang="zh">DOI: <a href="https://doi.org/10.1093/bioinformatics/btx057" target="_blank" rel="noopener">10.1093/bioinformatics/btx057</a> · GitHub <a href="https://github.com/brentp/cyvcf2" target="_blank" rel="noopener">brentp/cyvcf2</a></span><span data-lang="en">DOI: <a href="https://doi.org/10.1093/bioinformatics/btx057" target="_blank" rel="noopener">10.1093/bioinformatics/btx057</a> · GitHub <a href="https://github.com/brentp/cyvcf2" target="_blank" rel="noopener">brentp/cyvcf2</a></span></span>
+  </li>
+  <li>
+    <span class="ref-tag paper">PAPER</span>
+    <span class="ref-author">Poplin R, Chang PC, Alexander D, et al.</span>
+    <span class="ref-title"> A universal SNP and small-indel variant caller using deep neural networks (DeepVariant).</span>
+    <em>Nat Biotechnol</em> 36, 983–987 (2018).
+    <span class="ref-meta"><span data-lang="zh">DOI: <a href="https://doi.org/10.1038/nbt.4235" target="_blank" rel="noopener">10.1038/nbt.4235</a></span><span data-lang="en">DOI: <a href="https://doi.org/10.1038/nbt.4235" target="_blank" rel="noopener">10.1038/nbt.4235</a></span></span>
+  </li>
+  <li>
+    <span class="ref-tag paper">PAPER</span>
+    <span class="ref-author">Cingolani P, Platts A, Wang L, et al.</span>
+    <span class="ref-title"> A program for annotating and predicting the effects of single nucleotide polymorphisms, SnpEff.</span>
+    <em>Fly</em> 6(2):80–92 (2012).
+    <span class="ref-meta"><span data-lang="zh">DOI: <a href="https://doi.org/10.4161/fly.19695" target="_blank" rel="noopener">10.4161/fly.19695</a></span><span data-lang="en">DOI: <a href="https://doi.org/10.4161/fly.19695" target="_blank" rel="noopener">10.4161/fly.19695</a></span></span>
+  </li>
+  <li>
+    <span class="ref-tag paper">PAPER</span>
+    <span class="ref-author">McLaren W, Gil L, Hunt SE, et al.</span>
+    <span class="ref-title"> The Ensembl Variant Effect Predictor (VEP).</span>
+    <em>Genome Biol</em> 17, 122 (2016).
+    <span class="ref-meta"><span data-lang="zh">DOI: <a href="https://doi.org/10.1186/s13059-016-0974-4" target="_blank" rel="noopener">10.1186/s13059-016-0974-4</a></span><span data-lang="en">DOI: <a href="https://doi.org/10.1186/s13059-016-0974-4" target="_blank" rel="noopener">10.1186/s13059-016-0974-4</a></span></span>
+  </li>
+  <li>
+    <span class="ref-tag db">🗄️ DB</span>
+    <span class="ref-title">gnomAD — Genome Aggregation Database.</span>
+    <span data-lang="zh">人群變異頻率參考；過濾稀有變異必備。</span><span data-lang="en">A population variant frequency reference; essential for filtering rare variants.</span>
+    <span class="ref-meta"><span data-lang="zh"><a href="https://gnomad.broadinstitute.org/" target="_blank" rel="noopener">gnomad.broadinstitute.org</a></span><span data-lang="en"><a href="https://gnomad.broadinstitute.org/" target="_blank" rel="noopener">gnomad.broadinstitute.org</a></span></span>
+  </li>
+  <li>
+    <span class="ref-tag db">🗄️ DB</span>
+    <span class="ref-title">ClinVar — clinical variant interpretation database.</span>
+    <span class="ref-meta"><span data-lang="zh"><a href="https://www.ncbi.nlm.nih.gov/clinvar/" target="_blank" rel="noopener">ncbi.nlm.nih.gov/clinvar</a></span><span data-lang="en"><a href="https://www.ncbi.nlm.nih.gov/clinvar/" target="_blank" rel="noopener">ncbi.nlm.nih.gov/clinvar</a></span></span>
+  </li>
+</ul>
+
+</section>
+
+<!-- ===================== scanpy / AnnData ===================== -->
+<section class="section section-anchor" id="scanpy">
+<div class="section-label" data-zh="Ch 13–14" data-en="Ch 13–14">Ch 13–14</div>
+<h2 data-zh="🔬 scanpy / AnnData / scRNA-seq Workflow" data-en="🔬 scanpy / AnnData / scRNA-seq Workflow">🔬 scanpy / AnnData / scRNA-seq Workflow</h2>
+<ul class="ref-list">
+  <li>
+    <span class="ref-tag paper">PAPER</span>
+    <span class="ref-author">Wolf FA, Angerer P, Theis FJ.</span>
+    <span class="ref-title"> SCANPY: large-scale single-cell gene expression data analysis.</span>
+    <em>Genome Biology</em> 19:15 (2018).
+    <span class="ref-meta"><span data-lang="zh">DOI: <a href="https://doi.org/10.1186/s13059-017-1382-0" target="_blank" rel="noopener">10.1186/s13059-017-1382-0</a></span><span data-lang="en">DOI: <a href="https://doi.org/10.1186/s13059-017-1382-0" target="_blank" rel="noopener">10.1186/s13059-017-1382-0</a></span></span>
+  </li>
+  <li>
+    <span class="ref-tag paper">PAPER</span>
+    <span class="ref-author">Virshup I, Rybakov S, Theis FJ, Angerer P, Wolf FA.</span>
+    <span class="ref-title"> anndata: Annotated data.</span>
+    bioRxiv (2021); <em>Journal of Open Source Software</em> (2024). <span data-lang="zh">AnnData 物件的權威介紹。</span><span data-lang="en">The authoritative introduction to the AnnData object.</span>
+    <span class="ref-meta"><span data-lang="zh">DOI: <a href="https://doi.org/10.1101/2021.12.16.473007" target="_blank" rel="noopener">10.1101/2021.12.16.473007</a></span><span data-lang="en">DOI: <a href="https://doi.org/10.1101/2021.12.16.473007" target="_blank" rel="noopener">10.1101/2021.12.16.473007</a></span></span>
+  </li>
+  <li>
+    <span class="ref-tag paper">PAPER</span>
+    <span class="ref-author">Virshup I, Bredikhin D, Heumos L, et al.</span>
+    <span class="ref-title"> The scverse project provides a computational ecosystem for single-cell omics data analysis.</span>
+    <em>Nat Biotechnol</em> 41, 604–606 (2023). <span data-lang="zh">scanpy / anndata / muon / squidpy 等套件家族。</span><span data-lang="en">The scanpy / anndata / muon / squidpy package family.</span>
+    <span class="ref-meta"><span data-lang="zh">DOI: <a href="https://doi.org/10.1038/s41587-023-01733-8" target="_blank" rel="noopener">10.1038/s41587-023-01733-8</a> · <a href="https://scverse.org/" target="_blank" rel="noopener">scverse.org</a></span><span data-lang="en">DOI: <a href="https://doi.org/10.1038/s41587-023-01733-8" target="_blank" rel="noopener">10.1038/s41587-023-01733-8</a> · <a href="https://scverse.org/" target="_blank" rel="noopener">scverse.org</a></span></span>
+  </li>
+  <li>
+    <span class="ref-tag doc">DOC</span>
+    <span class="ref-title" data-zh="scanpy 官方教學 — PBMC 3K, 整合, 軌跡, 空間。" data-en="scanpy official tutorials — PBMC 3K, integration, trajectory, spatial.">scanpy 官方教學 — PBMC 3K, 整合, 軌跡, 空間。</span>
+    <span class="ref-meta"><span data-lang="zh"><a href="https://scanpy.readthedocs.io/en/stable/tutorials/" target="_blank" rel="noopener">scanpy.readthedocs.io/en/stable/tutorials</a></span><span data-lang="en"><a href="https://scanpy.readthedocs.io/en/stable/tutorials/" target="_blank" rel="noopener">scanpy.readthedocs.io/en/stable/tutorials</a></span></span>
+  </li>
+  <li>
+    <span class="ref-tag paper">PAPER</span>
+    <span class="ref-author">Lopez R, Regier J, Cole MB, Jordan MI, Yosef N.</span>
+    <span class="ref-title"> Deep generative modeling for single-cell transcriptomics (scVI).</span>
+    <em>Nat Methods</em> 15, 1053–1058 (2018).
+    <span class="ref-meta"><span data-lang="zh">DOI: <a href="https://doi.org/10.1038/s41592-018-0229-2" target="_blank" rel="noopener">10.1038/s41592-018-0229-2</a> · scvi-tools <a href="https://scvi-tools.org/" target="_blank" rel="noopener">scvi-tools.org</a></span><span data-lang="en">DOI: <a href="https://doi.org/10.1038/s41592-018-0229-2" target="_blank" rel="noopener">10.1038/s41592-018-0229-2</a> · scvi-tools at <a href="https://scvi-tools.org/" target="_blank" rel="noopener">scvi-tools.org</a>.</span></span>
+  </li>
+  <li>
+    <span class="ref-tag paper">PAPER</span>
+    <span class="ref-author">Korsunsky I, Millard N, Fan J, et al.</span>
+    <span class="ref-title"> Fast, sensitive and accurate integration of single-cell data with Harmony.</span>
+    <em>Nat Methods</em> 16, 1289–1296 (2019). <span data-lang="zh">batch-effect 整合最常用。</span><span data-lang="en">The most widely used method for batch-effect integration.</span>
+    <span class="ref-meta"><span data-lang="zh">DOI: <a href="https://doi.org/10.1038/s41592-019-0619-0" target="_blank" rel="noopener">10.1038/s41592-019-0619-0</a> · Python port: <a href="https://github.com/lilab-bcb/harmony-pytorch" target="_blank" rel="noopener">harmony-pytorch</a> / harmonypy</span><span data-lang="en">DOI: <a href="https://doi.org/10.1038/s41592-019-0619-0" target="_blank" rel="noopener">10.1038/s41592-019-0619-0</a> · Python port: <a href="https://github.com/lilab-bcb/harmony-pytorch" target="_blank" rel="noopener">harmony-pytorch</a> / harmonypy</span></span>
+  </li>
+  <li>
+    <span class="ref-tag paper">PAPER</span>
+    <span class="ref-author">Traag VA, Waltman L, van Eck NJ.</span>
+    <span class="ref-title"> From Louvain to Leiden: guaranteeing well-connected communities.</span>
+    <em>Scientific Reports</em> 9, 5233 (2019). <span data-lang="zh">Leiden 演算法原理。</span><span data-lang="en">The theoretical foundation of the Leiden algorithm.</span>
+    <span class="ref-meta"><span data-lang="zh">DOI: <a href="https://doi.org/10.1038/s41598-019-41695-z" target="_blank" rel="noopener">10.1038/s41598-019-41695-z</a></span><span data-lang="en">DOI: <a href="https://doi.org/10.1038/s41598-019-41695-z" target="_blank" rel="noopener">10.1038/s41598-019-41695-z</a></span></span>
+  </li>
+  <li>
+    <span class="ref-tag paper">PAPER</span>
+    <span class="ref-author">McInnes L, Healy J, Melville J.</span>
+    <span class="ref-title"> UMAP: Uniform Manifold Approximation and Projection for Dimension Reduction.</span>
+    arXiv:1802.03426 (2018) · <em>JOSS</em> 3, 861 (2018).
+    <span class="ref-meta"><span data-lang="zh">DOI: <a href="https://doi.org/10.21105/joss.00861" target="_blank" rel="noopener">10.21105/joss.00861</a></span><span data-lang="en">DOI: <a href="https://doi.org/10.21105/joss.00861" target="_blank" rel="noopener">10.21105/joss.00861</a></span></span>
+  </li>
+  <li>
+    <span class="ref-tag paper">PAPER</span>
+    <span class="ref-author">Domínguez Conde C, Xu C, Jarvis LB, et al.</span>
+    <span class="ref-title"> Cross-tissue immune cell analysis reveals tissue-specific features in humans (CellTypist).</span>
+    <em>Science</em> 376, eabl5197 (2022).
+    <span class="ref-meta"><span data-lang="zh">DOI: <a href="https://doi.org/10.1126/science.abl5197" target="_blank" rel="noopener">10.1126/science.abl5197</a> · GitHub <a href="https://github.com/Teichlab/celltypist" target="_blank" rel="noopener">Teichlab/celltypist</a></span><span data-lang="en">DOI: <a href="https://doi.org/10.1126/science.abl5197" target="_blank" rel="noopener">10.1126/science.abl5197</a> · GitHub <a href="https://github.com/Teichlab/celltypist" target="_blank" rel="noopener">Teichlab/celltypist</a></span></span>
+  </li>
+  <li>
+    <span class="ref-tag paper">PAPER</span>
+    <span class="ref-author">Squair JW, Gautier M, Kathe C, et al.</span>
+    <span class="ref-title"> Confronting false discoveries in single-cell differential expression.</span>
+    <em>Nat Commun</em> 12, 5692 (2021). <span data-lang="zh">單細胞 DE 推薦做 pseudobulk + DESeq2/edgeR-LRT。</span><span data-lang="en">For single-cell DE, the recommended approach is pseudobulk + DESeq2 / edgeR-LRT.</span>
+    <span class="ref-meta"><span data-lang="zh">DOI: <a href="https://doi.org/10.1038/s41467-021-25960-2" target="_blank" rel="noopener">10.1038/s41467-021-25960-2</a></span><span data-lang="en">DOI: <a href="https://doi.org/10.1038/s41467-021-25960-2" target="_blank" rel="noopener">10.1038/s41467-021-25960-2</a></span></span>
+  </li>
+</ul>
+
+</section>
+
+<!-- ===================== Spatial ===================== -->
+<section class="section section-anchor" id="spatial">
+<div class="section-label" data-zh="Ch 15" data-en="Ch 15">Ch 15</div>
+<h2 data-zh="🗺️ Squidpy / SpatialData / 空間轉錄組" data-en="🗺️ Squidpy / SpatialData / Spatial Transcriptomics">🗺️ Squidpy / SpatialData / 空間轉錄組</h2>
+<ul class="ref-list">
+  <li>
+    <span class="ref-tag paper">PAPER</span>
+    <span class="ref-author">Palla G, Spitzer H, Klein M, et al.</span>
+    <span class="ref-title"> Squidpy: a scalable framework for spatial omics analysis.</span>
+    <em>Nature Methods</em> 19, 171–178 (2022).
+    <span class="ref-meta"><span data-lang="zh">DOI: <a href="https://doi.org/10.1038/s41592-021-01358-2" target="_blank" rel="noopener">10.1038/s41592-021-01358-2</a> · 文件 <a href="https://squidpy.readthedocs.io/" target="_blank" rel="noopener">squidpy.readthedocs.io</a></span><span data-lang="en">DOI: <a href="https://doi.org/10.1038/s41592-021-01358-2" target="_blank" rel="noopener">10.1038/s41592-021-01358-2</a> · Docs at <a href="https://squidpy.readthedocs.io/" target="_blank" rel="noopener">squidpy.readthedocs.io</a>.</span></span>
+  </li>
+  <li>
+    <span class="ref-tag paper">PAPER</span>
+    <span class="ref-author">Marconato L, Palla G, Yamauchi KA, et al.</span>
+    <span class="ref-title"> SpatialData: an open and universal data framework for spatial omics.</span>
+    <em>Nature Methods</em> (2024). <span data-lang="zh">整合 table + image + shapes + points 的新一代資料模型。</span><span data-lang="en">A next-generation data model that unifies tables, images, shapes, and points.</span>
+    <span class="ref-meta"><span data-lang="zh">DOI: <a href="https://doi.org/10.1038/s41592-024-02212-x" target="_blank" rel="noopener">10.1038/s41592-024-02212-x</a> · GitHub <a href="https://github.com/scverse/spatialdata" target="_blank" rel="noopener">scverse/spatialdata</a></span><span data-lang="en">DOI: <a href="https://doi.org/10.1038/s41592-024-02212-x" target="_blank" rel="noopener">10.1038/s41592-024-02212-x</a> · GitHub <a href="https://github.com/scverse/spatialdata" target="_blank" rel="noopener">scverse/spatialdata</a></span></span>
+  </li>
+  <li>
+    <span class="ref-tag paper">PAPER</span>
+    <span class="ref-author">Kleshchevnikov V, Shmatko A, Dann E, et al.</span>
+    <span class="ref-title"> Cell2location maps fine-grained cell types in spatial transcriptomics.</span>
+    <em>Nature Biotechnology</em> 40, 661–671 (2022). <span data-lang="zh">Visium 細胞解構工具。</span><span data-lang="en">A cell deconvolution tool for Visium.</span>
+    <span class="ref-meta"><span data-lang="zh">DOI: <a href="https://doi.org/10.1038/s41587-021-01139-4" target="_blank" rel="noopener">10.1038/s41587-021-01139-4</a></span><span data-lang="en">DOI: <a href="https://doi.org/10.1038/s41587-021-01139-4" target="_blank" rel="noopener">10.1038/s41587-021-01139-4</a></span></span>
+  </li>
+  <li>
+    <span class="ref-tag paper">PAPER</span>
+    <span class="ref-author">Cable DM, Murray E, Zou LS, et al.</span>
+    <span class="ref-title"> Robust decomposition of cell type mixtures in spatial transcriptomics (RCTD).</span>
+    <em>Nature Biotechnology</em> 40, 517–526 (2022).
+    <span class="ref-meta"><span data-lang="zh">DOI: <a href="https://doi.org/10.1038/s41587-021-00830-w" target="_blank" rel="noopener">10.1038/s41587-021-00830-w</a></span><span data-lang="en">DOI: <a href="https://doi.org/10.1038/s41587-021-00830-w" target="_blank" rel="noopener">10.1038/s41587-021-00830-w</a></span></span>
+  </li>
+  <li>
+    <span class="ref-tag paper">PAPER</span>
+    <span class="ref-author">Biancalani T, Scalia G, Buffoni L, et al.</span>
+    <span class="ref-title"> Deep learning and alignment of spatially resolved single-cell transcriptomes with Tangram.</span>
+    <em>Nature Methods</em> 18, 1352–1362 (2021).
+    <span class="ref-meta"><span data-lang="zh">DOI: <a href="https://doi.org/10.1038/s41592-021-01264-7" target="_blank" rel="noopener">10.1038/s41592-021-01264-7</a></span><span data-lang="en">DOI: <a href="https://doi.org/10.1038/s41592-021-01264-7" target="_blank" rel="noopener">10.1038/s41592-021-01264-7</a></span></span>
+  </li>
+  <li>
+    <span class="ref-tag paper">PAPER</span>
+    <span class="ref-author">Svensson V, Teichmann SA, Stegle O.</span>
+    <span class="ref-title"> SpatialDE: identification of spatially variable genes.</span>
+    <em>Nature Methods</em> 15, 343–346 (2018).
+    <span class="ref-meta"><span data-lang="zh">DOI: <a href="https://doi.org/10.1038/nmeth.4636" target="_blank" rel="noopener">10.1038/nmeth.4636</a></span><span data-lang="en">DOI: <a href="https://doi.org/10.1038/nmeth.4636" target="_blank" rel="noopener">10.1038/nmeth.4636</a></span></span>
+  </li>
+  <li>
+    <span class="ref-tag paper">PAPER</span>
+    <span class="ref-author">Janesick A, Shelansky R, Gottscho AD, et al.</span>
+    <span class="ref-title"> High resolution mapping of the tumor microenvironment using integrated single-cell, spatial and in situ analysis (Visium HD context).</span>
+    <em>Nat Commun</em> 14, 8353 (2023).
+    <span class="ref-meta"><span data-lang="zh">DOI: <a href="https://doi.org/10.1038/s41467-023-43458-x" target="_blank" rel="noopener">10.1038/s41467-023-43458-x</a></span><span data-lang="en">DOI: <a href="https://doi.org/10.1038/s41467-023-43458-x" target="_blank" rel="noopener">10.1038/s41467-023-43458-x</a></span></span>
+  </li>
+</ul>
+</section>
+
+<!-- ===================== Multi-omics ===================== -->
+<section class="section section-anchor" id="multiomics">
+<div class="section-label" data-zh="Ch 16" data-en="Ch 16">Ch 16</div>
+<h2 data-zh="🔗 多體學整合（Multi-omics）" data-en="🔗 Multi-omics Integration">🔗 多體學整合（Multi-omics）</h2>
+<ul class="ref-list">
+  <li>
+    <span class="ref-tag paper">PAPER</span>
+    <span class="ref-author">Stoeckius M, Hafemeister C, Stephenson W, et al.</span>
+    <span class="ref-title"> Simultaneous epitope and transcriptome measurement in single cells (CITE-seq).</span>
+    <em>Nature Methods</em> 14, 865–868 (2017).
+    <span class="ref-meta"><span data-lang="zh">DOI: <a href="https://doi.org/10.1038/nmeth.4380" target="_blank" rel="noopener">10.1038/nmeth.4380</a></span><span data-lang="en">DOI: <a href="https://doi.org/10.1038/nmeth.4380" target="_blank" rel="noopener">10.1038/nmeth.4380</a></span></span>
+  </li>
+  <li>
+    <span class="ref-tag paper">PAPER</span>
+    <span class="ref-author">Bredikhin D, Kats I, Stegle O.</span>
+    <span class="ref-title"> MUON: multimodal omics analysis framework.</span>
+    <em>Genome Biology</em> 23, 42 (2022).
+    <span class="ref-meta"><span data-lang="zh">DOI: <a href="https://doi.org/10.1186/s13059-021-02577-8" target="_blank" rel="noopener">10.1186/s13059-021-02577-8</a> · GitHub <a href="https://github.com/scverse/muon" target="_blank" rel="noopener">scverse/muon</a></span><span data-lang="en">DOI: <a href="https://doi.org/10.1186/s13059-021-02577-8" target="_blank" rel="noopener">10.1186/s13059-021-02577-8</a> · GitHub <a href="https://github.com/scverse/muon" target="_blank" rel="noopener">scverse/muon</a></span></span>
+  </li>
+  <li>
+    <span class="ref-tag paper">PAPER</span>
+    <span class="ref-author">Argelaguet R, Arnol D, Bredikhin D, et al.</span>
+    <span class="ref-title"> MOFA+: a statistical framework for comprehensive integration of multi-modal single-cell data.</span>
+    <em>Genome Biology</em> 21, 111 (2020).
+    <span class="ref-meta"><span data-lang="zh">DOI: <a href="https://doi.org/10.1186/s13059-020-02015-1" target="_blank" rel="noopener">10.1186/s13059-020-02015-1</a></span><span data-lang="en">DOI: <a href="https://doi.org/10.1186/s13059-020-02015-1" target="_blank" rel="noopener">10.1186/s13059-020-02015-1</a></span></span>
+  </li>
+  <li>
+    <span class="ref-tag paper">PAPER</span>
+    <span class="ref-author">Gayoso A, Steier Z, Lopez R, et al.</span>
+    <span class="ref-title"> Joint probabilistic modeling of single-cell multi-omic data with totalVI.</span>
+    <em>Nature Methods</em> 18, 272–282 (2021). <span data-lang="zh">RNA + 表面蛋白整合。</span><span data-lang="en">Integration of RNA and surface protein data.</span>
+    <span class="ref-meta"><span data-lang="zh">DOI: <a href="https://doi.org/10.1038/s41592-020-01050-x" target="_blank" rel="noopener">10.1038/s41592-020-01050-x</a></span><span data-lang="en">DOI: <a href="https://doi.org/10.1038/s41592-020-01050-x" target="_blank" rel="noopener">10.1038/s41592-020-01050-x</a></span></span>
+  </li>
+  <li>
+    <span class="ref-tag paper">PAPER</span>
+    <span class="ref-author">Ashuach T, Gabitto MI, Koodli RV, et al.</span>
+    <span class="ref-title"> MultiVI: deep generative model for the integration of multimodal data.</span>
+    <em>Nature Methods</em> 20, 1222–1231 (2023). <span data-lang="zh">RNA + ATAC 同 cell 整合。</span><span data-lang="en">Integration of RNA + ATAC measured in the same cells.</span>
+    <span class="ref-meta"><span data-lang="zh">DOI: <a href="https://doi.org/10.1038/s41592-023-01909-9" target="_blank" rel="noopener">10.1038/s41592-023-01909-9</a></span><span data-lang="en">DOI: <a href="https://doi.org/10.1038/s41592-023-01909-9" target="_blank" rel="noopener">10.1038/s41592-023-01909-9</a></span></span>
+  </li>
+  <li>
+    <span class="ref-tag paper">PAPER</span>
+    <span class="ref-author">Cao ZJ, Gao G.</span>
+    <span class="ref-title"> Multi-omics single-cell data integration and regulatory inference with graph-linked embedding (scGLUE).</span>
+    <em>Nature Biotechnology</em> 40, 1458–1466 (2022).
+    <span class="ref-meta"><span data-lang="zh">DOI: <a href="https://doi.org/10.1038/s41587-022-01284-4" target="_blank" rel="noopener">10.1038/s41587-022-01284-4</a></span><span data-lang="en">DOI: <a href="https://doi.org/10.1038/s41587-022-01284-4" target="_blank" rel="noopener">10.1038/s41587-022-01284-4</a></span></span>
+  </li>
+  <li>
+    <span class="ref-tag paper">PAPER</span>
+    <span class="ref-author">Dixit A, Parnas O, Li B, et al.</span>
+    <span class="ref-title"> Perturb-seq: dissecting molecular circuits with scalable single-cell RNA profiling of pooled genetic screens.</span>
+    <em>Cell</em> 167, 1853–1866.e17 (2016).
+    <span class="ref-meta"><span data-lang="zh">DOI: <a href="https://doi.org/10.1016/j.cell.2016.11.038" target="_blank" rel="noopener">10.1016/j.cell.2016.11.038</a></span><span data-lang="en">DOI: <a href="https://doi.org/10.1016/j.cell.2016.11.038" target="_blank" rel="noopener">10.1016/j.cell.2016.11.038</a></span></span>
+  </li>
+</ul>
+</section>
+
+<!-- ===================== scLLMs ===================== -->
+<section class="section section-anchor" id="scllms">
+<div class="section-label" data-zh="Ch 17" data-en="Ch 17">Ch 17</div>
+<h2 data-zh="🧠 單細胞大型語言模型 (scLLMs)" data-en="🧠 Single-cell Large Language Models (scLLMs)">🧠 單細胞大型語言模型 (scLLMs)</h2>
+<ul class="ref-list">
+  <li>
+    <span class="ref-tag paper">PAPER</span>
+    <span class="ref-author">Cui H, Wang C, Maan H, et al.</span>
+    <span class="ref-title"> scGPT: toward building a foundation model for single-cell multi-omics using generative AI.</span>
+    <em>Nature Methods</em> 21, 1470–1480 (2024).
+    <span class="ref-meta"><span data-lang="zh">DOI: <a href="https://doi.org/10.1038/s41592-024-02201-0" target="_blank" rel="noopener">10.1038/s41592-024-02201-0</a> · GitHub <a href="https://github.com/bowang-lab/scGPT" target="_blank" rel="noopener">bowang-lab/scGPT</a></span><span data-lang="en">DOI: <a href="https://doi.org/10.1038/s41592-024-02201-0" target="_blank" rel="noopener">10.1038/s41592-024-02201-0</a> · GitHub <a href="https://github.com/bowang-lab/scGPT" target="_blank" rel="noopener">bowang-lab/scGPT</a></span></span>
+  </li>
+  <li>
+    <span class="ref-tag paper">PAPER</span>
+    <span class="ref-author">Theodoris CV, Xiao L, Chopra A, et al.</span>
+    <span class="ref-title"> Transfer learning enables predictions in network biology (Geneformer).</span>
+    <em>Nature</em> 618, 616–624 (2023).
+    <span class="ref-meta"><span data-lang="zh">DOI: <a href="https://doi.org/10.1038/s41586-023-06139-9" target="_blank" rel="noopener">10.1038/s41586-023-06139-9</a> · HuggingFace <a href="https://huggingface.co/ctheodoris/Geneformer" target="_blank" rel="noopener">ctheodoris/Geneformer</a></span><span data-lang="en">DOI: <a href="https://doi.org/10.1038/s41586-023-06139-9" target="_blank" rel="noopener">10.1038/s41586-023-06139-9</a> · HuggingFace <a href="https://huggingface.co/ctheodoris/Geneformer" target="_blank" rel="noopener">ctheodoris/Geneformer</a></span></span>
+  </li>
+  <li>
+    <span class="ref-tag paper">PAPER</span>
+    <span class="ref-author">Hao M, Gong J, Zeng X, et al.</span>
+    <span class="ref-title"> Large-scale foundation model on single-cell transcriptomics (scFoundation).</span>
+    <em>Nature Methods</em> 21, 1481–1491 (2024). <span data-lang="zh">50M cells、read-depth aware 預訓練。</span><span data-lang="en">Pretrained on 50M cells with read-depth-aware modelling.</span>
+    <span class="ref-meta"><span data-lang="zh">DOI: <a href="https://doi.org/10.1038/s41592-024-02305-7" target="_blank" rel="noopener">10.1038/s41592-024-02305-7</a></span><span data-lang="en">DOI: <a href="https://doi.org/10.1038/s41592-024-02305-7" target="_blank" rel="noopener">10.1038/s41592-024-02305-7</a></span></span>
+  </li>
+  <li>
+    <span class="ref-tag paper">PAPER</span>
+    <span class="ref-author">Rosen Y, Roohani Y, Agrawal A, et al.</span>
+    <span class="ref-title"> Universal Cell Embeddings: A Foundation Model for Cell Biology.</span>
+    bioRxiv (2023). <span data-lang="zh">跨物種統一 embedding。</span><span data-lang="en">A cross-species unified embedding.</span>
+    <span class="ref-meta"><span data-lang="zh">DOI: <a href="https://doi.org/10.1101/2023.11.28.568918" target="_blank" rel="noopener">10.1101/2023.11.28.568918</a></span><span data-lang="en">DOI: <a href="https://doi.org/10.1101/2023.11.28.568918" target="_blank" rel="noopener">10.1101/2023.11.28.568918</a></span></span>
+  </li>
+  <li>
+    <span class="ref-tag paper">PAPER</span>
+    <span class="ref-author">Yang F, Wang W, Wang F, et al.</span>
+    <span class="ref-title"> scBERT as a large-scale pretrained deep language model for cell type annotation.</span>
+    <em>Nat Mach Intell</em> 4, 852–866 (2022). <span data-lang="zh">早期 transformer 用於 scRNA-seq。</span><span data-lang="en">An early application of transformers to scRNA-seq.</span>
+    <span class="ref-meta"><span data-lang="zh">DOI: <a href="https://doi.org/10.1038/s42256-022-00534-z" target="_blank" rel="noopener">10.1038/s42256-022-00534-z</a></span><span data-lang="en">DOI: <a href="https://doi.org/10.1038/s42256-022-00534-z" target="_blank" rel="noopener">10.1038/s42256-022-00534-z</a></span></span>
+  </li>
+  <li>
+    <span class="ref-tag bench">📊 BENCH</span>
+    <span class="ref-author">Kedzierska KZ, Crawford L, Amini AP, Lu AX.</span>
+    <span class="ref-title"> Zero-shot evaluation reveals limitations of single-cell foundation models.</span>
+    bioRxiv (2023) → <em>Genome Biology</em> 26, 101 (2025).
+    <span class="ref-meta"><span data-lang="zh">DOI: <a href="https://doi.org/10.1101/2023.10.16.561085" target="_blank" rel="noopener">10.1101/2023.10.16.561085</a></span><span data-lang="en">DOI: <a href="https://doi.org/10.1101/2023.10.16.561085" target="_blank" rel="noopener">10.1101/2023.10.16.561085</a></span></span>
+  </li>
+  <li>
+    <span class="ref-tag bench">📊 BENCH</span>
+    <span class="ref-author">Boiarsky R, Singh NM, Buendia A, et al.</span>
+    <span class="ref-title"> A deep dive into single-cell RNA sequencing foundation models.</span>
+    bioRxiv (2023). <span data-lang="zh">多 scLLM 比較與限制分析。</span><span data-lang="en">Comparative analysis of several scLLMs and their limitations.</span>
+    <span class="ref-meta"><span data-lang="zh">DOI: <a href="https://doi.org/10.1101/2023.10.19.563100" target="_blank" rel="noopener">10.1101/2023.10.19.563100</a></span><span data-lang="en">DOI: <a href="https://doi.org/10.1101/2023.10.19.563100" target="_blank" rel="noopener">10.1101/2023.10.19.563100</a></span></span>
+  </li>
+</ul>
+
+</section>
+
+<!-- ===================== AI in Bio ===================== -->
+<section class="section section-anchor" id="ai">
+<div class="section-label" data-zh="Ch 18" data-en="Ch 18">Ch 18</div>
+<h2 data-zh="🤖 AI 在生物資訊應用" data-en="🤖 AI in Bioinformatics Applications">🤖 AI 在生物資訊應用</h2>
+<ul class="ref-list">
+  <li>
+    <span class="ref-tag paper">PAPER</span>
+    <span class="ref-author">Jumper J, Evans R, Pritzel A, et al.</span>
+    <span class="ref-title"> Highly accurate protein structure prediction with AlphaFold.</span>
+    <em>Nature</em> 596, 583–589 (2021). <span data-lang="zh">2024 年諾貝爾化學獎工作。</span><span data-lang="en">The work that won the 2024 Nobel Prize in Chemistry.</span>
+    <span class="ref-meta"><span data-lang="zh">DOI: <a href="https://doi.org/10.1038/s41586-021-03819-2" target="_blank" rel="noopener">10.1038/s41586-021-03819-2</a></span><span data-lang="en">DOI: <a href="https://doi.org/10.1038/s41586-021-03819-2" target="_blank" rel="noopener">10.1038/s41586-021-03819-2</a></span></span>
+  </li>
+  <li>
+    <span class="ref-tag paper">PAPER</span>
+    <span class="ref-author">Abramson J, Adler J, Dunger J, et al.</span>
+    <span class="ref-title"> Accurate structure prediction of biomolecular interactions with AlphaFold 3.</span>
+    <em>Nature</em> 630, 493–500 (2024). <span data-lang="zh">蛋白-小分子-DNA 複合物。</span><span data-lang="en">Protein-small molecule-DNA complexes.</span>
+    <span class="ref-meta"><span data-lang="zh">DOI: <a href="https://doi.org/10.1038/s41586-024-07487-w" target="_blank" rel="noopener">10.1038/s41586-024-07487-w</a></span><span data-lang="en">DOI: <a href="https://doi.org/10.1038/s41586-024-07487-w" target="_blank" rel="noopener">10.1038/s41586-024-07487-w</a></span></span>
+  </li>
+  <li>
+    <span class="ref-tag db">🗄️ DB</span>
+    <span class="ref-title">AlphaFold Protein Structure Database (EMBL-EBI / DeepMind).</span>
+    <span data-lang="zh">2 億+ 預測結構，UniProt ID 直接下載 PDB。</span><span data-lang="en">Over 200 million predicted structures, with direct PDB download by UniProt ID.</span>
+    <span class="ref-meta"><span data-lang="zh"><a href="https://alphafold.ebi.ac.uk/" target="_blank" rel="noopener">alphafold.ebi.ac.uk</a></span><span data-lang="en"><a href="https://alphafold.ebi.ac.uk/" target="_blank" rel="noopener">alphafold.ebi.ac.uk</a></span></span>
+  </li>
+  <li>
+    <span class="ref-tag paper">PAPER</span>
+    <span class="ref-author">Lin Z, Akin H, Rao R, et al.</span>
+    <span class="ref-title"> Evolutionary-scale prediction of atomic-level protein structure (ESM-2 / ESMFold).</span>
+    <em>Science</em> 379, 1123–1130 (2023).
+    <span class="ref-meta"><span data-lang="zh">DOI: <a href="https://doi.org/10.1126/science.ade2574" target="_blank" rel="noopener">10.1126/science.ade2574</a> · HuggingFace <a href="https://huggingface.co/facebook/esm2_t33_650M_UR50D" target="_blank" rel="noopener">facebook/esm2</a></span><span data-lang="en">DOI: <a href="https://doi.org/10.1126/science.ade2574" target="_blank" rel="noopener">10.1126/science.ade2574</a> · HuggingFace <a href="https://huggingface.co/facebook/esm2_t33_650M_UR50D" target="_blank" rel="noopener">facebook/esm2</a></span></span>
+  </li>
+  <li>
+    <span class="ref-tag paper">PAPER</span>
+    <span class="ref-author">Hayes T, Rao R, Akin H, et al.</span>
+    <span class="ref-title"> Simulating 500 million years of evolution with a language model (ESM-3).</span>
+    <em>Science</em> 387, 850–858 (2025).
+    <span class="ref-meta"><span data-lang="zh">DOI: <a href="https://doi.org/10.1126/science.ads0018" target="_blank" rel="noopener">10.1126/science.ads0018</a></span><span data-lang="en">DOI: <a href="https://doi.org/10.1126/science.ads0018" target="_blank" rel="noopener">10.1126/science.ads0018</a></span></span>
+  </li>
+  <li>
+    <span class="ref-tag paper">PAPER</span>
+    <span class="ref-author">Avsec Ž, Agarwal V, Visentin D, et al.</span>
+    <span class="ref-title"> Effective gene expression prediction from sequence by integrating long-range interactions (Enformer).</span>
+    <em>Nature Methods</em> 18, 1196–1203 (2021).
+    <span class="ref-meta"><span data-lang="zh">DOI: <a href="https://doi.org/10.1038/s41592-021-01252-x" target="_blank" rel="noopener">10.1038/s41592-021-01252-x</a></span><span data-lang="en">DOI: <a href="https://doi.org/10.1038/s41592-021-01252-x" target="_blank" rel="noopener">10.1038/s41592-021-01252-x</a></span></span>
+  </li>
+  <li>
+    <span class="ref-tag paper">PAPER</span>
+    <span class="ref-author">Watson JL, Juergens D, Bennett NR, et al.</span>
+    <span class="ref-title"> De novo design of protein structure and function with RFdiffusion.</span>
+    <em>Nature</em> 620, 1089–1100 (2023).
+    <span class="ref-meta"><span data-lang="zh">DOI: <a href="https://doi.org/10.1038/s41586-023-06415-8" target="_blank" rel="noopener">10.1038/s41586-023-06415-8</a></span><span data-lang="en">DOI: <a href="https://doi.org/10.1038/s41586-023-06415-8" target="_blank" rel="noopener">10.1038/s41586-023-06415-8</a></span></span>
+  </li>
+  <li>
+    <span class="ref-tag paper">PAPER</span>
+    <span class="ref-author">Dauparas J, Anishchenko I, Bennett N, et al.</span>
+    <span class="ref-title"> Robust deep learning–based protein sequence design using ProteinMPNN.</span>
+    <em>Science</em> 378, 49–56 (2022).
+    <span class="ref-meta"><span data-lang="zh">DOI: <a href="https://doi.org/10.1126/science.add2187" target="_blank" rel="noopener">10.1126/science.add2187</a></span><span data-lang="en">DOI: <a href="https://doi.org/10.1126/science.add2187" target="_blank" rel="noopener">10.1126/science.add2187</a></span></span>
+  </li>
+  <li>
+    <span class="ref-tag paper">PAPER</span>
+    <span class="ref-author">Corso G, Stärk H, Jing B, Barzilay R, Jaakkola T.</span>
+    <span class="ref-title"> DiffDock: Diffusion Steps, Twists, and Turns for Molecular Docking.</span>
+    ICLR 2023.
+    <span class="ref-meta"><span data-lang="zh">arXiv: <a href="https://arxiv.org/abs/2210.01776" target="_blank" rel="noopener">2210.01776</a></span><span data-lang="en">arXiv: <a href="https://arxiv.org/abs/2210.01776" target="_blank" rel="noopener">2210.01776</a></span></span>
+  </li>
+  <li>
+    <span class="ref-tag paper">PAPER</span>
+    <span class="ref-author">Paszke A, Gross S, Massa F, et al.</span>
+    <span class="ref-title"> PyTorch: An Imperative Style, High-Performance Deep Learning Library.</span>
+    NeurIPS 2019. <span data-lang="zh">PyTorch 原始論文。</span><span data-lang="en">The original PyTorch paper.</span>
+    <span class="ref-meta"><span data-lang="zh">arXiv: <a href="https://arxiv.org/abs/1912.01703" target="_blank" rel="noopener">1912.01703</a> · 文件 <a href="https://pytorch.org/" target="_blank" rel="noopener">pytorch.org</a></span><span data-lang="en">arXiv: <a href="https://arxiv.org/abs/1912.01703" target="_blank" rel="noopener">1912.01703</a> · Docs at <a href="https://pytorch.org/" target="_blank" rel="noopener">pytorch.org</a>.</span></span>
+  </li>
+  <li>
+    <span class="ref-tag tool">TOOL</span>
+    <span class="ref-title" data-zh="Hugging Face Transformers — 一站式蛋白 / DNA / 細胞 LM 模型庫。" data-en="Hugging Face Transformers — a one-stop model hub for protein / DNA / cell language models.">Hugging Face Transformers — 一站式蛋白 / DNA / 細胞 LM 模型庫。</span>
+    <span class="ref-meta"><span data-lang="zh"><a href="https://huggingface.co/docs/transformers" target="_blank" rel="noopener">huggingface.co/docs/transformers</a></span><span data-lang="en"><a href="https://huggingface.co/docs/transformers" target="_blank" rel="noopener">huggingface.co/docs/transformers</a></span></span>
+  </li>
+</ul>
+
+</section>
+
+<!-- ===================== Pipelines ===================== -->
+<section class="section section-anchor" id="pipelines">
+<div class="section-label" data-zh="Pipelines" data-en="Pipelines">Pipelines</div>
+<h2 data-zh="🧱 Pipeline 框架（Snakemake / Nextflow / nf-core）" data-en="🧱 Pipeline Frameworks (Snakemake / Nextflow / nf-core)">🧱 Pipeline 框架（Snakemake / Nextflow / nf-core）</h2>
+<ul class="ref-list">
+  <li>
+    <span class="ref-tag paper">PAPER</span>
+    <span class="ref-author">Mölder F, Jablonski KP, Letcher B, et al.</span>
+    <span class="ref-title"> Sustainable data analysis with Snakemake.</span>
+    <em>F1000Research</em> 10:33 (2021).
+    <span class="ref-meta"><span data-lang="zh">DOI: <a href="https://doi.org/10.12688/f1000research.29032.2" target="_blank" rel="noopener">10.12688/f1000research.29032.2</a> · 文件 <a href="https://snakemake.readthedocs.io/" target="_blank" rel="noopener">snakemake.readthedocs.io</a></span><span data-lang="en">DOI: <a href="https://doi.org/10.12688/f1000research.29032.2" target="_blank" rel="noopener">10.12688/f1000research.29032.2</a> · Docs at <a href="https://snakemake.readthedocs.io/" target="_blank" rel="noopener">snakemake.readthedocs.io</a>.</span></span>
+  </li>
+  <li>
+    <span class="ref-tag paper">PAPER</span>
+    <span class="ref-author">Di Tommaso P, Chatzou M, Floden EW, et al.</span>
+    <span class="ref-title"> Nextflow enables reproducible computational workflows.</span>
+    <em>Nat Biotechnol</em> 35, 316–319 (2017).
+    <span class="ref-meta"><span data-lang="zh">DOI: <a href="https://doi.org/10.1038/nbt.3820" target="_blank" rel="noopener">10.1038/nbt.3820</a> · <a href="https://nextflow.io/" target="_blank" rel="noopener">nextflow.io</a></span><span data-lang="en">DOI: <a href="https://doi.org/10.1038/nbt.3820" target="_blank" rel="noopener">10.1038/nbt.3820</a> · <a href="https://nextflow.io/" target="_blank" rel="noopener">nextflow.io</a></span></span>
+  </li>
+</ul>
+</section>
+
+<!-- ===================== Extended Discussion / Errata ===================== -->
+<section class="section section-anchor" id="errata">
+<div class="section-label" data-zh="教學註記" data-en="TUTORIAL NOTES">教學註記</div>
+<h2 data-zh="📌 教學註記與細節" data-en="📌 Tutorial Notes & Details">📌 教學註記與細節</h2>
+<p data-lang="zh">本節彙整教學各章節中容易被忽略的細節、版本差異與使用陷阱，並附上參考資料來源。這些補充說明並非錯誤更正，而是工具演進、跨平台差異或慣例與規範之間的細微落差，建議在實務操作時一併參考。</p>
+<p data-lang="en">This section gathers easily overlooked details, version differences, and usage pitfalls scattered across the tutorial, with source references. These notes are not corrections but rather subtle gaps between tool evolution, cross-platform behaviour, and convention vs. specification — worth keeping in mind during day-to-day work.</p>
+
+<div class="errata">
+  <span class="errata-label" data-zh="補充說明" data-en="Notes" style="display:inline-block;background:#e0e7ff;color:#3730a3;padding:2px 10px;border-radius:4px;font-size:.72rem;font-weight:700;letter-spacing:.5px;margin-bottom:8px">補充說明 · Notes</span>
+  <h4 data-zh="⚠️ conda 商業條款（2024+）：別在公司／大學機構直接安裝 Anaconda Distribution" data-en="⚠️ Anaconda commercial terms (2024+): do NOT install Anaconda Distribution in corporate / large-university settings">⚠️ conda 商業條款（2024+）：別在公司／大學機構直接安裝 Anaconda Distribution</h4>
+  <p data-lang="zh">Anaconda Inc. 自 2020 起、並於 2024 年再次收緊條款：員工數 &gt; 200 人的「商業機構」使用 Anaconda Distribution 或 defaults / anaconda.org 主頻道需付費授權。教學中請優先使用 <code>miniforge</code> + <code>conda-forge</code> + <code>bioconda</code> 組合（社群維護、免費），或改用 <code>pixi</code> / <code>uv</code>。</p>
+  <p data-lang="en">Anaconda Inc. tightened its terms in 2020 and again in 2024: organizations with more than 200 employees using Anaconda Distribution or the defaults / anaconda.org main channel now require a paid license. In this tutorial we recommend the community-maintained, free combination of <code>miniforge</code> + <code>conda-forge</code> + <code>bioconda</code>, or switching to <code>pixi</code> / <code>uv</code>.</p>
+  <p data-lang="zh">來源：<a href="https://www.anaconda.com/blog/is-conda-free" target="_blank" rel="noopener">Anaconda Terms of Service (2024)</a> · <a href="https://github.com/conda-forge/miniforge" target="_blank" rel="noopener">Miniforge GitHub</a></p>
+  <p data-lang="en">Source: <a href="https://www.anaconda.com/blog/is-conda-free" target="_blank" rel="noopener">Anaconda Terms of Service (2024)</a> · <a href="https://github.com/conda-forge/miniforge" target="_blank" rel="noopener">Miniforge GitHub</a></p>
+</div>
+
+<div class="errata">
+  <span class="errata-label" data-zh="補充說明" data-en="Notes" style="display:inline-block;background:#e0e7ff;color:#3730a3;padding:2px 10px;border-radius:4px;font-size:.72rem;font-weight:700;letter-spacing:.5px;margin-bottom:8px">補充說明 · Notes</span>
+  <h4 data-zh="NumPy 2.0 的 dtype 與 copy 破壞性變更（2024-06）" data-en="NumPy 2.0 — breaking dtype and copy semantics (2024-06)">NumPy 2.0 的 dtype 與 copy 破壞性變更（2024-06）</h4>
+  <p data-lang="zh">NumPy 2.0 為十多年來首次主版本升級，包含多項破壞性變更：(1) Python 整數溢位行為改為遵循 NEP 50，<code>np.int_</code> 在 Windows 由 int32 變為 int64；(2) <code>np.array(obj, copy=False)</code> 不再回退到複製，若無法零拷貝會直接 raise <code>ValueError</code>，建議改用 <code>copy=None</code>；(3) 移除 <code>np.float_</code> / <code>np.complex_</code> / <code>np.unicode_</code> 等別名；(4) <code>np.in1d</code> 改名為 <code>np.isin</code>。升級前請用 <code>ruff check --select NPY201</code> 自動偵測。</p>
+  <p data-lang="en">NumPy 2.0 (June 2024) is the first major release in over a decade and ships several breaking changes: (1) Python integer overflow now follows NEP 50, and <code>np.int_</code> changes from int32 to int64 on Windows; (2) <code>np.array(obj, copy=False)</code> no longer falls back to a copy — it raises <code>ValueError</code> if zero-copy is impossible (use <code>copy=None</code> instead); (3) deprecated aliases such as <code>np.float_</code>, <code>np.complex_</code>, and <code>np.unicode_</code> are removed; (4) <code>np.in1d</code> is renamed to <code>np.isin</code>. Before upgrading, run <code>ruff check --select NPY201</code> to auto-detect issues.</p>
+  <p data-lang="zh">來源：<a href="https://numpy.org/doc/stable/release/2.0.0-notes.html" target="_blank" rel="noopener">NumPy 2.0.0 Release Notes</a> · <a href="https://numpy.org/neps/nep-0050-scalar-promotion.html" target="_blank" rel="noopener">NEP 50</a></p>
+  <p data-lang="en">Source: <a href="https://numpy.org/doc/stable/release/2.0.0-notes.html" target="_blank" rel="noopener">NumPy 2.0.0 Release Notes</a> · <a href="https://numpy.org/neps/nep-0050-scalar-promotion.html" target="_blank" rel="noopener">NEP 50</a></p>
+</div>
+
+<div class="errata">
+  <span class="errata-label" data-zh="補充說明" data-en="Notes" style="display:inline-block;background:#e0e7ff;color:#3730a3;padding:2px 10px;border-radius:4px;font-size:.72rem;font-weight:700;letter-spacing:.5px;margin-bottom:8px">補充說明 · Notes</span>
+  <h4 data-zh="pandas read_csv 在 Windows vs Linux 的編碼預設差異" data-en="pandas read_csv — default encoding differs on Windows vs Linux">pandas read_csv 在 Windows vs Linux 的編碼預設差異</h4>
+  <p data-lang="zh">pandas <code>read_csv()</code> 的 <code>encoding</code> 參數預設為 <code>None</code>，實際解碼會交由 Python 的 <code>locale.getpreferredencoding(False)</code> 決定：Windows 上多為 <code>cp950</code> / <code>cp1252</code>，Linux/macOS 通常是 <code>utf-8</code>。同一份含中文或重音字的 CSV 在 Windows 直接 open 會 <code>UnicodeDecodeError</code>，在 Linux 卻正常。建議所有 I/O 一律明寫 <code>encoding="utf-8"</code>（或 <code>"utf-8-sig"</code> 處理 Excel 匯出的 BOM），別依賴系統 locale。Python 3.15（PEP 597）將預設 text mode 改為 UTF-8，但 pandas 不受 PEP 597 影響。</p>
+  <p data-lang="en">pandas <code>read_csv()</code> has <code>encoding=None</code> by default and the actual decoding falls through to Python's <code>locale.getpreferredencoding(False)</code>: on Windows that is usually <code>cp950</code> / <code>cp1252</code>, on Linux/macOS it is typically <code>utf-8</code>. The same CSV containing Chinese or accented characters will <code>UnicodeDecodeError</code> on Windows but read fine on Linux. Always pass <code>encoding="utf-8"</code> explicitly (or <code>"utf-8-sig"</code> to handle the BOM emitted by Excel) — never rely on the system locale. Python 3.15 (PEP 597) flips the default text-mode encoding to UTF-8, but pandas is not governed by PEP 597.</p>
+  <p data-lang="zh">來源：<a href="https://pandas.pydata.org/docs/reference/api/pandas.read_csv.html" target="_blank" rel="noopener">pandas.read_csv docs</a> · <a href="https://peps.python.org/pep-0597/" target="_blank" rel="noopener">PEP 597</a></p>
+  <p data-lang="en">Source: <a href="https://pandas.pydata.org/docs/reference/api/pandas.read_csv.html" target="_blank" rel="noopener">pandas.read_csv docs</a> · <a href="https://peps.python.org/pep-0597/" target="_blank" rel="noopener">PEP 597</a></p>
+</div>
+
+<div class="errata">
+  <span class="errata-label" data-zh="補充說明" data-en="Notes" style="display:inline-block;background:#e0e7ff;color:#3730a3;padding:2px 10px;border-radius:4px;font-size:.72rem;font-weight:700;letter-spacing:.5px;margin-bottom:8px">補充說明 · Notes</span>
+  <h4 data-zh="pandas merge 預設 suffix _x / _y 容易造成欄位名稱遺失" data-en="pandas merge — default _x / _y suffixes silently shadow columns">pandas merge 預設 suffix _x / _y 容易造成欄位名稱遺失</h4>
+  <p data-lang="zh">當兩個 DataFrame 有同名非 key 欄位，<code>pd.merge()</code> 預設加上 <code>suffixes=("_x","_y")</code>。在 RNA-seq 樣本 metadata 合併基因表達矩陣時，<code>sample_id_x</code> / <code>sample_id_y</code> 常被誤以為是新欄位，下游 <code>groupby</code> 也會出錯。建議：(1) merge 前先 <code>rename()</code> 兩邊衝突欄位；或 (2) 明寫 <code>suffixes=("_meta","_expr")</code> 讓出處清楚；或 (3) 用 <code>validate="one_to_one"</code> 強制檢查 key 唯一性，從根本減少誤合併。</p>
+  <p data-lang="en">When two DataFrames share non-key column names, <code>pd.merge()</code> silently appends <code>suffixes=("_x","_y")</code> by default. When merging RNA-seq sample metadata with an expression matrix, <code>sample_id_x</code> / <code>sample_id_y</code> are often mistaken for new columns and break downstream <code>groupby</code>. Best practices: (1) <code>rename()</code> conflicting columns before merging; (2) pass explicit <code>suffixes=("_meta","_expr")</code> so origins are obvious; or (3) use <code>validate="one_to_one"</code> to enforce key uniqueness and prevent silent fan-out.</p>
+  <p data-lang="zh">來源：<a href="https://pandas.pydata.org/docs/reference/api/pandas.merge.html" target="_blank" rel="noopener">pandas.merge docs</a> · <a href="https://pandas.pydata.org/docs/user_guide/merging.html" target="_blank" rel="noopener">pandas Merging Guide</a></p>
+  <p data-lang="en">Source: <a href="https://pandas.pydata.org/docs/reference/api/pandas.merge.html" target="_blank" rel="noopener">pandas.merge docs</a> · <a href="https://pandas.pydata.org/docs/user_guide/merging.html" target="_blank" rel="noopener">pandas Merging Guide</a></p>
+</div>
+
+<div class="errata">
+  <span class="errata-label" data-zh="補充說明" data-en="Notes" style="display:inline-block;background:#e0e7ff;color:#3730a3;padding:2px 10px;border-radius:4px;font-size:.72rem;font-weight:700;letter-spacing:.5px;margin-bottom:8px">補充說明 · Notes</span>
+  <h4 data-zh="Matplotlib 預設色彩：viridis 已取代 jet（自 2.0 起）" data-en="Matplotlib default colormap — viridis replaced jet since 2.0">Matplotlib 預設色彩：viridis 已取代 jet（自 2.0 起）</h4>
+  <p data-lang="zh">Matplotlib 自 2.0（2017）起，預設連續色階由 <code>jet</code> 改為 <code>viridis</code>。<code>jet</code> 在感知上非單調、色盲不友善，且灰階列印後資訊嚴重失真，多份視覺感知研究已不建議用於科學圖（Borland &amp; Taylor 2007；Liu &amp; Heer 2018）。教學熱圖一律使用 <code>viridis</code> / <code>magma</code> / <code>cividis</code>（後者特別為色盲設計）。<code>seaborn.heatmap()</code> 在 0.13 起也將 <code>rocket</code> 設為預設。仍看到 jet 表示是 2017 前的舊圖或刻意還原老樣式，請更新。</p>
+  <p data-lang="en">Since Matplotlib 2.0 (2017) the default sequential colormap was changed from <code>jet</code> to <code>viridis</code>. <code>jet</code> is perceptually non-monotonic, unfriendly to color-blind viewers, and loses much of its information when printed in grayscale — multiple perception studies recommend against using it in scientific figures (Borland &amp; Taylor 2007; Liu &amp; Heer 2018). Tutorial heatmaps consistently use <code>viridis</code> / <code>magma</code> / <code>cividis</code> (the last specifically designed for color blindness). <code>seaborn.heatmap()</code> defaulted to <code>rocket</code> in 0.13. Encountering jet usually means a pre-2017 figure or a deliberate retro style; please update.</p>
+  <p data-lang="zh">來源：<a href="https://matplotlib.org/stable/users/prev_whats_new/dflt_style_changes.html" target="_blank" rel="noopener">Matplotlib 2.0 Style Changes</a> · <a href="https://doi.org/10.1109/MCG.2007.323435" target="_blank" rel="noopener">Borland &amp; Taylor 2007 (IEEE CG&amp;A)</a></p>
+  <p data-lang="en">Source: <a href="https://matplotlib.org/stable/users/prev_whats_new/dflt_style_changes.html" target="_blank" rel="noopener">Matplotlib 2.0 Style Changes</a> · <a href="https://doi.org/10.1109/MCG.2007.323435" target="_blank" rel="noopener">Borland &amp; Taylor 2007 (IEEE CG&amp;A)</a></p>
+</div>
+
+<div class="errata">
+  <span class="errata-label" data-zh="補充說明" data-en="Notes" style="display:inline-block;background:#e0e7ff;color:#3730a3;padding:2px 10px;border-radius:4px;font-size:.72rem;font-weight:700;letter-spacing:.5px;margin-bottom:8px">補充說明 · Notes</span>
+  <h4 data-zh="Biopython SeqIO 的 format 參數為強制：副檔名不被自動偵測" data-en="Biopython SeqIO — format= is mandatory, extension is NOT auto-detected">Biopython SeqIO 的 format 參數為強制：副檔名不被自動偵測</h4>
+  <p data-lang="zh">不同於 BioPerl 與部分 R 套件，Biopython 的 <code>SeqIO.parse()</code> / <code>SeqIO.read()</code> / <code>SeqIO.write()</code> 都要求第二個 <code>format</code> 參數明寫格式字串（如 <code>"fasta"</code>、<code>"fastq"</code>、<code>"genbank"</code>、<code>"embl"</code>），不會從 <code>.fa</code> / <code>.fq</code> 副檔名推測。常見錯誤是把 GenBank 檔當 FASTA 讀，會默默吃掉 LOCUS 行以外的 metadata。格式字串需小寫，<code>"FASTA"</code> 會 raise <code>ValueError</code>。完整列表見 <a href="https://biopython.org/wiki/SeqIO" target="_blank" rel="noopener">SeqIO 支援格式表</a>。</p>
+  <p data-lang="en">Unlike BioPerl and some R packages, Biopython's <code>SeqIO.parse()</code> / <code>SeqIO.read()</code> / <code>SeqIO.write()</code> require the second <code>format</code> argument to be an explicit string (<code>"fasta"</code>, <code>"fastq"</code>, <code>"genbank"</code>, <code>"embl"</code>, etc.) — it does NOT infer from <code>.fa</code> / <code>.fq</code> extensions. A common bug is reading a GenBank file as FASTA, which silently discards every metadata field except LOCUS. The format string must be lowercase; <code>"FASTA"</code> raises <code>ValueError</code>. See the full table at <a href="https://biopython.org/wiki/SeqIO" target="_blank" rel="noopener">SeqIO supported formats</a>.</p>
+  <p data-lang="zh">來源：<a href="https://biopython.org/docs/latest/Tutorial/chapter_seqio.html" target="_blank" rel="noopener">Biopython Tutorial · Chapter SeqIO</a> · <a href="https://doi.org/10.1093/bioinformatics/btp163" target="_blank" rel="noopener">Cock et al. 2009 (Bioinformatics)</a></p>
+  <p data-lang="en">Source: <a href="https://biopython.org/docs/latest/Tutorial/chapter_seqio.html" target="_blank" rel="noopener">Biopython Tutorial · Chapter SeqIO</a> · <a href="https://doi.org/10.1093/bioinformatics/btp163" target="_blank" rel="noopener">Cock et al. 2009 (Bioinformatics)</a></p>
+</div>
+
+<div class="errata">
+  <span class="errata-label" data-zh="補充說明" data-en="Notes" style="display:inline-block;background:#e0e7ff;color:#3730a3;padding:2px 10px;border-radius:4px;font-size:.72rem;font-weight:700;letter-spacing:.5px;margin-bottom:8px">補充說明 · Notes</span>
+  <h4 data-zh="Biopython SeqRecord.id 會在第一個空白處被截斷" data-en="Biopython SeqRecord.id is truncated at the first whitespace">Biopython SeqRecord.id 會在第一個空白處被截斷</h4>
+  <p data-lang="zh">FASTA header 形如 <code>&gt;ENST00000456328 ENSG00000223972 lincRNA</code>，Biopython 解析後 <code>record.id</code> 只取第一個 token <code>ENST00000456328</code>，其餘併入 <code>record.description</code>。若以為 <code>id</code> 等於整行 header，在跨資料庫比對時會出現「明明檔案裡有但找不到」的情況。要保留完整 header 須用 <code>record.description</code>（已包含 id 部分）；要重新切自訂分隔符請自行 <code>split()</code>。FASTQ 同此規則。</p>
+  <p data-lang="en">For a FASTA header like <code>&gt;ENST00000456328 ENSG00000223972 lincRNA</code>, Biopython parses <code>record.id</code> as only the first whitespace-delimited token <code>ENST00000456328</code>; the rest is stored in <code>record.description</code>. Code that treats <code>id</code> as the entire header line silently fails on cross-database joins ("the gene is in the file but the lookup misses"). To keep the full header use <code>record.description</code> (which already includes the id portion); to split on a custom delimiter call <code>split()</code> yourself. The same rule applies to FASTQ.</p>
+  <p data-lang="zh">來源：<a href="https://biopython.org/docs/latest/api/Bio.SeqRecord.html" target="_blank" rel="noopener">Biopython SeqRecord API</a> · <a href="https://biopython.org/wiki/SeqIO" target="_blank" rel="noopener">SeqIO Wiki — FASTA Notes</a></p>
+  <p data-lang="en">Source: <a href="https://biopython.org/docs/latest/api/Bio.SeqRecord.html" target="_blank" rel="noopener">Biopython SeqRecord API</a> · <a href="https://biopython.org/wiki/SeqIO" target="_blank" rel="noopener">SeqIO Wiki — FASTA Notes</a></p>
+</div>
+
+<div class="errata">
+  <span class="errata-label" data-zh="補充說明" data-en="Notes" style="display:inline-block;background:#e0e7ff;color:#3730a3;padding:2px 10px;border-radius:4px;font-size:.72rem;font-weight:700;letter-spacing:.5px;margin-bottom:8px">補充說明 · Notes</span>
+  <h4 data-zh="FASTQ Phred 編碼：Sanger / Solexa / Illumina 1.3+ 偏移量不同" data-en="FASTQ Phred encoding — Sanger / Solexa / Illumina 1.3+ use different offsets">FASTQ Phred 編碼：Sanger / Solexa / Illumina 1.3+ 偏移量不同</h4>
+  <p data-lang="zh">FASTQ 第四行的品質字元有三套互不相容的編碼：Sanger / Illumina 1.8+ 使用 Phred+33（ASCII 33–93，即 <code>!</code> 到 <code>]</code>）、Illumina 1.3–1.7 使用 Phred+64（ASCII 64–104，<code>@</code> 到 <code>h</code>）、Solexa/Illumina 1.0 使用 Solexa+64（含對應 log-odds 換算）。Cock et al. 2010 詳細列表至今仍是標準參考。現代資料幾乎都是 Phred+33，但讀古老 SRA 檔仍需注意：若 Q 值看起來都 &gt;40 或字元集出現 <code>@A-Z</code>，先用 <code>fastqc</code> 確認版本；Biopython 解析時必須選 <code>format="fastq-sanger"</code>、<code>"fastq-solexa"</code> 或 <code>"fastq-illumina"</code>，泛稱 <code>"fastq"</code> 等同 Sanger。</p>
+  <p data-lang="en">The quality line in FASTQ uses three mutually incompatible encodings: Sanger / Illumina 1.8+ uses Phred+33 (ASCII 33–93, <code>!</code> through <code>]</code>); Illumina 1.3–1.7 uses Phred+64 (ASCII 64–104, <code>@</code> through <code>h</code>); Solexa/Illumina 1.0 uses Solexa+64 (with a separate log-odds conversion). Cock et al. 2010 remains the definitive reference table. Modern data are almost always Phred+33, but old SRA archives still require care: if Q values look uniformly above 40 or characters span <code>@A-Z</code>, confirm the version with <code>fastqc</code> first. In Biopython, choose <code>format="fastq-sanger"</code>, <code>"fastq-solexa"</code> or <code>"fastq-illumina"</code> explicitly — bare <code>"fastq"</code> aliases to Sanger.</p>
+  <p data-lang="zh">來源：<a href="https://doi.org/10.1093/nar/gkp1137" target="_blank" rel="noopener">Cock et al. 2010 (Nucleic Acids Res)</a> · <a href="https://www.bioinformatics.babraham.ac.uk/projects/fastqc/" target="_blank" rel="noopener">FastQC</a></p>
+  <p data-lang="en">Source: <a href="https://doi.org/10.1093/nar/gkp1137" target="_blank" rel="noopener">Cock et al. 2010 (Nucleic Acids Res)</a> · <a href="https://www.bioinformatics.babraham.ac.uk/projects/fastqc/" target="_blank" rel="noopener">FastQC</a></p>
+</div>
+
+<div class="errata">
+  <span class="errata-label" data-zh="補充說明" data-en="Notes" style="display:inline-block;background:#e0e7ff;color:#3730a3;padding:2px 10px;border-radius:4px;font-size:.72rem;font-weight:700;letter-spacing:.5px;margin-bottom:8px">補充說明 · Notes</span>
+  <h4 data-zh="BLAST 的 E-value 不是機率：別寫成 p-value" data-en="BLAST E-value is NOT a probability — do not call it a p-value">BLAST 的 E-value 不是機率：別寫成 p-value</h4>
+  <p data-lang="zh">BLAST 報表中的 E-value 是「在當前資料庫大小下，期望（expected）出現分數至少與當前 hit 相同的隨機 alignment 數」，是泊松過程的期望值 λ，可大於 1（如 E=15 表示預期會有 15 個更好或同等的隨機命中）。對應的機率為 <code>p = 1 − exp(−E)</code>，當 E &lt; 0.01 時 <code>p ≈ E</code>，因此 E 小時可近似當機率使用，但在 E &gt; 0.1 時把 E-value 當 p-value 引用是錯誤；E-value 也不應做 Bonferroni / BH 校正，它已內含資料庫大小的多重比較修正。Altschul et al. 1990 與 Karlin–Altschul statistics 為標準參考。</p>
+  <p data-lang="en">The E-value reported by BLAST is the expected number of random alignments scoring at least as high as the current hit given the current database size — it is the Poisson rate λ and can exceed 1 (e.g. E = 15 means about 15 equally-good or better random hits are expected). The corresponding probability is <code>p = 1 − exp(−E)</code>; for E &lt; 0.01 we have <code>p ≈ E</code> so the E-value can be used as a probability approximation, but quoting E-values above 0.1 as p-values is wrong. E-values should also not be Bonferroni- or BH-corrected — the database size multiple-testing correction is already built in. See Altschul et al. 1990 and the Karlin–Altschul statistics for the canonical treatment.</p>
+  <p data-lang="zh">來源：<a href="https://doi.org/10.1016/S0022-2836(05)80360-2" target="_blank" rel="noopener">Altschul et al. 1990 (J Mol Biol)</a> · <a href="https://www.ncbi.nlm.nih.gov/books/NBK62051/" target="_blank" rel="noopener">BLAST Statistics (NCBI Handbook)</a></p>
+  <p data-lang="en">Source: <a href="https://doi.org/10.1016/S0022-2836(05)80360-2" target="_blank" rel="noopener">Altschul et al. 1990 (J Mol Biol)</a> · <a href="https://www.ncbi.nlm.nih.gov/books/NBK62051/" target="_blank" rel="noopener">BLAST Statistics (NCBI Handbook)</a></p>
+</div>
+
+<div class="errata">
+  <span class="errata-label" data-zh="補充說明" data-en="Notes" style="display:inline-block;background:#e0e7ff;color:#3730a3;padding:2px 10px;border-radius:4px;font-size:.72rem;font-weight:700;letter-spacing:.5px;margin-bottom:8px">補充說明 · Notes</span>
+  <h4 data-zh="pysam 是 0-based half-open，與 VCF / SAM 文字格式（1-based）差 1" data-en="pysam uses 0-based half-open coordinates — off-by-one vs VCF / SAM text">pysam 是 0-based half-open，與 VCF / SAM 文字格式（1-based）差 1</h4>
+  <p data-lang="zh">pysam 沿用 BAM/HTSlib 的內部座標：<code>read.reference_start</code>、<code>fetch(chrom, start, end)</code> 全為 0-based half-open（包含 start、不含 end，類似 BED）。但你在 IGV 或 VCF 看到的位置是 1-based inclusive（VCF spec），SAM 文字檔的 <code>POS</code> 欄位也是 1-based。常見錯誤：在 pileup 報告 SNV 時把 <code>pileupcolumn.reference_pos</code> 直接寫成 VCF 的 POS，會少 1。轉換規則：VCF <code>POS</code> = pysam <code>pos</code> + 1；BED <code>start</code> = pysam <code>start</code>、BED <code>end</code> = pysam <code>end</code>（相同）。pyranges、HTSeq 等套件也採 0-based，但 bcftools / tabix 的 region 字串為 1-based。</p>
+  <p data-lang="en">pysam follows the internal coordinates of BAM/HTSlib: <code>read.reference_start</code> and <code>fetch(chrom, start, end)</code> are all 0-based half-open (start inclusive, end exclusive, like BED). However, the positions you see in IGV or VCF are 1-based inclusive (VCF spec), and the <code>POS</code> column in SAM text files is also 1-based. A common bug: writing <code>pileupcolumn.reference_pos</code> directly as the VCF POS in pileup-based SNV reports — it will be off by one. Conversions: VCF <code>POS</code> = pysam <code>pos</code> + 1; BED <code>start</code>/<code>end</code> = pysam <code>start</code>/<code>end</code> (same). pyranges and HTSeq are also 0-based, but bcftools / tabix region strings are 1-based.</p>
+  <p data-lang="zh">來源：<a href="https://pysam.readthedocs.io/en/latest/glossary.html" target="_blank" rel="noopener">pysam Glossary — coordinates</a> · <a href="https://samtools.github.io/hts-specs/VCFv4.4.pdf" target="_blank" rel="noopener">VCF v4.4 Specification</a></p>
+  <p data-lang="en">Source: <a href="https://pysam.readthedocs.io/en/latest/glossary.html" target="_blank" rel="noopener">pysam Glossary — coordinates</a> · <a href="https://samtools.github.io/hts-specs/VCFv4.4.pdf" target="_blank" rel="noopener">VCF v4.4 Specification</a></p>
+</div>
+
+<div class="errata">
+  <span class="errata-label" data-zh="補充說明" data-en="Notes" style="display:inline-block;background:#e0e7ff;color:#3730a3;padding:2px 10px;border-radius:4px;font-size:.72rem;font-weight:700;letter-spacing:.5px;margin-bottom:8px">補充說明 · Notes</span>
+  <h4 data-zh="VCF normalization：合併與比較前必須 left-align + split multi-allelic（Tan 2015）" data-en="VCF normalization — always left-align + split multi-allelic before merge or compare (Tan 2015)">VCF normalization：合併與比較前必須 left-align + split multi-allelic（Tan 2015）</h4>
+  <p data-lang="zh">同一個 indel 可有多種等價表示（例如 chr1:100 ATG&gt;A 與 chr1:101 TG&gt;-），不同 caller（GATK HaplotypeCaller、DeepVariant、bcftools）輸出未必相同；multi-allelic 位點 <code>A&gt;G,T</code> 也常被當成單一變異處理。Tan et al. 2015 提出 normalization 三步驟：(1) parsimony（最小化共同前後綴）、(2) left-alignment（往左對齊到最早可能位置）、(3) split multi-allelic 為多列 bi-allelic。標準指令：<code>bcftools norm -f ref.fa -m -any input.vcf</code>。未經 normalization 的 VCF 在 merge、annotation（如 VEP、SnpEff）、liftOver 與 PRS 計算都會出現假性不一致。</p>
+  <p data-lang="en">The same indel can have several equivalent representations (e.g. chr1:100 ATG&gt;A and chr1:101 TG&gt;-), and different callers (GATK HaplotypeCaller, DeepVariant, bcftools) do not necessarily produce identical strings; multi-allelic sites <code>A&gt;G,T</code> are often treated as a single record. Tan et al. 2015 defined a three-step normalization: (1) parsimony (trim common prefix and suffix), (2) left-alignment (shift to the leftmost equivalent position), (3) split multi-allelics into separate bi-allelic records. Canonical command: <code>bcftools norm -f ref.fa -m -any input.vcf</code>. Without normalization, VCF merges, annotations (VEP, SnpEff), liftOver, and PRS calculations produce spurious mismatches.</p>
+  <p data-lang="zh">來源：<a href="https://doi.org/10.1093/bioinformatics/btv112" target="_blank" rel="noopener">Tan, Abecasis &amp; Kang 2015 (Bioinformatics)</a> · <a href="https://samtools.github.io/bcftools/bcftools.html#norm" target="_blank" rel="noopener">bcftools norm docs</a></p>
+  <p data-lang="en">Source: <a href="https://doi.org/10.1093/bioinformatics/btv112" target="_blank" rel="noopener">Tan, Abecasis &amp; Kang 2015 (Bioinformatics)</a> · <a href="https://samtools.github.io/bcftools/bcftools.html#norm" target="_blank" rel="noopener">bcftools norm docs</a></p>
+</div>
+
+<div class="errata">
+  <span class="errata-label" data-zh="補充說明" data-en="Notes" style="display:inline-block;background:#e0e7ff;color:#3730a3;padding:2px 10px;border-radius:4px;font-size:.72rem;font-weight:700;letter-spacing:.5px;margin-bottom:8px">補充說明 · Notes</span>
+  <h4 data-zh="AlphaFold pLDDT 不等同實驗結構解析度" data-en="AlphaFold pLDDT is NOT equivalent to experimental resolution">AlphaFold pLDDT 不等同實驗結構解析度</h4>
+  <p data-lang="zh">AlphaFold2 / AlphaFold3 在 B-factor 欄位輸出的是 per-residue pLDDT（0–100），表示對該殘基局部結構的信心：&gt;90 高信心、70–90 中等、50–70 低、&lt;50 通常為內在無序區（IDR）。實驗結構的 B-factor 反映原子熱運動或晶體紊亂，單位 Å²，與 pLDDT 不同維度也不可直接比對。X-ray 的 1.5 Å resolution 與 AlphaFold 的 pLDDT=95 在意義上沒有對等關係；後者僅是「模型對自己預測的信心」，不能用來宣稱「實驗等級準確度」。AlphaFold-Multimer 預測介面時還需看 ipTM / PAE，pLDDT 對複合體界面有系統性高估。Jumper et al. 2021 與 Abramson et al. 2024 為原始定義。</p>
+  <p data-lang="en">AlphaFold2 / AlphaFold3 store per-residue pLDDT (0–100) in the B-factor column to indicate confidence in the local structure: &gt;90 high, 70–90 moderate, 50–70 low, &lt;50 typically intrinsically disordered regions (IDRs). Experimental B-factors measure atomic thermal motion or crystal disorder in Å² — a different quantity that cannot be compared directly. There is no equivalence between a 1.5 Å X-ray resolution and an AlphaFold pLDDT of 95; the latter is only "the model's confidence in its own prediction" and does not justify claims of "experimental-grade accuracy". For interfaces, AlphaFold-Multimer requires ipTM and PAE; pLDDT systematically overestimates confidence at complex interfaces. The original definitions are in Jumper et al. 2021 and Abramson et al. 2024.</p>
+  <p data-lang="zh">來源：<a href="https://doi.org/10.1038/s41586-021-03819-2" target="_blank" rel="noopener">Jumper et al. 2021 (AlphaFold2, Nature)</a> · <a href="https://doi.org/10.1038/s41586-024-07487-w" target="_blank" rel="noopener">Abramson et al. 2024 (AlphaFold3, Nature)</a></p>
+  <p data-lang="en">Source: <a href="https://doi.org/10.1038/s41586-021-03819-2" target="_blank" rel="noopener">Jumper et al. 2021 (AlphaFold2, Nature)</a> · <a href="https://doi.org/10.1038/s41586-024-07487-w" target="_blank" rel="noopener">Abramson et al. 2024 (AlphaFold3, Nature)</a></p>
+</div>
+</section>
+<nav class="page-nav">
+  <a href="../index.html"><span class="nav-dir" data-zh="← 教學首頁" data-en="← Tutorial home">← 教學首頁</span><span class="nav-title" data-zh="回到主教學頁" data-en="Back to tutorial hub">回到主教學頁</span></a>
+  <a href="../python-quiz/index.html" target="_blank" rel="noopener"><span class="nav-dir" data-zh="互動考題 →" data-en="Interactive quiz →">互動考題 →</span><span class="nav-title" data-zh="互動式考題" data-en="Interactive Quiz">互動式考題</span></a>
+</nav>
+
+</main>
+<script src="../i18n.js"></script>
+</body>
+</html>
